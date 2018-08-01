@@ -1,0 +1,350 @@
+openapi: 3.0.0
+# Added by API Auto Mocking Plugin
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/bolein/xcom/1.0.0
+info:
+  description: "E-Com generic wrapper TODO: coupons, locations "
+  version: "1.0.0"
+  title: X-Com API
+  termsOfService: 'http://swagger.io/terms/'
+  contact:
+    email: vadym@theappshop.eu
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: products
+  - name: content
+paths:
+  /categories:
+    get:
+      tags:
+        - products
+      summary: Gets categories
+      operationId: getCategories
+      parameters:
+        - in: query
+          name: query
+          description: search query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: list of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+  /goods:
+    get:
+      tags:
+       - products
+      summary: Get goods list
+      operationId: getCategories
+      parameters:
+        - in: query
+          name: region
+          description: region code
+          schema:
+            type: integer
+        - in: query
+          name: SkipTake
+          schema:
+            $ref: '#/components/schemas/SkipTake'
+        - in: query
+          name: ProductFilter
+          explode: true
+          schema:
+            $ref: '#/components/schemas/ProductFilter'
+      responses:
+        '200':
+          description: list of goods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+                  
+  /goods/{id}:
+    get:
+      tags:
+       - products
+      summary: Get detailed product
+      operationId: getProduct
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: region
+          description: region code
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedProduct'
+                  
+                  
+  /content:
+    get:
+      tags:
+       - content
+      summary: Get content articles
+      operationId: getContent
+      parameters:
+        - in: query
+          name: region
+          description: region code
+          schema:
+            type: integer
+        - in: query
+          name: SkipTake
+          schema:
+            $ref: '#/components/schemas/SkipTake'      
+      responses:
+        '200':
+          description: list of goods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Content'
+
+  /content/{id}/goods:
+    get:
+      tags:
+       - content
+      summary: Get goods associated with the content article
+      operationId: getGoodsForContent
+      parameters:
+        - in: path
+          name: id
+          description: content article id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: region
+          description: region code
+          schema:
+            type: integer
+        - in: query
+          name: SkipTake
+          schema:
+            $ref: '#/components/schemas/SkipTake'
+        - in: query
+          name: ProductFilter
+          explode: true
+          schema:
+            $ref: '#/components/schemas/ProductFilter'
+      responses:
+        '200':
+          description: list of goods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+
+externalDocs:
+  description: Find out more about Swagger
+  url: 'http://swagger.io'
+components:
+  schemas:
+    Category:
+        allOf:
+          - type: object
+            required:
+              - id
+              - name
+              - productCount
+            properties:
+              id:
+                type: integer
+                format: int64
+              name:
+                type: string
+                example: Лекарства и БАД
+              level:
+                type: integer
+                example: 0
+                description: Level of the catagory in hierarchy
+              parentId:
+                type: integer
+                example: 0
+                description: Parent id or 0
+              productCount:
+                type: integer
+                example: 69
+          - $ref: '#/components/schemas/EcomEntity'
+          
+    Product:
+        allOf:
+          - type: object
+            required:
+              - id
+              - name
+              - manufacturer
+            properties:
+              id:
+                type: integer
+                format: int64
+              name:
+                type: string
+                example: Лекарства и БАД
+              manufacturer:
+                type: string
+                example: Дивеево
+              # TODO: more product fields from ECOM 
+              label: 
+                $ref: '#/components/schemas/Label'
+              price:
+                type: number
+                format: double
+                example: 199.99
+              isPriceRanged:
+                type: boolean
+                description: if the price varies accross locations in current region
+          - $ref: '#/components/schemas/EcomEntity'
+          
+    DetailedProduct:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          properties:
+            relatedContent: # OPTIONAL in first release
+              type: array
+              items:
+                $ref: '#/components/schemas/Content'
+            availableCount: # OPTIONAL in first release
+              type: integer
+              description: The shortest availability across the locations in the current region 
+            related: # OPTIONAL in first release
+              description: Ids of related products
+              type: array
+              items:
+                type: integer
+                
+          
+    EcomEntity:
+      type: object
+      required: 
+        - lastSyncDate
+      properties:
+        ecomSyncDate:
+          type: string
+          format: date-time
+          example: "2017-07-21T17:32:28Z"
+    
+    SkipTake:
+      type: object
+      properties:
+        skip:
+          type: integer
+        take:
+          type: integer
+          
+    Content:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          example: "Крем для тела лифтинг апельсин-имбирь 200мл"
+        media:
+          $ref: '#/components/schemas/Media'
+        # extra fields
+        productCount:
+          type: integer
+          description: Number of associated goods
+        description:
+          type: string
+          example: "При покупке термальной воды Глоу Лаб, 2-я вода в подарок! Акция действует в аптеках сети ОЗЕРКИ"
+        fromDate:
+          type: string
+          format: date-time
+        toDate:
+          type: string
+          format: date-time            
+
+    Media:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [image, video]
+        urls:
+          type: string
+        urlm:
+          type: string
+        urlx:
+          type: string
+
+    Label:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        icon:
+          type: string
+          description: label icon url
+          example: "https://app.swaggerhub.com/img/CORP_swaggerhub_logo.svg"
+
+          
+    ProductFilter:
+      type: object
+      properties:
+        query:
+          type: string
+          example: "Анальг"
+          description: search query
+        categoryId:
+          type: integer
+          example: 32
+          description: category id or 0 to search all
+        brand:
+          type: string
+          example: "Дивеево"
+        priceMin:
+          type: number
+          format: double
+          example: 250.0
+        priceMax:
+          type: number
+          format: double
+          example: 250.0
+        order:
+          type: string
+          enum: [asc, desc]
+        sort:
+          type: string
+          enum: [top, price, name]
+        
+          
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
