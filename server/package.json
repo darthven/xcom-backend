@@ -57,7 +57,6 @@
     },
     "dependencies": {
         "app-root-path": "^2.1.0",
-        "class-validator": "^0.9.1",
         "koa": "^2.5.2",
         "koa-bodyparser": "^4.2.1",
         "koa-multer": "^1.0.2",
