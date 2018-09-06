@@ -12,5 +12,8 @@ const koa = new Koa()
 export default useKoaServer(koa, {
     routePrefix: '/api',
     middlewares: [LoggingMiddleware],
-    controllers: [__dirname + '/controllers/**/*']
+    controllers: [__dirname + '/controllers/**/*'],
+    validation: {
+        skipMissingProperties: true
+    }
 })

@@ -1,4 +1,4 @@
-Dependencies:
+dependencies:
   typescript:
     - "npm i --save-dev @types/node typescript ts-node"
     - "npm i --save-dev prettier tslint tslint-config-prettier tslint-plugin-prettier"

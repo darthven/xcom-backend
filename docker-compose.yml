@@ -29,11 +29,11 @@ services:
       REDIS_HOST: redis
       TW_SID: AC94d7879854da55ed50ad0781c123a56b
       TW_TOKEN: dd2f087c4a0006a4fa1bf1ff4a23dc9d
-      TW_NUMBER: +14387006921 
+      TW_NUMBER: +14387006921
     command:
       ["npm", "run", "db+start:prod"]
     networks:
-      - webnet   
+      - webnet
   push-db:
     image: postgres
     container_name:
@@ -68,7 +68,7 @@ services:
     command:
       ["npm", "run", "db+start:prod"]
     networks:
-      - webnet      
+      - webnet
   db:
     image: postgres
     container_name:
@@ -82,14 +82,14 @@ services:
   server:
     image: darthven/youhire-backend
     container_name:
-      youhire_server 
+      youhire_server
     depends_on:
       - db
       - sms-app
       - push-app
     environment:
       PG_HOST: db
-      PORT: 80      
+      PORT: 80
       SMS_APP_HOST: sms-app
       SMS_APP_PORT: 80
       PUSH_APP_HOST: push-app
@@ -100,12 +100,12 @@ services:
     ports:
       - "2043:80"
     volumes:
-      - ./server:/usr/src/app
+      - ./server:/usr/seed/app
     networks:
       - webnet
 networks:
   webnet:
-    
+
 # docker kill $(docker ps -q)                                       # stop all containers
 # docker rm $(docker ps -a -q)                                      # remove all containers
 # docker rmi $(docker images -q)                                    # remove all docker images

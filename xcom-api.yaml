@@ -37,7 +37,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Category'
+                  $ref: '#/components/schemas/Categories'
   /goods:
     get:
       tags:
@@ -68,7 +68,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
-                  
+
   /goods/{id}:
     get:
       tags:
@@ -93,8 +93,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DetailedProduct'
-                  
-                  
+
+
   /content:
     get:
       tags:
@@ -110,7 +110,7 @@ paths:
         - in: query
           name: SkipTake
           schema:
-            $ref: '#/components/schemas/SkipTake'      
+            $ref: '#/components/schemas/SkipTake'
       responses:
         '200':
           description: list of goods
@@ -190,7 +190,7 @@ components:
                 type: integer
                 example: 69
           - $ref: '#/components/schemas/EcomEntity'
-          
+
     Product:
         allOf:
           - type: object
@@ -208,8 +208,8 @@ components:
               manufacturer:
                 type: string
                 example: Дивеево
-              # TODO: more product fields from ECOM 
-              label: 
+              # TODO: more product fields from ECOM
+              label:
                 $ref: '#/components/schemas/Label'
               price:
                 type: number
@@ -219,7 +219,7 @@ components:
                 type: boolean
                 description: if the price varies accross locations in current region
           - $ref: '#/components/schemas/EcomEntity'
-          
+
     DetailedProduct:
       allOf:
         - $ref: '#/components/schemas/Product'
@@ -231,24 +231,24 @@ components:
                 $ref: '#/components/schemas/Content'
             availableCount: # OPTIONAL in first release
               type: integer
-              description: The shortest availability across the locations in the current region 
+              description: The shortest availability across the locations in the current region
             related: # OPTIONAL in first release
               description: Ids of related products
               type: array
               items:
                 type: integer
-                
-          
+
+
     EcomEntity:
       type: object
-      required: 
+      required:
         - lastSyncDate
       properties:
         ecomSyncDate:
           type: string
           format: date-time
           example: "2017-07-21T17:32:28Z"
-    
+
     SkipTake:
       type: object
       properties:
@@ -256,7 +256,7 @@ components:
           type: integer
         take:
           type: integer
-          
+
     Content:
       type: object
       required:
@@ -281,7 +281,7 @@ components:
           format: date-time
         toDate:
           type: string
-          format: date-time            
+          format: date-time
 
     Media:
       type: object
@@ -312,7 +312,7 @@ components:
           description: label icon url
           example: "https://app.swaggerhub.com/img/CORP_swaggerhub_logo.svg"
 
-          
+
     ProductFilter:
       type: object
       properties:
@@ -341,8 +341,8 @@ components:
         sort:
           type: string
           enum: [top, price, name]
-        
-          
+
+
   securitySchemes:
     api_key:
       type: apiKey

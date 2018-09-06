@@ -2,3 +2,5 @@
 node_modules/
 .idea/
 *.log
+raw/*.json
+./src/server/synchronization/raw/*.json
