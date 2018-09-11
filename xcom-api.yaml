@@ -37,7 +37,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Categories'
+                  $ref: '#/components/schemas/Category'
   /goods:
     get:
       tags:

@@ -34,11 +34,9 @@ export class EcomUploader {
         const res: any = await requestPromise(ecomOptions)
         await this.categories.dropCollection()
         await this.categories.createCollection()
-        for (let i = 0; i < res.categories.length; i++) {
-            res.categories[i].productCount = await this.goods.collection
-                .find({ siteCatId: res.categories[i].id })
-                .count()
-            logger.debug(res.categories[i].productCount)
+        for (const single of res.categories) {
+            single.productCount = await this.goods.collection.find({ siteCatId: single.id }).count()
+            logger.debug(single.productCount)
         }
         await this.categories.collection.insertMany(res.categories)
         logger.info('categories uploaded')
@@ -126,16 +124,16 @@ export class EcomUploader {
     }
 
     public async uploadStocks(): Promise<void> {
-        await this.stocks.dropCollection()
-        await this.stocks.createCollection()
         const stores: any[] = await this.stores.collection.find().toArray()
         for (let i = 0; i < stores.length; i++) {
             ecomOptions.uri = `${ECOM_URL}/stocks/${stores[i].id}`
             try {
+                logger.debug('request', { id: stores[i].id })
                 const res: any = await requestPromise(ecomOptions)
-                await this.stocks.collection.insertMany(res.stocks)
+                logger.debug('request completed')
+                await this.stores.collection.findOneAndUpdate({ id: stores[i].id }, { $set: { stocks: res.stocks } })
             } catch (err) {
-                logger.error(`${stores[i].id} didn't uploaded`, err.measure)
+                logger.error(`${stores[i].id} didn't uploaded`, err.message)
             }
             logger.info(`${i + 1}/${stores.length} uploaded`)
         }

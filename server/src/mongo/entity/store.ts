@@ -1,4 +1,4 @@
-export interface Stores {
+export interface Store {
     id: number
     name: string
     GUID: string

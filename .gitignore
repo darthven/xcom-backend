@@ -4,3 +4,4 @@ node_modules/
 *.log
 raw/*.json
 ./src/server/synchronization/raw/*.json
+./server/ecosystem.config.js

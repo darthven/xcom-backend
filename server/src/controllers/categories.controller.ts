@@ -4,15 +4,12 @@ import { Inject } from 'typedi'
 import { CategoryRepository } from '../mongo/repository/categories'
 
 @JsonController('/categories')
-export class AuthController {
+export class CategoriesController {
     @Inject()
     private categories!: CategoryRepository
 
     @Get()
     public async getCategories(@QueryParam('query') query?: string) {
-        return this.categories.collection
-            .find(query ? { $text: { $search: query } } : {})
-            .project({ _id: 0 })
-            .toArray()
+        return this.categories.getAll(query)
     }
 }

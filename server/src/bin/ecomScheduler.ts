@@ -36,4 +36,4 @@ async function start() {
     await shedulerStart(ecomUpdater)
 }
 
-start().catch(err => logger.error('process exit 1', err.message))
+start().catch(err => logger.error('process exit 1', { message: err.message }))

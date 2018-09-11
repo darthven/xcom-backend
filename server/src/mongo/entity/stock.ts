@@ -1,4 +1,4 @@
-export interface Stocks {
+export interface Stock {
     region: number
     storeId: number
     goodsId: number

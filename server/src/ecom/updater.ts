@@ -138,33 +138,40 @@ export class EcomUpdater {
     }
 
     public async updatePrices(): Promise<void> {
-        const regions: any[] = await this.regions.collection.find().toArray()
-        const limit = 100
-        let skip = 0
-        let query = 1
-        for (let i = 0; query; i++) {
-            const goods: any[] = await this.goods.collection
-                .find()
-                .limit(limit)
-                .skip(skip)
-                .toArray()
-            query = goods.length
-            skip = skip + limit
-            for (const good of goods) {
-                const price = []
-                for (const region of regions) {
-                    price.push(await this.goods.getMinMaxPrice(good.id, region.regionCode))
+        logger.debug(`started`)
+        await this.goods.collection.updateMany({}, { $set: { price: null } })
+        logger.debug(`finished`)
+        const prices = await this.stores.getMinMax()
+        for (const single of prices) {
+            await this.goods.collection.updateOne({ id: single.id }, { $set: { price: single.price } })
+            logger.debug(`${single.id} updated`)
+        }
+    }
+    public async updateLocations(): Promise<void> {
+        const stores = await this.stores.collection
+            .find({})
+            .project({ _id: 1, GPS: 1 })
+            .toArray()
+        for (const store of stores) {
+            if (store.GPS) {
+                let [lat, lng] = store.GPS.split(',')
+                if (!lat || !lng) {
+                    const [l1, l2] = store.GPS.split(';')
+                    lat = l1
+                    lng = l2
                 }
-                await this.goods.collection.findOneAndUpdate(
-                    { id: good.id },
+                await this.stores.collection.updateOne(
+                    { _id: store._id },
                     {
                         $set: {
-                            price: price.filter(n => n)
+                            location: {
+                                lat,
+                                lng
+                            }
                         }
                     }
                 )
             }
-            logger.debug('price updated', { skip })
         }
     }
 }

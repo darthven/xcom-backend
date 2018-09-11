@@ -1,9 +1,11 @@
-import { IsPositive } from 'class-validator'
+import { Max, Min } from 'class-validator'
 
 export class SkipTake {
-    @IsPositive()
+    @Min(0)
+    @Max(1000)
     public skip?: number
-    @IsPositive()
+    @Min(1)
+    @Max(1000)
     public take?: number
 
     constructor(query: any) {

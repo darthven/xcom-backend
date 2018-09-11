@@ -1,13 +1,13 @@
 import { Get, JsonController } from 'routing-controllers'
 
 @JsonController()
-export class AuthController {
+export class ApiController {
     @Get()
     public apiInfo() {
         return {
             status: 'available',
             info: 'xcom api',
-            version: '1.0.0',
+            version: '1.1.0',
             startAt: new Date()
         }
     }

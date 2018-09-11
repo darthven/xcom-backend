@@ -1,4 +1,4 @@
-export interface OrderStatuses {
+export interface PayType {
     id: number
     name: string
 }

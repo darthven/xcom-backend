@@ -1,9 +1,9 @@
-export interface Goods {
+export interface Good {
     id: number
     name: string
     apCode: number
     apGroup: string
-    рн: string
+    manufacturer: string
     isService: boolean
     medForm: string
     mnn: string
