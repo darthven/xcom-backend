@@ -16,6 +16,8 @@ info:
 tags:
   - name: products
   - name: content
+  - name: locations
+  - name: check
 paths:
   /categories:
     get:
@@ -38,16 +40,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Category'
+                  
   /goods:
     get:
       tags:
        - products
       summary: Get goods list
-      operationId: getCategories
+      operationId: getGoods
       parameters:
         - in: query
           name: region
           description: region code
+          required: true
           schema:
             type: integer
         - in: query
@@ -62,13 +66,64 @@ paths:
       responses:
         '200':
           description: list of goods
+          headers:
+            X-Collection-Size:
+              description: Size of filtered collection (ignoring pagination)
+              schema:
+                type: integer
+            X-Price-Density:
+              description: 2d array of price density chart 
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: integer
+              example: [[200, 5], [500, 10]]
+            X-Categories:
+              description: all categories where the filtered results can be found
+              schema:
+                type: array
+                items:
+                  type: integer
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
-
+  
+  /goods/{ids}:
+    get:
+      tags:
+       - products
+      summary: Get goods by ids
+      operationId: getGoodsByIds
+      parameters:
+        - in: path
+          name: ids
+          description: array of product ids
+          required: true
+          schema:
+            type: array
+            items:
+              type: integer
+        - in: query
+          name: region
+          description: region code
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: list of goods
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+                  
   /goods/{id}:
     get:
       tags:
@@ -84,6 +139,7 @@ paths:
         - in: query
           name: region
           description: region code
+          required: true
           schema:
             type: integer
       responses:
@@ -94,7 +150,161 @@ paths:
               schema:
                 $ref: '#/components/schemas/DetailedProduct'
 
+  /check/soft:
+    post:
+      tags:
+       - check
+      summary: request soft check for product list
+      operationId: getSoftCheck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                storeId:
+                  type: string
+                  description: location id
+                cardNumber:
+                  type: string
+                coupons:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Coupon'
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Item'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Check'
+        '477':
+          description: coupon invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponError'
+                
 
+  /check/fiscal:
+    post:
+      tags:
+       - check
+      summary: request fiscal check for product list
+      operationId: getFiscalCheck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+                - storeId
+                - clientName
+                - clientTel
+              properties:
+                clientName:
+                  type: string
+                  description: ФИО Клиента
+                clientEmail:
+                  type: string
+                clientTel:
+                  type: string
+                  description: Номер телефона клиента (7XXXXXXXXXX)
+                storeId:
+                  type: string
+                  description: location id
+                clientAddress:
+                  type: string
+                loyaltyCardType:
+                  type: string
+                payment:
+                  $ref: '#/components/schemas/PaymentDetails'
+                cardNumber:
+                  type: string
+                coupons:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Coupon'
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Item'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Check'                
+        '477':
+          description: coupon invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponError'      
+                
+  /check/paymentTypes:
+    get:
+      tags:
+       - check
+      summary: get available payment types
+      operationId: getPaymentTypes
+      parameters:
+        - in: query
+          name: items
+          description: array of product ids
+          required: true
+          schema:
+            type: array
+            items:
+              type: integer
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentType'               
+                
+  /goods/availability:
+    get:
+      tags:
+       - products
+      summary: get availability for region
+      description: returns available count of each product across all locations in selected region
+      operationId: getAvailability
+      parameters:
+        - in: query
+          name: LocationFilter
+          required: true
+          schema:
+            $ref: '#/components/schemas/LocationFilter'
+        - in: query
+          name: items
+          description: array of product ids
+          required: true
+          schema:
+            type: array
+            items:
+              type: integer
+      responses:
+        '200':
+          description: Returns array of Location with extra array field for availability
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                    $ref: '#/components/schemas/Depot'                  
   /content:
     get:
       tags:
@@ -105,49 +315,30 @@ paths:
         - in: query
           name: region
           description: region code
+          required: true
           schema:
             type: integer
         - in: query
           name: SkipTake
           schema:
-            $ref: '#/components/schemas/SkipTake'
+            $ref: '#/components/schemas/SkipTake'      
       responses:
         '200':
-          description: list of goods
+          description: list of content articles
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Content'
-
-  /content/{id}/goods:
+                  
+  /label/categories:
     get:
       tags:
-       - content
-      summary: Get goods associated with the content article
-      operationId: getGoodsForContent
-      parameters:
-        - in: path
-          name: id
-          description: content article id
-          required: true
-          schema:
-            type: integer
-        - in: query
-          name: region
-          description: region code
-          schema:
-            type: integer
-        - in: query
-          name: SkipTake
-          schema:
-            $ref: '#/components/schemas/SkipTake'
-        - in: query
-          name: ProductFilter
-          explode: true
-          schema:
-            $ref: '#/components/schemas/ProductFilter'
+       - products
+      summary: Get label categories
+      description: Each label category is associated with a set of labels. The same label can be present in more than one category
+      operationId: getLabelCategories
       responses:
         '200':
           description: list of goods
@@ -156,9 +347,30 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Product'
+                  $ref: '#/components/schemas/LabelCategory'
 
-
+  /locations:
+    get:
+      tags:
+       - locations
+      summary: Get locations
+      operationId: getLocations
+      parameters:
+        - in: query
+          name: LocationFilter
+          schema:
+            $ref: '#/components/schemas/LocationFilter'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'  
+                  
+                  
 externalDocs:
   description: Find out more about Swagger
   url: 'http://swagger.io'
@@ -189,8 +401,10 @@ components:
               productCount:
                 type: integer
                 example: 69
+              icon:
+                $ref: '#/components/schemas/Media'
           - $ref: '#/components/schemas/EcomEntity'
-
+          
     Product:
         allOf:
           - type: object
@@ -208,18 +422,23 @@ components:
               manufacturer:
                 type: string
                 example: Дивеево
-              # TODO: more product fields from ECOM
-              label:
+              # TODO: more product fields from ECOM 
+              label: 
                 $ref: '#/components/schemas/Label'
-              price:
+              priceMin:
                 type: number
                 format: double
                 example: 199.99
-              isPriceRanged:
-                type: boolean
-                description: if the price varies accross locations in current region
+                description: min price accross locations in current region
+              priceMax:
+                type: number
+                format: double
+                example: 299.99
+              categoryId:
+                type: integer
+                description: category id
           - $ref: '#/components/schemas/EcomEntity'
-
+          
     DetailedProduct:
       allOf:
         - $ref: '#/components/schemas/Product'
@@ -231,24 +450,131 @@ components:
                 $ref: '#/components/schemas/Content'
             availableCount: # OPTIONAL in first release
               type: integer
-              description: The shortest availability across the locations in the current region
+              description: The highest availability across the locations in the current region 
             related: # OPTIONAL in first release
               description: Ids of related products
               type: array
               items:
                 type: integer
 
-
-    EcomEntity:
+    Check:
       type: object
       required:
-        - lastSyncDate
+        - sum
+        - items
       properties:
-        ecomSyncDate:
+        sum:
+          type: number
+          format: double
+          description: total amount in rub
+        discount:
+          type: number
+          format: double
+          description: discount in %
+        sumDiscounted:
+          type: number
+          format: double
+          description: discounted amount in rub
+        bonus:
+          type: number
+          format: double
+          example: 35.99
+          description: reward bonus count
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckItem'
+    
+    PaymentType:
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          example: Оплата онлайн
+    
+    PaymentDetails:
+      required:
+        - payType
+      properties:
+        payGUID:
+          type: string
+          description: Идентификатор транзакции платежной системы
+        payType:
+          type: string
+    
+    Coupon:
+      oneOf:
+      - type: object
+        required: 
+          - number
+        properties:
+          number:
+            type: string
+            description: Номер купона
+      - type: object
+        required: 
+          - emissionId
+        properties:
+          emissionId:
+            type: string
+            description: Номер выпуска купона
+      - type: object
+        required: 
+          - typeId
+        properties:
+          typeId:
+            type: string
+            description: Тип купона
+            
+    Item:
+      type: object
+      required: 
+        - id
+        - count
+      properties:
+        id:
+          type: integer
+          description: product id
+        count:
+          type: integer
+          description: item count
+          
+    CheckItem:
+      allOf:
+        - $ref: '#/components/schemas/Item'
+        - type: object
+          properties:
+            price:
+              type: number
+              format: double
+              example: 199.99
+            sum:
+              type: number
+              format: double
+              example: 199.99
+            discount:
+              type: number
+              format: double
+              example: 199.99
+            sumDiscounted:
+              type: number
+              format: double
+              example: 199.99
+          
+    EcomEntity:
+      type: object
+      required: 
+        - syncDate
+      properties:
+        syncDate:
           type: string
           format: date-time
           example: "2017-07-21T17:32:28Z"
-
+    
     SkipTake:
       type: object
       properties:
@@ -256,7 +582,7 @@ components:
           type: integer
         take:
           type: integer
-
+          
     Content:
       type: object
       required:
@@ -282,7 +608,12 @@ components:
         toDate:
           type: string
           format: date-time
-
+        goods:
+          type: array
+          items: 
+            type: integer
+          description: Array of related product IDs
+        
     Media:
       type: object
       required:
@@ -295,7 +626,7 @@ components:
           type: string
         urlm:
           type: string
-        urlx:
+        urll:
           type: string
 
     Label:
@@ -307,11 +638,92 @@ components:
           type: integer
         title:
           type: string
+        value:
+          type: number
         icon:
-          type: string
-          description: label icon url
-          example: "https://app.swaggerhub.com/img/CORP_swaggerhub_logo.svg"
+          $ref: '#/components/schemas/Media'
 
+    LabelCategory:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          
+    LocationFilter:
+      type: object
+      required:
+        - region
+      properties:
+        region:
+          type: integer
+          description: region id
+        type:
+          type: string
+          
+    Location:
+      type: object
+      required:
+        - region
+        - address
+      properties:
+        region:
+          type: integer
+          description: region id
+        type:
+          type: string
+          description: Тип склада (Аптека, Оптика и т.д.)
+        address:
+          type: string
+        phone:
+          type: string
+        workTime:
+          type: string
+          description: hours of operation
+        location:
+          $ref: '#/components/schemas/GeoPoint'
+        stations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Station'
+
+    Depot:
+      allOf:
+        - $ref: '#/components/schemas/Location'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Item'
+            pickupAt:
+              type: string
+              format: date-time
+              description: Date when the order is ready for pick up
+            expiresAt:
+              type: string
+              format: date-time
+              description: Date when order expires
+            
+    GeoPoint:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng: 
+          type: number
+          format: double
+             
+    Station:
+      type: object
+      properties:
+        name:
+          type: string
 
     ProductFilter:
       type: object
@@ -320,13 +732,13 @@ components:
           type: string
           example: "Анальг"
           description: search query
-        categoryId:
+        categories:
           type: integer
-          example: 32
-          description: category id or 0 to search all
-        brand:
-          type: string
-          example: "Дивеево"
+          example: [32, 22]
+          description: category ids or null to search all
+        labelCategoryId:
+          type: integer
+          description: id of label category to search or 0
         priceMin:
           type: number
           format: double
@@ -342,6 +754,21 @@ components:
           type: string
           enum: [top, price, name]
 
+    CouponError:
+      type: object
+      properties:
+        couponErrors:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Coupon'
+              - type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    example: Купон неприменим, вернуть покупателю
 
   securitySchemes:
     api_key:
