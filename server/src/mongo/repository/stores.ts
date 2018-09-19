@@ -67,7 +67,7 @@ export class StoreRepository extends Repository {
             .toArray()
     }
 
-    public async getLocations(query: LocationsQuery) {
+    public async getAll(query: LocationsQuery) {
         return this.collection
             .aggregate([
                 { $match: query },
@@ -75,12 +75,35 @@ export class StoreRepository extends Repository {
                     $project: {
                         _id: 0,
                         id: 1,
+                        name: 1,
                         region: '$regionCode',
                         type: '$storeType',
                         address: 1,
                         phone: '$phoneNumber',
                         workTime: 1,
-                        location: 1
+                        location: 1,
+                        stations: 1
+                    }
+                }
+            ])
+            .toArray()
+    }
+    public async getSingle(id: number) {
+        return this.collection
+            .aggregate([
+                { $match: { id } },
+                {
+                    $project: {
+                        _id: 0,
+                        id: 1,
+                        name: 1,
+                        region: '$regionCode',
+                        type: '$storeType',
+                        address: 1,
+                        phone: '$phoneNumber',
+                        workTime: 1,
+                        location: 1,
+                        stations: 1
                     }
                 }
             ])
@@ -93,18 +116,42 @@ export class StoreRepository extends Repository {
                     $group: {
                         _id: { storeType: '$storeType' },
                         name: { $first: '$storeType' },
-                        count: { $sum: 1 }
                     }
                 },
                 {
                     $project: {
                         _id: 0,
-                        name: 1,
-                        count: 1
+                        name: 1
                     }
                 }
             ])
             .toArray()
         return res.filter(item => (item.name ? item : null))
+    }
+    public async getRegions() {
+        return this.collection
+            .aggregate([
+                {
+                    $project: {
+                        _id: 0,
+                        region: 1,
+                        regionCode: 1
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$regionCode',
+                        region: { $first: '$region' }
+                    }
+                },
+                {
+                    $project: {
+                        regionCode: '$_id',
+                        region: 1,
+                        _id: 0
+                    }
+                }
+            ])
+            .toArray()
     }
 }

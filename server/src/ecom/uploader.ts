@@ -1,3 +1,5 @@
+import * as appRoot from 'app-root-path'
+import * as fs from 'fs'
 import * as requestPromise from 'request-promise-native'
 import { Inject, Service } from 'typedi'
 
@@ -8,8 +10,9 @@ import { GoodRepository } from '../mongo/repository/goods'
 import { OrderStatusRepository } from '../mongo/repository/orderStatuses'
 import { PayTypeRepository } from '../mongo/repository/payTypes'
 import { RegionsRepository } from '../mongo/repository/regions'
-import { StockRepository } from '../mongo/repository/stocks'
+import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
+import { StoreTypeRepository } from '../mongo/repository/storeType'
 import { ecomOptions } from './ecomOptions'
 
 @Service()
@@ -25,11 +28,13 @@ export class EcomUploader {
     @Inject()
     private goods!: GoodRepository
     @Inject()
-    private stocks!: StockRepository
+    private stations!: StationsRepository
     @Inject()
     private regions!: RegionsRepository
+    @Inject()
+    private storeTypes!: StoreTypeRepository
 
-    public async uploadCategories(): Promise<void> {
+    public async uploadCategories() {
         ecomOptions.uri = `${ECOM_URL}/categories`
         const res: any = await requestPromise(ecomOptions)
         await this.categories.dropCollection()
@@ -42,7 +47,7 @@ export class EcomUploader {
         logger.info('categories uploaded')
     }
 
-    public async uploadStores(): Promise<void> {
+    public async uploadStores() {
         ecomOptions.uri = `${ECOM_URL}/stores`
         const res: any = await requestPromise(ecomOptions)
         await this.stores.dropCollection()
@@ -55,37 +60,25 @@ export class EcomUploader {
             }
         }
         logger.info('stores uploaded')
-        const regions = await this.stores.collection
-            .aggregate([
-                {
-                    $project: {
-                        _id: 0,
-                        region: 1,
-                        regionCode: 1
-                    }
-                },
-                {
-                    $group: {
-                        _id: '$regionCode',
-                        region: { $first: '$region' }
-                    }
-                },
-                {
-                    $project: {
-                        regionCode: '$_id',
-                        region: 1,
-                        _id: 0
-                    }
-                }
-            ])
-            .toArray()
+    }
+
+    public async uploadRegions() {
+        const regions = await this.stores.getRegions()
         await this.regions.dropCollection()
         await this.regions.createCollection()
         await this.regions.collection.insertMany(regions)
         logger.info('regions uploaded')
     }
 
-    public async uploadOrderStatuses(): Promise<void> {
+    public async uploadStoreTypes() {
+        const types = await this.stores.getLocationsType()
+        await this.storeTypes.dropCollection()
+        await this.storeTypes.createCollection()
+        await this.storeTypes.collection.insertMany(types)
+        logger.info('store types uploaded')
+    }
+
+    public async uploadOrderStatuses() {
         ecomOptions.uri = `${ECOM_URL}/order_statuses`
         const res: any = await requestPromise(ecomOptions)
         await this.orderStatuses.dropCollection()
@@ -94,7 +87,7 @@ export class EcomUploader {
         logger.info('order statuses uploaded')
     }
 
-    public async uploadPayTypes(): Promise<void> {
+    public async uploadPayTypes() {
         ecomOptions.uri = `${ECOM_URL}/pay_types`
         const res: any = await requestPromise(ecomOptions)
         await this.payTypes.dropCollection()
@@ -103,7 +96,7 @@ export class EcomUploader {
         logger.info('pay types uploaded')
     }
 
-    public async uploadGoods(): Promise<void> {
+    public async uploadGoods() {
         await this.goods.dropCollection()
         await this.goods.createCollection()
         for (let i = 1, count = 1; count; i++) {
@@ -123,19 +116,10 @@ export class EcomUploader {
         logger.info('goods uploaded')
     }
 
-    public async uploadStocks(): Promise<void> {
-        const stores: any[] = await this.stores.collection.find().toArray()
-        for (let i = 0; i < stores.length; i++) {
-            ecomOptions.uri = `${ECOM_URL}/stocks/${stores[i].id}`
-            try {
-                logger.debug('request', { id: stores[i].id })
-                const res: any = await requestPromise(ecomOptions)
-                logger.debug('request completed')
-                await this.stores.collection.findOneAndUpdate({ id: stores[i].id }, { $set: { stocks: res.stocks } })
-            } catch (err) {
-                logger.error(`${stores[i].id} didn't uploaded`, err.message)
-            }
-            logger.info(`${i + 1}/${stores.length} uploaded`)
-        }
+    public async uploadStations() {
+        await this.stations.dropCollection()
+        await this.stations.createCollection()
+        const stations = JSON.parse(fs.readFileSync(`${appRoot}/data/stations.json`, 'utf8'))
+        await this.stations.collection.insertMany(stations)
     }
 }

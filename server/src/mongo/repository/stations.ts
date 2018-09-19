@@ -2,13 +2,13 @@ import { Service } from 'typedi'
 import { Repository } from './repository'
 
 @Service()
-export class RegionsRepository extends Repository {
+export class StationsRepository extends Repository {
     constructor() {
-        super('regions')
+        super('stations')
     }
     public async createCollection() {
         await super.createCollection()
-        await this.collection.createIndex({ regionCode: 1 }, { unique: true })
+        await this.collection.createIndex({ id: 1 }, { unique: true })
     }
     public async getAll() {
         return this.collection
@@ -16,8 +16,10 @@ export class RegionsRepository extends Repository {
                 {
                     $project: {
                         _id: 0,
-                        id: '$regionCode',
-                        name: '$region'
+                        id: 1,
+                        name: 1,
+                        location: 1,
+                        city: 1
                     }
                 },
                 {
@@ -29,16 +31,15 @@ export class RegionsRepository extends Repository {
     public async getSingle(id: number) {
         return this.collection
             .aggregate([
-                { $match: { regionCode: id } },
+                { $match: { id } },
                 {
                     $project: {
                         _id: 0,
-                        id: '$regionCode',
-                        name: '$region'
+                        id: 1,
+                        name: 1,
+                        location: 1,
+                        city: 1
                     }
-                },
-                {
-                    $sort: { id: 1 }
                 }
             ])
             .toArray()

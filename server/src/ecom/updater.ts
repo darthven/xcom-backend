@@ -1,16 +1,25 @@
+import * as appRoot from 'app-root-path'
+import * as fs from 'fs'
 import * as requestPromise from 'request-promise-native'
 import { Inject, Service } from 'typedi'
 
 import { ECOM_URL } from '../config/env.config'
 import logger from '../config/logger.config'
+import { Good } from '../mongo/entity/good'
+import { Station } from '../mongo/entity/station'
+import { Store } from '../mongo/entity/store'
 import { CategoryRepository } from '../mongo/repository/categories'
 import { GoodRepository } from '../mongo/repository/goods'
 import { OrderStatusRepository } from '../mongo/repository/orderStatuses'
 import { PayTypeRepository } from '../mongo/repository/payTypes'
 import { RegionsRepository } from '../mongo/repository/regions'
-import { StockRepository } from '../mongo/repository/stocks'
+import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
+import { getStationsInRadius } from '../utils/distanceByCoord'
+import { uploadImage } from '../utils/ftpUploader'
 import { ecomOptions } from './ecomOptions'
+import {StoreTypeRepository} from '../mongo/repository/storeType'
+import {storeTypesIconsMap} from '../utils/storeTypesIcons'
 
 @Service()
 export class EcomUpdater {
@@ -25,11 +34,13 @@ export class EcomUpdater {
     @Inject()
     private goods!: GoodRepository
     @Inject()
-    private stocks!: StockRepository
+    private stations!: StationsRepository
     @Inject()
     private regions!: RegionsRepository
+    @Inject()
+    private storeTypes!: StoreTypeRepository
 
-    public async updateCategories(): Promise<void> {
+    public async updateCategories() {
         ecomOptions.uri = `${ECOM_URL}/categories`
         const res: any = await requestPromise(ecomOptions)
         for (const item of res.categories) {
@@ -39,7 +50,7 @@ export class EcomUpdater {
         logger.info('categories updated')
     }
 
-    public async updateStores(): Promise<void> {
+    public async updateStores() {
         ecomOptions.uri = `${ECOM_URL}/stores`
         const res: any = await requestPromise(ecomOptions)
         for (const item of res.stores) {
@@ -80,7 +91,7 @@ export class EcomUpdater {
         logger.info('regions updated')
     }
 
-    public async updateOrderStatuses(): Promise<void> {
+    public async updateOrderStatuses() {
         ecomOptions.uri = `${ECOM_URL}/order_statuses`
         const res: any = await requestPromise(ecomOptions)
         for (const item of res.orderStatuses) {
@@ -89,7 +100,7 @@ export class EcomUpdater {
         logger.info('order statuses uploaded')
     }
 
-    public async updatePayTypes(): Promise<void> {
+    public async updatePayTypes() {
         ecomOptions.uri = `${ECOM_URL}/pay_types`
         const res: any = await requestPromise(ecomOptions)
         for (const item of res.payTypes) {
@@ -98,7 +109,7 @@ export class EcomUpdater {
         logger.info('pay types updated')
     }
 
-    public async updateGoods(): Promise<void> {
+    public async updateGoods() {
         for (let i = 1, count = 1; count; i++) {
             ecomOptions.uri = `${ECOM_URL}/goods?page=${i}`
             try {
@@ -117,19 +128,14 @@ export class EcomUpdater {
         logger.info('goods updated')
     }
 
-    public async updateStocks(): Promise<void> {
+    public async updateStocks() {
         const stores: any[] = await this.stores.collection.find().toArray()
         for (let i = 0; i < stores.length; i++) {
             ecomOptions.uri = `${ECOM_URL}/stocks/${stores[i].id}`
             try {
+                logger.debug('request stock', { id: stores[i].id })
                 const res: any = await requestPromise(ecomOptions)
-                for (const item of res.stocks) {
-                    await this.stocks.collection.findOneAndUpdate(
-                        { goodsId: item.goodsId, storeId: item.storeId },
-                        { $set: item },
-                        { upsert: true }
-                    )
-                }
+                await this.stores.collection.findOneAndUpdate({ id: stores[i].id }, { $set: { stocks: res.stocks } })
             } catch (err) {
                 logger.error(`${stores[i].id} didn't updated`, err.message)
             }
@@ -137,7 +143,7 @@ export class EcomUpdater {
         }
     }
 
-    public async updatePrices(): Promise<void> {
+    public async updatePrices() {
         logger.debug(`started`)
         await this.goods.collection.updateMany({}, { $set: { price: null } })
         logger.debug(`finished`)
@@ -147,7 +153,7 @@ export class EcomUpdater {
             logger.debug(`${single.id} updated`)
         }
     }
-    public async updateLocations(): Promise<void> {
+    public async updateLocations() {
         const stores = await this.stores.collection
             .find({})
             .project({ _id: 1, GPS: 1 })
@@ -165,10 +171,58 @@ export class EcomUpdater {
                     {
                         $set: {
                             location: {
-                                lat,
-                                lng
+                                lat: parseFloat(lat),
+                                lng: parseFloat(lng)
                             }
                         }
+                    }
+                )
+            }
+        }
+    }
+
+    public async updateStoreTypes() {
+        const types = await this.stores.getLocationsType()
+        for (const item of types) {
+            item.img = storeTypesIconsMap.get(item.name)
+            await this.storeTypes.collection.updateOne({ name: item.name }, { $set: item }, { upsert: true })
+        }
+        logger.info('store types updated')
+    }
+    public async updateStations() {
+        const stations = JSON.parse(fs.readFileSync(`${appRoot}/data/stations.json`, 'utf8'))
+        for (const item of stations) {
+            await this.stations.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
+        }
+    }
+
+    // public async updatetest() {
+    //     const goods: Good[] = await this.goods.collection.find().toArray()
+    //     const ftpPath = goods[0].imgLinkFTP
+    //     const file = await uploadImage(ftpPath)
+    //     console.log(file)
+    // }
+
+    public async updateStationsNear() {
+        const stores: Store[] = await this.stores.collection
+            .find({})
+            .project({ _id: 0, id: 1, location: 1 })
+            .toArray()
+        const stations: Station[] = await this.stations.collection
+            .find({})
+            .project({ _id: 0, location: 1, name: 1, id: 1 })
+            .toArray()
+        for (const store of stores) {
+            if (!store.location) {
+                continue
+            }
+            // GET ALL STATION IN SOME RADIUS
+            const stationsNear = getStationsInRadius(stations, store, 3)
+            if (stationsNear.length) {
+                await this.stores.collection.updateOne(
+                    { id: store.id },
+                    {
+                        $set: { stations: stationsNear }
                     }
                 )
             }

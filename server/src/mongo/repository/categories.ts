@@ -22,4 +22,10 @@ export class CategoryRepository extends Repository {
             .project({ _id: 0 })
             .toArray()
     }
+    public async getSingle(id: number) {
+        return this.collection
+            .find({ id })
+            .project({ _id: 0 })
+            .toArray()
+    }
 }

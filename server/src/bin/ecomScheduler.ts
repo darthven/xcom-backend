@@ -19,6 +19,7 @@ async function shedulerStart(ecomUpdater: EcomUpdater) {
     schedule.scheduleJob('0 0 * * *', () => {
         ecomUpdater.updateCategories()
         ecomUpdater.updateStores()
+        ecomUpdater.updateLocations()
         ecomUpdater.updateGoods()
     })
 
@@ -36,4 +37,4 @@ async function start() {
     await shedulerStart(ecomUpdater)
 }
 
-start().catch(err => logger.error('process exit 1', { message: err.message }))
+start().catch(err => logger.error('process exit 1', { err: err.message }))

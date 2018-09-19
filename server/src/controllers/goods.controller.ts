@@ -9,7 +9,6 @@ import { GoodsHint } from '../mongo/queries/GoodsHint'
 import { GoodsQuery } from '../mongo/queries/GoodsQuery'
 import { GoodsStrictQuery } from '../mongo/queries/GoodsStrictQuery'
 import { GoodRepository } from '../mongo/repository/goods'
-import { StockRepository } from '../mongo/repository/stocks'
 import { Ids } from '../parameters/ids'
 import { ProductFilter } from '../parameters/productFilter'
 import { Region } from '../parameters/region'
@@ -19,8 +18,6 @@ import { SkipTake } from '../parameters/skipTake'
 export class GoodsController {
     @Inject()
     private goods!: GoodRepository
-    @Inject()
-    private stocks!: StockRepository
 
     @Get()
     @UseBefore(SkipTakeInjectMiddleware)
@@ -47,14 +44,6 @@ export class GoodsController {
             data: await this.goods.getAll(match, skipTake, region)
         }
     }
-
-    @Get('/by/ids')
-    @UseBefore(IdsInjectMiddleware)
-    @UseBefore(RegionInjectMiddleware)
-    public async getGoodsByIds(@State('ids') ids: Ids, @State('region') region: Region) {
-        return this.goods.getByIds(ids.value, region)
-    }
-
     @Get('/:id')
     @UseBefore(RegionInjectMiddleware)
     public async getSingle(@Param('id') id: number, @State('region') region: Region) {
@@ -63,5 +52,11 @@ export class GoodsController {
             throw new NotFoundError('good not found')
         }
         return res[0]
+    }
+    @Get('/by/ids')
+    @UseBefore(IdsInjectMiddleware)
+    @UseBefore(RegionInjectMiddleware)
+    public async getGoodsByIds(@State('ids') ids: Ids, @State('region') region: Region) {
+        return this.goods.getByIds(ids.value, region)
     }
 }

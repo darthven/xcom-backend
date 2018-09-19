@@ -11,18 +11,15 @@ async function start() {
     await Mongo.connect(mongodbOptions)
     logger.debug('mongodb connected', mongodbOptions)
     const ecomUpdater = Container.get(EcomUpdater)
-    // await ecomUpdater.updatePayTypes()
-    // await ecomUpdater.updateOrderStatuses()
-    // await ecomUpdater.updateStores()
-    // await ecomUpdater.updateGoods()
-    // await ecomUpdater.updateCategories()
-    // await ecomUpdater.updateStocks()
     // await ecomUpdater.updatePrices()
     // await ecomUpdater.updateLocations()
+    // await ecomUpdater.updateStationsNear()
+    await ecomUpdater.updateStoreTypes()
+    // await ecomUpdater.updatetest()
     await Mongo.close()
 }
 
 start().catch(err => {
-    logger.error(err.message)
+    logger.error('process exit 1', { err: err.message })
     Mongo.close()
 })
