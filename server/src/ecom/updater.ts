@@ -189,19 +189,20 @@ export class EcomUpdater {
         }
         logger.info('store types updated')
     }
+
     public async updateStations() {
-        const stations = JSON.parse(fs.readFileSync(`${appRoot}/data/stations.json`, 'utf8'))
+        const stations: Station[] = JSON.parse(fs.readFileSync(`${appRoot}/data/stations.json`, 'utf8'))
         for (const item of stations) {
-            await this.stations.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
+            await this.stations.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
     }
 
-    // public async updatetest() {
-    //     const goods: Good[] = await this.goods.collection.find().toArray()
-    //     const ftpPath = goods[0].imgLinkFTP
-    //     const file = await uploadImage(ftpPath)
-    //     console.log(file)
-    // }
+    public async updatetest() {
+        const goods: Good[] = await this.goods.collection.find().toArray()
+        const ftpPath = goods[0].imgLinkFTP
+        const file = await uploadImage(ftpPath)
+        console.log(file)
+    }
 
     public async updateStationsNear() {
         const stores: Store[] = await this.stores.collection
