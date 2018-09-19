@@ -1,11 +1,10 @@
 openapi: 3.0.0
 # Added by API Auto Mocking Plugin
 servers:
-# Added by API Auto Mocking Plugin
-- description: SwaggerHub API Auto Mocking
-  url: https://virtserver.swaggerhub.com/appshop/xcom/1.0.0
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/bolein/xcom/1.0.0
 info:
-  description: "E-Com generic wrapper"
+  description: "E-Com generic wrapper TODO: coupons, locations "
   version: "1.0.0"
   title: X-Com API
   termsOfService: 'http://swagger.io/terms/'
@@ -15,27 +14,23 @@ info:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
 tags:
-- name: categories
-- name: products
-- name: stores
-- name: regions
-- name: stations
-externalDocs:
-  description: Find out more about Swagger
-  url: 'http://swagger.io'
+  - name: products
+  - name: content
+  - name: locations
+  - name: check
 paths:
-  '/api/categories':
+  /categories:
     get:
       tags:
-      - categories
+        - products
       summary: Gets categories
       operationId: getCategories
       parameters:
-      - in: query
-        name: query
-        description: search query
-        schema:
-          type: string
+        - in: query
+          name: query
+          description: search query
+          schema:
+            type: string
       responses:
         '200':
           description: list of categories
@@ -45,145 +40,108 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Category'
-        '400':
-          description: request validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BadRequestError'
-  '/api/categories/{id}':
+                  
+  /goods:
     get:
       tags:
-      - categories
-      summary: Get category by id
-      operationId: getCategoryById
-      parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      responses:
-        '200':
-          description: category
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Category'
-        '404':
-          description: category not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundError'
-
-  '/api/goods':
-    get:
-      tags:
-      - products
+       - products
       summary: Get goods list
       operationId: getGoods
       parameters:
-      - in: query
-        name: region
-        description: region code
-        required: true
-        schema:
-          type: integer
-      - in: query
-        explode: true
-        name: SkipTake
-        schema:
-          $ref: '#/components/schemas/SkipTake'
-      - in: query
-        name: ProductFilter
-        explode: true
-        schema:
-          $ref: '#/components/schemas/ProductFilter'
-      responses:
-        '200':
-          description: list of goods in data field, with additional information. length - size of filtered collection, categories - all categories where the filtered results can be found, density - array of price density chart.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  length:
-                    type: integer
-                    example: 1243
-                  categories:
-                    type: array
-                    items:
-                      type: integer
-                      example: [12, 22, 56, 34]
-                  density:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/DensityPoint'
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Product'
-        '400':
-          description: request validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BadRequestError'
-  '/api/goods/by/ids':
-    get:
-      tags:
-      - products
-      summary: Get goods by ids
-      operationId: getGoodsByIds
-      parameters:
-      - in: query
-        name: ids
-        description: array of product ids
-        required: true
-        schema:
-          type: array
-          items:
+        - in: query
+          name: region
+          description: region code
+          required: true
+          schema:
             type: integer
-      - in: query
-        name: region
-        description: region code
-        required: true
-        schema:
-          type: integer
+        - in: query
+          name: SkipTake
+          schema:
+            $ref: '#/components/schemas/SkipTake'
+        - in: query
+          name: ProductFilter
+          explode: true
+          schema:
+            $ref: '#/components/schemas/ProductFilter'
       responses:
         '200':
-          description: list of goods filtered by ids
+          description: list of goods
+          headers:
+            X-Collection-Size:
+              description: Size of filtered collection (ignoring pagination)
+              schema:
+                type: integer
+            X-Price-Density:
+              description: 2d array of price density chart 
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: integer
+              example: [[200, 5], [500, 10]]
+            X-Categories:
+              description: all categories where the filtered results can be found
+              schema:
+                type: array
+                items:
+                  type: integer
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
-        '400':
-          description: region is missed
+  
+  /goods/{ids}:
+    get:
+      tags:
+       - products
+      summary: Get goods by ids
+      operationId: getGoodsByIds
+      parameters:
+        - in: path
+          name: ids
+          description: array of product ids
+          required: true
+          schema:
+            type: array
+            items:
+              type: integer
+        - in: query
+          name: region
+          description: region code
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: list of goods
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequestError'
-  '/api/goods/{id}':
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+                  
+  /goods/{id}:
     get:
       tags:
-      - products
+       - products
       summary: Get detailed product
       operationId: getProduct
       parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
-      - in: query
-        name: region
-        description: region code
-        required: true
-        schema:
-          type: integer
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: region
+          description: region code
+          required: true
+          schema:
+            type: integer
       responses:
         '200':
           description: success
@@ -191,248 +149,527 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DetailedProduct'
-        '400':
-          description: region is missed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BadRequestError'
-        '404':
-          description: good not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundError'
 
-  '/api/stores':
-    get:
+  /check/soft:
+    post:
       tags:
-      - stores
-      summary: Get stores
-      operationId: getStores
-      parameters:
-      - in: query
-        name: StoreFilter
-        schema:
-          $ref: '#/components/schemas/StoreFilter'
-      responses:
-        '200':
-          description: array of stores
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Store'
-        '400':
-          description: region is probably missing
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BadRequestError'
-  '/api/stores/{id}':
-    get:
-      tags:
-      - stores
-      summary: Get store by id
-      operationId: getStoreById
-      parameters:
-      - in: path
-        name: id
+       - check
+      summary: request soft check for product list
+      operationId: getSoftCheck
+      requestBody:
         required: true
-        schema:
-          type: integer
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                storeId:
+                  type: string
+                  description: location id
+                cardNumber:
+                  type: string
+                coupons:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Coupon'
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Item'
       responses:
         '200':
           description: success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Store'
+                $ref: '#/components/schemas/Check'
+        '477':
+          description: coupon invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CouponError'
+                
 
-        '404':
-          description: store not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundError'
-  '/api/stores/get/types':
-    get:
+  /check/fiscal:
+    post:
       tags:
-      - stores
-      summary: Get store types
-      operationId: getStoreGetTypes
-      responses:
-        '200':
-          description: return array of all store types with name and count of stores presented in that type
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                      example: 'Аптека'
-                    count:
-                      type: integer
-                      example: 1437
-
-  '/api/regions':
-    get:
-      tags:
-      - regions
-      summary: Get regions
-      operationId: getRegions
-      responses:
-        '200':
-          description: array of regions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Region'
-  '/api/regions/{id}':
-    get:
-      tags:
-      - regions
-      summary: Get region by id
-      operationId: getRegionsById
-      parameters:
-      - in: path
-        name: id
+       - check
+      summary: request fiscal check for product list
+      operationId: getFiscalCheck
+      requestBody:
         required: true
-        schema:
-          type: integer
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+                - storeId
+                - clientName
+                - clientTel
+              properties:
+                clientName:
+                  type: string
+                  description: ФИО Клиента
+                clientEmail:
+                  type: string
+                clientTel:
+                  type: string
+                  description: Номер телефона клиента (7XXXXXXXXXX)
+                storeId:
+                  type: string
+                  description: location id
+                clientAddress:
+                  type: string
+                loyaltyCardType:
+                  type: string
+                payment:
+                  $ref: '#/components/schemas/PaymentDetails'
+                cardNumber:
+                  type: string
+                coupons:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Coupon'
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Item'
       responses:
         '200':
-          description: region with id and name
+          description: success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Region'
-
-        '404':
-          description: region not found
+                $ref: '#/components/schemas/Check'                
+        '477':
+          description: coupon invalid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundError'
-
-  '/api/stations':
+                $ref: '#/components/schemas/CouponError'      
+                
+  /check/paymentTypes:
     get:
       tags:
-      - stations
-      summary: Get stations
-      operationId: getStations
+       - check
+      summary: get available payment types
+      operationId: getPaymentTypes
+      parameters:
+        - in: query
+          name: items
+          description: array of product ids
+          required: true
+          schema:
+            type: array
+            items:
+              type: integer
       responses:
         '200':
-          description: array of all metro stations
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentType'               
+                
+  /goods/availability:
+    get:
+      tags:
+       - products
+      summary: get availability for region
+      description: returns available count of each product across all locations in selected region
+      operationId: getAvailability
+      parameters:
+        - in: query
+          name: LocationFilter
+          required: true
+          schema:
+            $ref: '#/components/schemas/LocationFilter'
+        - in: query
+          name: items
+          description: array of product ids
+          required: true
+          schema:
+            type: array
+            items:
+              type: integer
+      responses:
+        '200':
+          description: Returns array of Location with extra array field for availability
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Station'
-  '/api/stations/{id}':
+                    $ref: '#/components/schemas/Depot'                  
+  /content:
     get:
       tags:
-      - stations
-      summary: Get stations
-      operationId: getStationById
+       - content
+      summary: Get content articles
+      operationId: getContent
       parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: integer
+        - in: query
+          name: region
+          description: region code
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: SkipTake
+          schema:
+            $ref: '#/components/schemas/SkipTake'      
       responses:
         '200':
-          description: station with id, name, location and city information
+          description: list of content articles
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Station'
-
-        '404':
-          description: region not found
+                type: array
+                items:
+                  $ref: '#/components/schemas/Content'
+                  
+  /label/categories:
+    get:
+      tags:
+       - products
+      summary: Get label categories
+      description: Each label category is associated with a set of labels. The same label can be present in more than one category
+      operationId: getLabelCategories
+      responses:
+        '200':
+          description: list of goods
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NotFoundError'
+                type: array
+                items:
+                  $ref: '#/components/schemas/LabelCategory'
 
-
+  /locations:
+    get:
+      tags:
+       - locations
+      summary: Get locations
+      operationId: getLocations
+      parameters:
+        - in: query
+          name: LocationFilter
+          schema:
+            $ref: '#/components/schemas/LocationFilter'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'  
+                  
+                  
+externalDocs:
+  description: Find out more about Swagger
+  url: 'http://swagger.io'
 components:
   schemas:
     Category:
-      type: object
-      required:
-      - id
-      - name
-      - level
-      - parentId
-      - productCount
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-          example: Лекарства и БАД
-        level:
-          type: integer
-          example: 0
-          description: Level of the catagory in hierarchy
-        parentId:
-          type: integer
-          example: 0
-          description: Parent id or 0
-        productCount:
-          type: integer
-          example: 69
+        allOf:
+          - type: object
+            required:
+              - id
+              - name
+              - productCount
+            properties:
+              id:
+                type: integer
+                format: int64
+              name:
+                type: string
+                example: Лекарства и БАД
+              level:
+                type: integer
+                example: 0
+                description: Level of the catagory in hierarchy
+              parentId:
+                type: integer
+                example: 0
+                description: Parent id or 0
+              productCount:
+                type: integer
+                example: 69
+              icon:
+                $ref: '#/components/schemas/Media'
+          - $ref: '#/components/schemas/EcomEntity'
+          
     Product:
-      type: object
-      required:
-      - id
-      - name
-      - manufacturer
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-          example: Лекарства и БАД
-        manufacturer:
-          type: string
-          example: Дивеево
-        priceMin:
-          type: number
-          format: double
-          example: 199.99
-          description: min price accross locations in current region
-        priceMax:
-          type: number
-          format: double
-          example: 299.99
-        categoryId:
-          type: integer
-          description: category id
+        allOf:
+          - type: object
+            required:
+              - id
+              - name
+              - manufacturer
+            properties:
+              id:
+                type: integer
+                format: int64
+              name:
+                type: string
+                example: Лекарства и БАД
+              manufacturer:
+                type: string
+                example: Дивеево
+              # TODO: more product fields from ECOM 
+              label: 
+                $ref: '#/components/schemas/Label'
+              priceMin:
+                type: number
+                format: double
+                example: 199.99
+                description: min price accross locations in current region
+              priceMax:
+                type: number
+                format: double
+                example: 299.99
+              categoryId:
+                type: integer
+                description: category id
+          - $ref: '#/components/schemas/EcomEntity'
+          
     DetailedProduct:
       allOf:
-      - $ref: '#/components/schemas/Product'
-      - type: object
-        properties:
-          availableCount: # OPTIONAL in first release
-            type: integer
-            description: The highest availability across the locations in the current region
-    Store:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          properties:
+            relatedContent: # OPTIONAL in first release
+              type: array
+              items:
+                $ref: '#/components/schemas/Content'
+            availableCount: # OPTIONAL in first release
+              type: integer
+              description: The highest availability across the locations in the current region 
+            related: # OPTIONAL in first release
+              description: Ids of related products
+              type: array
+              items:
+                type: integer
+
+    Check:
       type: object
       required:
-      - region
-      - address
+        - sum
+        - items
+      properties:
+        sum:
+          type: number
+          format: double
+          description: total amount in rub
+        discount:
+          type: number
+          format: double
+          description: discount in %
+        sumDiscounted:
+          type: number
+          format: double
+          description: discounted amount in rub
+        bonus:
+          type: number
+          format: double
+          example: 35.99
+          description: reward bonus count
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckItem'
+    
+    PaymentType:
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          example: Оплата онлайн
+    
+    PaymentDetails:
+      required:
+        - payType
+      properties:
+        payGUID:
+          type: string
+          description: Идентификатор транзакции платежной системы
+        payType:
+          type: string
+    
+    Coupon:
+      oneOf:
+      - type: object
+        required: 
+          - number
+        properties:
+          number:
+            type: string
+            description: Номер купона
+      - type: object
+        required: 
+          - emissionId
+        properties:
+          emissionId:
+            type: string
+            description: Номер выпуска купона
+      - type: object
+        required: 
+          - typeId
+        properties:
+          typeId:
+            type: string
+            description: Тип купона
+            
+    Item:
+      type: object
+      required: 
+        - id
+        - count
+      properties:
+        id:
+          type: integer
+          description: product id
+        count:
+          type: integer
+          description: item count
+          
+    CheckItem:
+      allOf:
+        - $ref: '#/components/schemas/Item'
+        - type: object
+          properties:
+            price:
+              type: number
+              format: double
+              example: 199.99
+            sum:
+              type: number
+              format: double
+              example: 199.99
+            discount:
+              type: number
+              format: double
+              example: 199.99
+            sumDiscounted:
+              type: number
+              format: double
+              example: 199.99
+          
+    EcomEntity:
+      type: object
+      required: 
+        - syncDate
+      properties:
+        syncDate:
+          type: string
+          format: date-time
+          example: "2017-07-21T17:32:28Z"
+    
+    SkipTake:
+      type: object
+      properties:
+        skip:
+          type: integer
+        take:
+          type: integer
+          
+    Content:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          example: "Крем для тела лифтинг апельсин-имбирь 200мл"
+        media:
+          $ref: '#/components/schemas/Media'
+        # extra fields
+        productCount:
+          type: integer
+          description: Number of associated goods
+        description:
+          type: string
+          example: "При покупке термальной воды Глоу Лаб, 2-я вода в подарок! Акция действует в аптеках сети ОЗЕРКИ"
+        fromDate:
+          type: string
+          format: date-time
+        toDate:
+          type: string
+          format: date-time
+        goods:
+          type: array
+          items: 
+            type: integer
+          description: Array of related product IDs
+        
+    Media:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [image, video]
+        urls:
+          type: string
+        urlm:
+          type: string
+        urll:
+          type: string
+
+    Label:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        value:
+          type: number
+        icon:
+          $ref: '#/components/schemas/Media'
+
+    LabelCategory:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          
+    LocationFilter:
+      type: object
+      required:
+        - region
+      properties:
+        region:
+          type: integer
+          description: region id
+        type:
+          type: string
+          
+    Location:
+      type: object
+      required:
+        - region
+        - address
       properties:
         region:
           type: integer
@@ -452,70 +689,41 @@ components:
         stations:
           type: array
           items:
-            $ref: '#/components/schemas/StoreStation'
-    StoreStation:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 261
-        name:
-          type: string
-          example: 'Купчино'
-        location:
-          $ref: '#/components/schemas/GeoPoint'
-        distance:
-          type: number
-          format: double
-          example: 2.7135164951248125
-    Station:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 261
-        name:
-          type: string
-          example: 'Купчино'
-        location:
-          $ref: '#/components/schemas/GeoPoint'
-        city:
-          type: string
-          example: 'Москва'
-    Region:
-      type: object
-      required:
-      - id
-      - name
-      properties:
-        id:
-          type: integer
-          example: 77
-        name:
-          type: string
-          example: Москва
+            $ref: '#/components/schemas/Station'
 
-
+    Depot:
+      allOf:
+        - $ref: '#/components/schemas/Location'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Item'
+            pickupAt:
+              type: string
+              format: date-time
+              description: Date when the order is ready for pick up
+            expiresAt:
+              type: string
+              format: date-time
+              description: Date when order expires
+            
     GeoPoint:
       type: object
       properties:
         lat:
           type: number
           format: double
-          example: 59.82971529999999
-        lng:
+        lng: 
           type: number
           format: double
-          example: 30.3754302
-    DensityPoint:
+             
+    Station:
       type: object
       properties:
-        value:
-          type: number
-          example: 100
-        count:
-          type: number
-          example: 76
+        name:
+          type: string
 
     ProductFilter:
       type: object
@@ -545,47 +753,25 @@ components:
         sort:
           type: string
           enum: [top, price, name]
-    StoreFilter:
-      type: object
-      required:
-      - region
-      properties:
-        region:
-          type: integer
-          description: region id
-        type:
-          type: string
-    SkipTake:
-      type: object
-      properties:
-        skip:
-          type: integer
-        take:
-          type: integer
 
-    NotFoundError:
+    CouponError:
       type: object
       properties:
-        name:
-          type: string
-          example: 'NotFoundError'
-        message:
-          type: string
-          example: 'smth not found'
-    BadRequestError:
-      type: object
-      properties:
-        name:
-          type: string
-          example: 'BadRequestError'
-        message:
-          type: string
-          example: "Invalid state, check 'errors' property for more info."
-        errors:
+        couponErrors:
           type: array
           items:
-            type: object
-            properties: {}
-        paramName:
-          type: string
-          example: 'locationFilter'
+            allOf:
+              - $ref: '#/components/schemas/Coupon'
+              - type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    example: Купон неприменим, вернуть покупателю
+
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
