@@ -1,6 +1,6 @@
 import { Service } from 'typedi'
 
-import { IMAGE_M_SUBFOLDER, IMAGE_S_SUBFOLDER, IMAGE_STORE_TYPE_FOLDER, IMAGE_URL } from '../../config/env.config'
+import { IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, IMAGE_S_SUBFOLDER, IMAGE_URL } from '../../config/env.config'
 import { Region } from '../../parameters/region'
 import { SkipTake } from '../../parameters/skipTake'
 import { GoodsHint } from '../queries/GoodsHint'
@@ -61,9 +61,9 @@ export class GoodRepository extends Repository {
                         priceMin: '$price.priceMin',
                         priceMax: '$price.priceMax',
                         icon: {
-                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$img'] },
-                            urls: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
-                            urlm: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
+                            url: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, '$img'] },
+                            urls: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
+                            urlm: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
                         }
                     }
                 }
@@ -101,9 +101,9 @@ export class GoodRepository extends Repository {
                         priceMin: '$price.priceMin',
                         priceMax: '$price.priceMax',
                         icon: {
-                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$img'] },
-                            urls: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
-                            urlm: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
+                            url: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, '$img'] },
+                            urls: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
+                            urlm: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
                         }
                     }
                 }
@@ -138,9 +138,9 @@ export class GoodRepository extends Repository {
                         priceMax: '$price.priceMax',
                         availableCount: '$price.available',
                         icon: {
-                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$img'] },
-                            urls: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
-                            urlm: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
+                            url: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, '$img'] },
+                            urls: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
+                            urlm: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
                         }
                     }
                 }
