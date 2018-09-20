@@ -181,6 +181,25 @@ export class EcomUpdater {
         }
     }
 
+    public async updateStations() {
+        const stations: Station[] = JSON.parse(fs.readFileSync(`${appRoot}/data/stations.json`, 'utf8'))
+        for (const item of stations) {
+            await this.stations.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
+        }
+    }
+
+    public async updateRegionsPoly() {
+        const regions = JSON.parse(fs.readFileSync(`${appRoot}/data/regions.json`, 'utf8'))
+        for (const item of regions) {
+            try {
+                await this.regions.collection.updateOne({ regionCode: item.id }, { $set: { polygon: item.polygon } })
+            } catch (e) {
+                logger.error(`err poly, id: ${item.id}, err: ${e.message}`)
+            }
+        }
+        logger.info('regions poly updated')
+    }
+
     public async updateStoreTypes() {
         const types = await this.stores.getLocationsType()
         for (const item of types) {
@@ -188,13 +207,6 @@ export class EcomUpdater {
             await this.storeTypes.collection.updateOne({ name: item.name }, { $set: item }, { upsert: true })
         }
         logger.info('store types updated')
-    }
-
-    public async updateStations() {
-        const stations: Station[] = JSON.parse(fs.readFileSync(`${appRoot}/data/stations.json`, 'utf8'))
-        for (const item of stations) {
-            await this.stations.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
-        }
     }
 
     public async updateImages() {

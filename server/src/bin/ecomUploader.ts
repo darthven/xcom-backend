@@ -15,10 +15,10 @@ async function start() {
     // await ecomUploader.uploadOrderStatuses()
     // await ecomUploader.uploadStores()
     // await ecomUploader.uploadRegions()
-    await ecomUploader.uploadStoreTypes()
+    // await ecomUploader.uploadStoreTypes()
     // await ecomUploader.uploadGoods()
     // await ecomUploader.uploadCategories()
-    // await ecomUploader.uploadStations()
+    await ecomUploader.uploadStations()
     await Mongo.close()
 }
 

@@ -19,7 +19,8 @@ export class StationsRepository extends Repository {
                         id: 1,
                         name: 1,
                         location: 1,
-                        city: 1
+                        city: 1,
+                        line: 1
                     }
                 },
                 {
@@ -38,7 +39,8 @@ export class StationsRepository extends Repository {
                         id: 1,
                         name: 1,
                         location: 1,
-                        city: 1
+                        city: 1,
+                        line: 1
                     }
                 }
             ])

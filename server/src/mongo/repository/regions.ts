@@ -9,6 +9,7 @@ export class RegionsRepository extends Repository {
     public async createCollection() {
         await super.createCollection()
         await this.collection.createIndex({ regionCode: 1 }, { unique: true })
+        await this.collection.createIndex({ polygon: '2dsphere' })
     }
     public async getAll() {
         return this.collection
@@ -39,6 +40,36 @@ export class RegionsRepository extends Repository {
                 },
                 {
                     $sort: { id: 1 }
+                }
+            ])
+            .toArray()
+    }
+    public async getRegionByLatLng(lat: number, lng: number): Promise<any[]> {
+        return this.collection
+            .aggregate([
+                {
+                    $match: {
+                        polygon: {
+                            $geoIntersects: {
+                                $geometry: {
+                                    type: 'Point',
+                                    coordinates: [lng, lat]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        id: '$regionCode',
+                        name: '$region',
+                        _id: 0
+                    }
+                },
+                {
+                    $project: {
+                        polygon: 0
+                    }
                 }
             ])
             .toArray()
