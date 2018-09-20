@@ -1,5 +1,6 @@
 import { Service } from 'typedi'
 
+import { IMAGE_M_SUBFOLDER, IMAGE_S_SUBFOLDER, IMAGE_STORE_TYPE_FOLDER, IMAGE_URL } from '../../config/env.config'
 import { Region } from '../../parameters/region'
 import { SkipTake } from '../../parameters/skipTake'
 import { GoodsHint } from '../queries/GoodsHint'
@@ -40,7 +41,8 @@ export class GoodRepository extends Repository {
                         name: 1,
                         manufacturer: 1,
                         siteCatId: 1,
-                        price: 1
+                        price: 1,
+                        img: 1
                     }
                 },
                 {
@@ -57,7 +59,12 @@ export class GoodRepository extends Repository {
                         manufacturer: 1,
                         categoryId: '$siteCatId',
                         priceMin: '$price.priceMin',
-                        priceMax: '$price.priceMax'
+                        priceMax: '$price.priceMax',
+                        icon: {
+                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$img'] },
+                            urls: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
+                            urlm: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
+                        }
                     }
                 }
             ])
@@ -74,7 +81,8 @@ export class GoodRepository extends Repository {
                         name: 1,
                         manufacturer: 1,
                         siteCatId: 1,
-                        price: 1
+                        price: 1,
+                        img: 1
                     }
                 },
                 {
@@ -91,7 +99,12 @@ export class GoodRepository extends Repository {
                         manufacturer: 1,
                         categoryId: '$siteCatId',
                         priceMin: '$price.priceMin',
-                        priceMax: '$price.priceMax'
+                        priceMax: '$price.priceMax',
+                        icon: {
+                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$img'] },
+                            urls: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
+                            urlm: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
+                        }
                     }
                 }
             ])
@@ -108,7 +121,8 @@ export class GoodRepository extends Repository {
                         name: 1,
                         manufacturer: 1,
                         siteCatId: 1,
-                        price: 1
+                        price: 1,
+                        img: 1
                     }
                 },
                 { $unwind: '$price' },
@@ -122,7 +136,12 @@ export class GoodRepository extends Repository {
                         categoryId: '$siteCatId',
                         priceMin: '$price.priceMin',
                         priceMax: '$price.priceMax',
-                        availableCount: '$price.available'
+                        availableCount: '$price.available',
+                        icon: {
+                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$img'] },
+                            urls: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
+                            urlm: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
+                        }
                     }
                 }
             ])

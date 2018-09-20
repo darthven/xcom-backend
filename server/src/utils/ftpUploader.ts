@@ -13,7 +13,7 @@ import {
 import logger from '../config/logger.config'
 
 export async function uploadImage(imgLinkFTP: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
         const client = new FtpClient()
         client.on('ready', () => {
             const ftp = path.join(path.basename(path.dirname(imgLinkFTP)), path.basename(imgLinkFTP))
@@ -25,11 +25,11 @@ export async function uploadImage(imgLinkFTP: string) {
                     reject(err)
                 } else {
                     stream.once('close', () => {
+                        resolve(destination)
                         logger.debug(`${imgLinkFTP} was uploaded.`)
                         client.end()
                     })
                     stream.pipe(fs.createWriteStream(destination))
-                    resolve(destination)
                 }
             })
         })

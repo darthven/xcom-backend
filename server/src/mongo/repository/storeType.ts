@@ -10,7 +10,7 @@ export class StoreTypeRepository extends Repository {
     public async createCollection() {
         await super.createCollection()
     }
-    public async getAll() {
+    public async getAll(region?: number) {
         return this.collection
             .aggregate([
                 {
@@ -22,6 +22,7 @@ export class StoreTypeRepository extends Repository {
                     }
                 },
                 { $unwind: '$stores' },
+                { $match: { 'stores.regionCode': region } },
                 {
                     $group: {
                         _id: '$name',

@@ -9,6 +9,7 @@
         "ecom:update": "ts-node src/bin/ecomUpdater.ts",
         "test": "NODE_ENV=test mocha -r ts-node/register test/**/**/*.spec.ts --exit",
         "build": "tsc -p .",
+        "mongo:fix": "cp ./data/@types/mongodb/index.d.ts ./node_modules/@types/mongodb/",
         "lint": "tslint -p .",
         "lint:fix": "tslint --fix -p .",
         "lint:check": "tslint-config-prettier-check ./tslint.json"

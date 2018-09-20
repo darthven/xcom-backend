@@ -1,4 +1,5 @@
 import { Service } from 'typedi'
+import { IMAGE_STORE_TYPE_FOLDER, IMAGE_URL } from '../../config/env.config'
 import { LocationsQuery } from '../queries/LocationsQuery'
 import { Repository } from './repository'
 
@@ -77,12 +78,39 @@ export class StoreRepository extends Repository {
                         id: 1,
                         name: 1,
                         region: '$regionCode',
-                        type: '$storeType',
+                        storeType: 1,
                         address: 1,
                         phone: '$phoneNumber',
                         workTime: 1,
                         location: 1,
                         stations: 1
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'storeTypes',
+                        localField: 'storeType',
+                        foreignField: 'name',
+                        as: 'type'
+                    }
+                },
+                { $unwind: '$type' },
+                {
+                    $project: {
+                        id: 1,
+                        name: 1,
+                        region: 1,
+                        address: 1,
+                        phone: 1,
+                        workTime: 1,
+                        location: 1,
+                        stations: 1,
+                        'type.name': 1,
+                        'type.icon': {
+                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$type.img'] },
+                            urls: null,
+                            urlm: null
+                        }
                     }
                 }
             ])
@@ -98,12 +126,39 @@ export class StoreRepository extends Repository {
                         id: 1,
                         name: 1,
                         region: '$regionCode',
-                        type: '$storeType',
+                        storeType: 1,
                         address: 1,
                         phone: '$phoneNumber',
                         workTime: 1,
                         location: 1,
                         stations: 1
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'storeTypes',
+                        localField: 'storeType',
+                        foreignField: 'name',
+                        as: 'type'
+                    }
+                },
+                { $unwind: '$type' },
+                {
+                    $project: {
+                        id: 1,
+                        name: 1,
+                        region: 1,
+                        address: 1,
+                        phone: 1,
+                        workTime: 1,
+                        location: 1,
+                        stations: 1,
+                        'type.name': 1,
+                        'type.icon': {
+                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$type.img'] },
+                            urls: null,
+                            urlm: null
+                        }
                     }
                 }
             ])
@@ -115,7 +170,7 @@ export class StoreRepository extends Repository {
                 {
                     $group: {
                         _id: { storeType: '$storeType' },
-                        name: { $first: '$storeType' },
+                        name: { $first: '$storeType' }
                     }
                 },
                 {

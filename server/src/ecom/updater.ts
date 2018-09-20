@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as requestPromise from 'request-promise-native'
 import { Inject, Service } from 'typedi'
 
-import { ECOM_URL } from '../config/env.config'
+import { ECOM_URL, IMAGE_DEFAULT_TYPE } from '../config/env.config'
 import logger from '../config/logger.config'
 import { Good } from '../mongo/entity/good'
 import { Station } from '../mongo/entity/station'
@@ -15,11 +15,11 @@ import { PayTypeRepository } from '../mongo/repository/payTypes'
 import { RegionsRepository } from '../mongo/repository/regions'
 import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
+import { StoreTypeRepository } from '../mongo/repository/storeType'
 import { getStationsInRadius } from '../utils/distanceByCoord'
-import { uploadImage } from '../utils/ftpUploader'
+import { invalidGoodImages } from '../utils/invalidGoodImages'
+import { storeTypesIconsMap } from '../utils/storeTypesIcons'
 import { ecomOptions } from './ecomOptions'
-import {StoreTypeRepository} from '../mongo/repository/storeType'
-import {storeTypesIconsMap} from '../utils/storeTypesIcons'
 
 @Service()
 export class EcomUpdater {
@@ -117,7 +117,7 @@ export class EcomUpdater {
                 count = res.goodsCount
                 if (count) {
                     for (const item of res.goods) {
-                        await this.goods.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
+                        await this.goods.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
                     }
                 }
                 logger.info(`goods page ${i} updated`)
@@ -197,11 +197,16 @@ export class EcomUpdater {
         }
     }
 
-    public async updatetest() {
+    public async updateImages() {
         const goods: Good[] = await this.goods.collection.find().toArray()
-        const ftpPath = goods[0].imgLinkFTP
-        const file = await uploadImage(ftpPath)
-        console.log(file)
+        for (const good of goods) {
+            if (good.imgLinkFTP && !invalidGoodImages.includes(good.id)) {
+                await this.goods.collection.updateOne(
+                    { id: good.id },
+                    { $set: { img: `${good.id}${IMAGE_DEFAULT_TYPE}` } }
+                )
+            }
+        }
     }
 
     public async updateStationsNear() {

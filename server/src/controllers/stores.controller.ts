@@ -25,8 +25,4 @@ export class StoresController {
         }
         return res[0]
     }
-    @Get('/get/types')
-    public async getLocationsTypes() {
-        return this.stores.getLocationsType()
-    }
 }

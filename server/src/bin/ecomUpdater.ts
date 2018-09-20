@@ -15,7 +15,7 @@ async function start() {
     // await ecomUpdater.updateLocations()
     // await ecomUpdater.updateStationsNear()
     await ecomUpdater.updateStoreTypes()
-    // await ecomUpdater.updatetest()
+    await ecomUpdater.updateImages()
     await Mongo.close()
 }
 

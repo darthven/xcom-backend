@@ -1,4 +1,4 @@
-import { Get, JsonController } from 'routing-controllers'
+import { Get, JsonController, QueryParam } from 'routing-controllers'
 import { Inject } from 'typedi'
 
 import { StoreTypeRepository } from '../mongo/repository/storeType'
@@ -9,7 +9,7 @@ export class StoresController {
     private storeTypes!: StoreTypeRepository
 
     @Get()
-    public async getStoreTypes() {
-        return this.storeTypes.getAll()
+    public async getStoreTypes(@QueryParam('region') region: number) {
+        return this.storeTypes.getAll(region)
     }
 }
