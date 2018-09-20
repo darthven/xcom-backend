@@ -228,7 +228,7 @@ export class EcomUpdater {
             .toArray()
         const stations: Station[] = await this.stations.collection
             .find({})
-            .project({ _id: 0, location: 1, name: 1, id: 1 })
+            .project({ _id: 0, location: 1, name: 1, id: 1, line: 1, city: 1 })
             .toArray()
         for (const store of stores) {
             if (!store.location) {

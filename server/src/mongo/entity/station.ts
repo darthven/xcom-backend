@@ -5,4 +5,5 @@ export interface Station {
     name: string
     location: Location
     city: string
+    line: { name: string; color: string }
 }

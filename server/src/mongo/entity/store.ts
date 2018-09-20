@@ -5,13 +5,17 @@ export class StoreStation {
     public id: number
     public name: string
     public location: Location
+    public city: string
     public distance: number
+    public line: { name: string; color: string }
 
     constructor(station: Station, distance: number) {
         this.id = station.id
         this.name = station.name
         this.location = station.location
         this.distance = distance
+        this.city = station.city
+        this.line = station.line
     }
 }
 
