@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as requestPromise from 'request-promise-native'
 import { Inject, Service } from 'typedi'
 
-import { ECOM_URL, IMAGE_DEFAULT_TYPE } from '../config/env.config'
+import { ECOM_URL } from '../config/env.config'
 import logger from '../config/logger.config'
 import { Good } from '../mongo/entity/good'
 import { Station } from '../mongo/entity/station'
@@ -18,11 +18,11 @@ import { StoreRepository } from '../mongo/repository/stores'
 import { StoreTypeRepository } from '../mongo/repository/storeType'
 import { getStationsInRadius } from '../utils/distanceByCoord'
 import { goodImageExist } from '../utils/fileExist'
+import { uploadImage } from '../utils/ftpUploader'
+import { saveGoodImage } from '../utils/imageSaver'
 import { invalidGoodImages } from '../utils/invalidGoodImages'
 import { storeTypesIconsMap } from '../utils/storeTypesIcons'
 import { ecomOptions } from './ecomOptions'
-import {uploadImage} from '../utils/ftpUploader'
-import {saveGoodImage} from '../utils/imageSaver'
 
 @Service()
 export class EcomUpdater {
@@ -143,10 +143,8 @@ export class EcomUpdater {
     }
 
     public async updatePrices() {
-        logger.debug(`started`)
-        await this.goods.collection.updateMany({}, { $set: { price: null } })
-        logger.debug(`finished`)
         const prices = await this.stores.getMinMax()
+        await this.goods.collection.updateMany({}, { $set: { price: null } })
         for (const single of prices) {
             await this.goods.collection.updateOne({ id: single.id }, { $set: { price: single.price } })
             logger.debug(`${single.id} updated`)
@@ -250,6 +248,7 @@ export class EcomUpdater {
             // update price
         }
         if (item.imgLinkFTP && !goodImageExist(item.id)) {
+            // upload image from ftp
             const tmpFile = await uploadImage(item.imgLinkFTP)
             try {
                 await saveGoodImage(tmpFile, item.id)
