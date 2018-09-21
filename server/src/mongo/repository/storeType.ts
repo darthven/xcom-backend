@@ -9,30 +9,14 @@ export class StoreTypeRepository extends Repository {
     }
     public async createCollection() {
         await super.createCollection()
+        await this.collection.createIndex({ name: 1 })
     }
-    public async getAll(region?: number) {
+    public async getAll() {
         return this.collection
             .aggregate([
                 {
-                    $lookup: {
-                        from: 'stores',
-                        localField: 'name',
-                        foreignField: 'storeType',
-                        as: 'stores'
-                    }
-                },
-                { $unwind: '$stores' },
-                { $match: { 'stores.regionCode': region } },
-                {
-                    $group: {
-                        _id: '$name',
-                        count: { $sum: 1 },
-                        img: { $first: '$img' }
-                    }
-                },
-                {
                     $project: {
-                        name: '$_id',
+                        name: 1,
                         count: 1,
                         icon: {
                             url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$img'] },
@@ -40,6 +24,31 @@ export class StoreTypeRepository extends Repository {
                             urlm: null
                         },
                         _id: 0
+                    }
+                }
+            ])
+            .toArray()
+    }
+    public async getAllByRegion(region: number) {
+        return this.collection
+            .aggregate([
+                {
+                    $project: {
+                        _id: 0,
+                        count: 0
+                    }
+                },
+                { $unwind: '$regions' },
+                { $match: { 'regions.region': region } },
+                {
+                    $project: {
+                        name: 1,
+                        count: '$regions.count',
+                        icon: {
+                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$img'] },
+                            urls: null,
+                            urlm: null
+                        }
                     }
                 }
             ])

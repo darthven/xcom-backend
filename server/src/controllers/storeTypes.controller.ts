@@ -10,6 +10,9 @@ export class StoresController {
 
     @Get()
     public async getStoreTypes(@QueryParam('region') region: number) {
-        return this.storeTypes.getAll(region)
+        if (region) {
+            return this.storeTypes.getAllByRegion(region)
+        }
+        return this.storeTypes.getAll()
     }
 }

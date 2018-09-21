@@ -1,6 +1,12 @@
 import { Service } from 'typedi'
 
-import { IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, IMAGE_S_SUBFOLDER, IMAGE_URL } from '../../config/env.config'
+import {
+    IMAGE_DEFAULT_TYPE,
+    IMAGE_GOOD_FOLDER,
+    IMAGE_M_SUBFOLDER,
+    IMAGE_S_SUBFOLDER,
+    IMAGE_URL
+} from '../../config/env.config'
 import { Region } from '../../parameters/region'
 import { SkipTake } from '../../parameters/skipTake'
 import { GoodsHint } from '../queries/GoodsHint'
@@ -28,6 +34,11 @@ export class GoodRepository extends Repository {
             { name: 'priceMinMaxReg' }
         )
     }
+
+    public async updateImageLink(id: number) {
+        return this.collection.updateOne({ id }, { $set: { img: `${id}${IMAGE_DEFAULT_TYPE}` } })
+    }
+
     public async getAll(match: GoodsQuery, skipTake: SkipTake, region: Region) {
         return this.collection
             .aggregate([

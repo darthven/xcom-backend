@@ -13,10 +13,11 @@ async function start() {
     const ecomUpdater = Container.get(EcomUpdater)
     // await ecomUpdater.updatePrices()
     // await ecomUpdater.updateLocations()
-    await ecomUpdater.updateStationsNear()
-    // await ecomUpdater.updateStoreTypes()
+    // await ecomUpdater.updateStationsNear()
+    await ecomUpdater.updateStoreTypes()
     // await ecomUpdater.updateImages()
     // await ecomUpdater.updateRegionsPoly()
+    // await ecomUpdater.updateGoods()
     await Mongo.close()
 }
 

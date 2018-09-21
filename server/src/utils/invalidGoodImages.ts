@@ -1,3 +1,4 @@
+/* image with imgFtpLink field exist but the image is broken or not presented */
 export const invalidGoodImages = [
     106545,
     60046,

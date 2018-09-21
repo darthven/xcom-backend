@@ -17,9 +17,12 @@ import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
 import { StoreTypeRepository } from '../mongo/repository/storeType'
 import { getStationsInRadius } from '../utils/distanceByCoord'
+import { goodImageExist } from '../utils/fileExist'
 import { invalidGoodImages } from '../utils/invalidGoodImages'
 import { storeTypesIconsMap } from '../utils/storeTypesIcons'
 import { ecomOptions } from './ecomOptions'
+import {uploadImage} from '../utils/ftpUploader'
+import {saveGoodImage} from '../utils/imageSaver'
 
 @Service()
 export class EcomUpdater {
@@ -45,7 +48,7 @@ export class EcomUpdater {
         const res: any = await requestPromise(ecomOptions)
         for (const item of res.categories) {
             item.productCount = await this.goods.collection.find({ siteCatId: item.id }).count()
-            await this.categories.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
+            await this.categories.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
         logger.info('categories updated')
     }
@@ -54,7 +57,7 @@ export class EcomUpdater {
         ecomOptions.uri = `${ECOM_URL}/stores`
         const res: any = await requestPromise(ecomOptions)
         for (const item of res.stores) {
-            await this.stores.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
+            await this.stores.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
         logger.info('stores updated')
         const regions = await this.stores.collection
@@ -82,11 +85,7 @@ export class EcomUpdater {
             ])
             .toArray()
         for (const item of regions) {
-            await this.regions.collection.findOneAndUpdate(
-                { regionCode: item.regionCode },
-                { $set: item },
-                { upsert: true }
-            )
+            await this.regions.collection.updateOne({ regionCode: item.regionCode }, { $set: item }, { upsert: true })
         }
         logger.info('regions updated')
     }
@@ -95,7 +94,7 @@ export class EcomUpdater {
         ecomOptions.uri = `${ECOM_URL}/order_statuses`
         const res: any = await requestPromise(ecomOptions)
         for (const item of res.orderStatuses) {
-            await this.orderStatuses.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
+            await this.orderStatuses.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
         logger.info('order statuses uploaded')
     }
@@ -104,7 +103,7 @@ export class EcomUpdater {
         ecomOptions.uri = `${ECOM_URL}/pay_types`
         const res: any = await requestPromise(ecomOptions)
         for (const item of res.payTypes) {
-            await this.payTypes.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
+            await this.payTypes.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
         logger.info('pay types updated')
     }
@@ -117,7 +116,7 @@ export class EcomUpdater {
                 count = res.goodsCount
                 if (count) {
                     for (const item of res.goods) {
-                        await this.goods.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
+                        await this.updateSingleGood(item)
                     }
                 }
                 logger.info(`goods page ${i} updated`)
@@ -135,7 +134,7 @@ export class EcomUpdater {
             try {
                 logger.debug('request stock', { id: stores[i].id })
                 const res: any = await requestPromise(ecomOptions)
-                await this.stores.collection.findOneAndUpdate({ id: stores[i].id }, { $set: { stocks: res.stocks } })
+                await this.stores.collection.updateOne({ id: stores[i].id }, { $set: { stocks: res.stocks } })
             } catch (err) {
                 logger.error(`${stores[i].id} didn't updated`, err.message)
             }
@@ -213,10 +212,7 @@ export class EcomUpdater {
         const goods: Good[] = await this.goods.collection.find().toArray()
         for (const good of goods) {
             if (good.imgLinkFTP && !invalidGoodImages.includes(good.id)) {
-                await this.goods.collection.updateOne(
-                    { id: good.id },
-                    { $set: { img: `${good.id}${IMAGE_DEFAULT_TYPE}` } }
-                )
+                await this.goods.updateImageLink(good.id)
             }
         }
     }
@@ -244,6 +240,24 @@ export class EcomUpdater {
                     }
                 )
             }
+        }
+    }
+
+    private async updateSingleGood(item: Good) {
+        const updated = await this.goods.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
+        if (!updated.value) {
+            // if new item added
+            // update price
+        }
+        if (item.imgLinkFTP && !goodImageExist(item.id)) {
+            const tmpFile = await uploadImage(item.imgLinkFTP)
+            try {
+                await saveGoodImage(tmpFile, item.id)
+                await this.goods.updateImageLink(item.id)
+            } catch (e) {
+                logger.error('err while updating image', e.message)
+            }
+            logger.info(`image for good saved ${item.id}`)
         }
     }
 }

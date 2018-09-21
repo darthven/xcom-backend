@@ -11,6 +11,9 @@ export class StoreRepository extends Repository {
     public async createCollection() {
         await super.createCollection()
         await this.collection.createIndex({ id: 1 }, { unique: true })
+        await this.collection.createIndex({ storeType: 1 })
+        await this.collection.createIndex({ region: 1 })
+        await this.collection.createIndex({ regionCode: 1 })
     }
 
     public async getMinMax() {
@@ -169,14 +172,25 @@ export class StoreRepository extends Repository {
             .aggregate([
                 {
                     $group: {
-                        _id: { storeType: '$storeType' },
-                        name: { $first: '$storeType' }
+                        _id: { storeType: '$storeType', region: '$regionCode' },
+                        name: { $first: '$storeType' },
+                        region: { $first: '$regionCode' },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { name: '$name' },
+                        name: { $first: '$name' },
+                        count: { $sum: '$count' },
+                        regions: {
+                            $push: { region: '$region', count: '$count' }
+                        }
                     }
                 },
                 {
                     $project: {
-                        _id: 0,
-                        name: 1
+                        _id: 0
                     }
                 }
             ])
@@ -210,3 +224,9 @@ export class StoreRepository extends Repository {
             .toArray()
     }
 }
+
+
+/*
+
+debug: indexes {"0":{"v":2,"key":{"_id":1},"name":"_id_","ns":"xcom-prod.stores"},"1":{"v":2,"unique":true,"key":{"id":1},"name":"id_1","ns":"xcom-prod.stores"},"2":{"v":2,"key":{"storeType":1},"name":"storeType_1","ns":"xcom-prod.stores"},"3":{"v":2,"key":{"region":1},"name":"region_1","ns":"xcom-prod.stores"},"4":{"v":2,"key":{"regionCode":1},"name":"regionCode_1","ns":"xcom-prod.stores"}
+*/

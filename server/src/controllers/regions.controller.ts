@@ -1,4 +1,4 @@
-import {BadRequestError, Get, JsonController, NotFoundError, Param, QueryParam} from 'routing-controllers'
+import { BadRequestError, Get, JsonController, NotFoundError, Param } from 'routing-controllers'
 import { Inject } from 'typedi'
 
 import { RegionsRepository } from '../mongo/repository/regions'

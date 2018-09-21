@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { IMAGE_FOLDER, IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, IMAGE_S_SUBFOLDER } from '../config/env.config'
+import { IMAGE_FOLDER, IMAGE_GOOD_FOLDER } from '../config/env.config'
 
 function fileExists(filename: string): boolean {
     try {
