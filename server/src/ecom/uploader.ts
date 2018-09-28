@@ -14,6 +14,7 @@ import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
 import { StoreTypeRepository } from '../mongo/repository/storeType'
 import { ecomOptions } from './ecomOptions'
+import {categoryImageExist} from '../utils/fileExist'
 
 @Service()
 export class EcomUploader {
@@ -40,6 +41,10 @@ export class EcomUploader {
         await this.categories.dropCollection()
         await this.categories.createCollection()
         for (const single of res.categories) {
+            const imgName = categoryImageExist(single.id)
+            if (imgName) {
+                single.img = imgName
+            }
             single.productCount = await this.goods.collection.find({ siteCatId: single.id }).count()
             logger.debug(single.productCount)
         }

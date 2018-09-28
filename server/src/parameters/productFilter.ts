@@ -14,11 +14,13 @@ export class ProductFilter {
     public priceMax?: number
     @IsEnum({ asc: 'asc', desc: 'desc' })
     public order?: string
-    @IsEnum({ asc: 'asc', desc: 'desc' })
+    @IsEnum({ top: 'top', price: 'price', name: 'name' })
     public sort?: string
 
     constructor(query: any) {
-        this.query = query.query
+        if (query.query) {
+            this.query = query.query
+        }
         this.order = query.order
         this.sort = query.sort
         if (query.categories) {

@@ -18,7 +18,7 @@ async function start() {
     // await ecomUploader.uploadStoreTypes()
     // await ecomUploader.uploadGoods()
     // await ecomUploader.uploadCategories()
-    await ecomUploader.uploadStations()
+    // await ecomUploader.uploadStations()
     await Mongo.close()
 }
 

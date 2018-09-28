@@ -5,6 +5,7 @@ import { Inject, Service } from 'typedi'
 
 import { ECOM_URL } from '../config/env.config'
 import logger from '../config/logger.config'
+import { Category } from '../mongo/entity/category'
 import { Good } from '../mongo/entity/good'
 import { Station } from '../mongo/entity/station'
 import { Store } from '../mongo/entity/store'
@@ -17,7 +18,7 @@ import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
 import { StoreTypeRepository } from '../mongo/repository/storeType'
 import { getStationsInRadius } from '../utils/distanceByCoord'
-import { goodImageExist } from '../utils/fileExist'
+import { categoryImageExist, goodImageExist } from '../utils/fileExist'
 import { uploadImage } from '../utils/ftpUploader'
 import { saveGoodImage } from '../utils/imageSaver'
 import { invalidGoodImages } from '../utils/invalidGoodImages'
@@ -46,8 +47,17 @@ export class EcomUpdater {
     public async updateCategories() {
         ecomOptions.uri = `${ECOM_URL}/categories`
         const res: any = await requestPromise(ecomOptions)
+        // SET IMAGE FOR CATEGORIES AND FIND PRODUCTS COUNT
         for (const item of res.categories) {
+            const imgName = categoryImageExist(item.id)
+            if (imgName) {
+                item.img = imgName
+            }
             item.productCount = await this.goods.collection.find({ siteCatId: item.id }).count()
+        }
+        // COUNT A TREE SUM USING PRODUCTS COUNT
+        for (const item of res.categories) {
+            item.treeSumCount = this.recursiveCategoryCount(res.categories, item.id)
             await this.categories.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
         logger.info('categories updated')
@@ -150,7 +160,7 @@ export class EcomUpdater {
             logger.debug(`${single.id} updated`)
         }
     }
-    public async updateLocations() {
+    public async updateStoreLocations() {
         const stores = await this.stores.collection
             .find({})
             .project({ _id: 1, GPS: 1 })
@@ -176,6 +186,7 @@ export class EcomUpdater {
                 )
             }
         }
+        logger.info('store locations updated')
     }
 
     public async updateStations() {
@@ -215,7 +226,7 @@ export class EcomUpdater {
         }
     }
 
-    public async updateStationsNear() {
+    public async updateStationsNearStore() {
         const stores: Store[] = await this.stores.collection
             .find({})
             .project({ _id: 0, id: 1, location: 1 })
@@ -239,6 +250,17 @@ export class EcomUpdater {
                 )
             }
         }
+        logger.info('stations near stores updated updated')
+    }
+
+    private recursiveCategoryCount(categories: Category[], parentId: number): number {
+        let sum = 0
+        for (const item of categories) {
+            if (item.parentId === parentId) {
+                sum += item.productCount + this.recursiveCategoryCount(categories, item.id)
+            }
+        }
+        return sum
     }
 
     private async updateSingleGood(item: Good) {

@@ -16,6 +16,32 @@ import { Repository } from './repository'
 
 @Service()
 export class GoodRepository extends Repository {
+    private firstProject = {
+        _id: 0,
+        id: 1,
+        name: 1,
+        manufacturer: 1,
+        siteCatId: 1,
+        country: 1,
+        mnn: 1,
+        price: 1,
+        img: 1
+    }
+    private secondProject = {
+        id: 1,
+        name: 1,
+        manufacturer: 1,
+        country: 1,
+        activeSubstance: '$mnn',
+        categoryId: '$siteCatId',
+        priceMin: '$price.priceMin',
+        priceMax: '$price.priceMax',
+        icon: {
+            url: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, '$img'] },
+            urls: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
+            urlm: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
+        }
+    }
     constructor() {
         super('goods')
     }
@@ -45,39 +71,10 @@ export class GoodRepository extends Repository {
                 { $match: match },
                 { $skip: skipTake.skip || 0 },
                 { $limit: skipTake.take || 10 },
-                {
-                    $project: {
-                        _id: 0,
-                        id: 1,
-                        name: 1,
-                        manufacturer: 1,
-                        siteCatId: 1,
-                        price: 1,
-                        img: 1
-                    }
-                },
-                {
-                    $unwind: {
-                        path: '$price',
-                        preserveNullAndEmptyArrays: true
-                    }
-                },
+                { $project: this.firstProject },
+                { $unwind: { path: '$price', preserveNullAndEmptyArrays: true } },
                 { $match: { $or: [{ price: null }, { 'price.region': region.region }] } },
-                {
-                    $project: {
-                        id: 1,
-                        name: 1,
-                        manufacturer: 1,
-                        categoryId: '$siteCatId',
-                        priceMin: '$price.priceMin',
-                        priceMax: '$price.priceMax',
-                        icon: {
-                            url: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, '$img'] },
-                            urls: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
-                            urlm: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
-                        }
-                    }
-                }
+                { $project: this.secondProject }
             ])
             .toArray()
     }
@@ -85,17 +82,7 @@ export class GoodRepository extends Repository {
         return this.collection
             .aggregate([
                 { $match: { id: { $in: ids } } },
-                {
-                    $project: {
-                        _id: 0,
-                        id: 1,
-                        name: 1,
-                        manufacturer: 1,
-                        siteCatId: 1,
-                        price: 1,
-                        img: 1
-                    }
-                },
+                { $project: this.firstProject },
                 {
                     $unwind: {
                         path: '$price',
@@ -103,21 +90,7 @@ export class GoodRepository extends Repository {
                     }
                 },
                 { $match: { $or: [{ price: null }, { 'price.region': region.region }] } },
-                {
-                    $project: {
-                        id: 1,
-                        name: 1,
-                        manufacturer: 1,
-                        categoryId: '$siteCatId',
-                        priceMin: '$price.priceMin',
-                        priceMax: '$price.priceMax',
-                        icon: {
-                            url: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, '$img'] },
-                            urls: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
-                            urlm: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
-                        }
-                    }
-                }
+                { $project: this.secondProject }
             ])
             .toArray()
     }
@@ -125,17 +98,7 @@ export class GoodRepository extends Repository {
         return this.collection
             .aggregate([
                 { $match: { id } },
-                {
-                    $project: {
-                        _id: 0,
-                        id: 1,
-                        name: 1,
-                        manufacturer: 1,
-                        siteCatId: 1,
-                        price: 1,
-                        img: 1
-                    }
-                },
+                { $project: this.firstProject },
                 { $unwind: '$price' },
                 { $match: { 'price.region': region.region } },
                 {
@@ -144,6 +107,7 @@ export class GoodRepository extends Repository {
                         _id: 0,
                         name: 1,
                         manufacturer: 1,
+                        country: 1,
                         categoryId: '$siteCatId',
                         priceMin: '$price.priceMin',
                         priceMax: '$price.priceMax',

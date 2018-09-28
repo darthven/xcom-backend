@@ -12,6 +12,7 @@ export const FTP_CLIENT_PASSWORD = process.env.FTP_CLIENT_PASSWORD || '9035-5110
 export const IMAGE_TMP_FOLDER = process.env.IMAGE_TMP_FOLDER || '/tmp'
 export const IMAGE_URL = process.env.IMAGE_URL || 'http://138.68.86.83/static/images/'
 export const IMAGE_DEFAULT_TYPE = process.env.IMAGE_DEFAULT_TYPE || '.jpeg'
+export const IMAGE_CATEGORY_TYPE = process.env.IMAGE_DEFAULT_TYPE || '.png'
 export const IMAGE_S_SUBFOLDER = process.env.IMAGE_S_SUBFOLDER || 's/'
 export const IMAGE_M_SUBFOLDER = process.env.IMAGE_M_SUBFOLDER || 'm/'
 export const IMAGE_FOLDER = process.env.IMAGE_FOLDER || 'images/' // '/var/www/xcom/static/images/' - production
