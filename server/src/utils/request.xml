@@ -1,0 +1,43 @@
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+   <soap:Body>
+      <ProcessRequest xmlns="http://loyalty.manzanagroup.ru/loyalty.xsd">
+         <request>
+            <ChequeRequest ChequeType="Soft">
+               <RequestID>1001</RequestID>
+               <DateTime>2019-01-18T01:43:56+03:00</DateTime>
+               <Organization>0001</Organization>
+               <BusinessUnit>001</BusinessUnit>
+               <POS>001</POS>
+               <Card>
+                  <CardNumber>9419410000516</CardNumber>
+               </Card>
+               <Number>Anse-1</Number>
+               <OperationType>Sale</OperationType>
+               <Summ>10000</Summ>
+               <Discount>0</Discount>
+               <SummDiscounted>10000</SummDiscounted>
+               <PaidByBonus>0</PaidByBonus>          
+               <Item>
+                  <PositionNumber>1</PositionNumber>
+                  <Article>AE</Article>
+                  <Price>20</Price>
+                  <Quantity>200</Quantity>
+                  <Summ>4000</Summ>
+                  <Discount>0</Discount>
+                  <SummDiscounted>4000</SummDiscounted>                 
+               </Item>
+               <Item>
+                  <PositionNumber>2</PositionNumber>
+                  <Article>SHIO</Article>
+                  <Price>30</Price>
+                  <Quantity>200</Quantity>
+                  <Summ>6000</Summ>
+                  <Discount>0</Discount>
+                  <SummDiscounted>6000</SummDiscounted>
+               </Item>
+            </ChequeRequest>
+         </request>
+         <orgName>Ozerki</orgName>
+      </ProcessRequest>
+   </soap:Body>
+</soap:Envelope>

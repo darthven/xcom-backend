@@ -1,5 +1,7 @@
 export const NODE_ENV = process.env.NODE_ENV || 'development'
 export const PORT = process.env.PORT || '1340'
+export const MANZANA_CASH_URL =
+    process.env.MANZANA_CASH_URL || 'http://mbsdevcrm15sp1.manzanagroup.ru:10001/POSProcessing.asmx'
 export const ECOM_URL = process.env.ECOM_URL || 'http://ws.erkapharm.com:8990/ecom/hs/'
 export const ECOM_USER = process.env.ECOM_USER || 'IdEast'
 export const ECOM_PASS = process.env.ECOM_PASS || 'KZMY5N'

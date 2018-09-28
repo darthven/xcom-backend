@@ -13,7 +13,7 @@ export class LoggingMiddleware implements KoaMiddlewareInterface {
         })
         await next()
         logger.info(`RES ${i} ${context.method} ${context.url}`, {
-            statusCode: context.response.status,
+            statusCode: context.response.status
         })
         i++
     }
