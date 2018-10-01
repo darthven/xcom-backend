@@ -1,7 +1,7 @@
 interface ChequeRequest {
     type: 'Soft' | 'Fiscal'
     cardNumber: string
-    operationType: string
+    operationType: 'Sale'
     summ: number
     paidByBonus?: number
     items: [

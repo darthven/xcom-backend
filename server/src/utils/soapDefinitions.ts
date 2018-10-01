@@ -43,7 +43,7 @@ interface ChequeRequestModel {
                         Discount: ElementValue
                         SummDiscounted: ElementValue
                         PaidByBonus: ElementValue
-                        Items: {
+                        Items?: {
                             Item: Item[]
                         }
                     }
@@ -99,7 +99,7 @@ interface ChequeResponseModel {
                         ActiveChargedStatusBonus: ElementValue
                         AvailablePayment: ElementValue
                         WriteoffBonus: ElementValue
-                        Item: {
+                        Items?: {
                             Item: Item[]
                         }
                     }
@@ -163,56 +163,6 @@ const CHEQUE_REQUEST: ChequeRequestModel = {
                         },
                         PaidByBonus: {
                             _text: '0'
-                        },
-                        Items: {
-                            Item: [
-                                {
-                                    PositionNumber: {
-                                        _text: '1'
-                                    },
-                                    Article: {
-                                        _text: 'AE'
-                                    },
-                                    Price: {
-                                        _text: '20'
-                                    },
-                                    Quantity: {
-                                        _text: '200'
-                                    },
-                                    Summ: {
-                                        _text: '4000'
-                                    },
-                                    Discount: {
-                                        _text: '0'
-                                    },
-                                    SummDiscounted: {
-                                        _text: '4000'
-                                    }
-                                },
-                                {
-                                    PositionNumber: {
-                                        _text: '2'
-                                    },
-                                    Article: {
-                                        _text: 'SHIO'
-                                    },
-                                    Price: {
-                                        _text: '30'
-                                    },
-                                    Quantity: {
-                                        _text: '200'
-                                    },
-                                    Summ: {
-                                        _text: '6000'
-                                    },
-                                    Discount: {
-                                        _text: '0'
-                                    },
-                                    SummDiscounted: {
-                                        _text: '6000'
-                                    }
-                                }
-                            ]
                         }
                     }
                 },
@@ -224,4 +174,4 @@ const CHEQUE_REQUEST: ChequeRequestModel = {
     }
 }
 
-export { ChequeRequestModel, ChequeResponseModel, CHEQUE_REQUEST }
+export { Item, ChequeRequestModel, ChequeResponseModel, CHEQUE_REQUEST }

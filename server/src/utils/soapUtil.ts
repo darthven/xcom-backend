@@ -5,7 +5,7 @@ import * as converter from 'xml-js'
 import { ChequeRequest } from '../common'
 import { MANZANA_CASH_URL } from '../config/env.config'
 import logger from '../config/logger.config'
-import { CHEQUE_REQUEST, ChequeRequestModel, ChequeResponseModel } from './soapDefinitions'
+import { CHEQUE_REQUEST, ChequeRequestModel, ChequeResponseModel, Item } from './soapDefinitions'
 
 interface SoapHeaders {
     'user-agent'?: string
@@ -60,7 +60,18 @@ export default class SoapUtil {
         this.updateObjectValue('ChequeType', chequeRequest.type, data)
         this.updateObjectValue('CardNumber', chequeRequest.cardNumber, data)
         this.updateObjectValue('DateTime', new Date().toISOString(), data)
-        this.updateObjectValue('OperationType', chequeRequest.operationType, data)
+        this.updateObjectValue('OperationType', 'Sale', data)
+        this.updateObjectValue('Summ', chequeRequest.summ, data)
+        this.updateObjectValue('Discount', 0, data)
+        this.updateObjectValue('SummDiscounted', chequeRequest.summ, data)
+        this.updateObjectValue('PaidByBonus', chequeRequest.paidByBonus || 0, data)
+        this.addItems(chequeRequest, data)
+        this.addCoupons(chequeRequest, data)
+        // console.log('REQUEST', converter.js2xml(data, { compact: true }))
+        return converter.js2xml(data, { compact: true })
+    }
+
+    private static addItems(chequeRequest: ChequeRequest, data: any): void {
         for (const [index, item] of chequeRequest.items.entries()) {
             this.updateObjectValue('PositionNumber', item.id, data, index)
             this.updateObjectValue('Article', item.article, data, index)
@@ -70,18 +81,43 @@ export default class SoapUtil {
             this.updateObjectValue('Summ', item.summ, data, index)
             this.updateObjectValue('SummDiscounted', item.summ, data, index)
         }
-        this.updateObjectValue('Summ', chequeRequest.summ, data)
-        this.updateObjectValue('Discount', 0, data)
-        this.updateObjectValue('SummDiscounted', chequeRequest.summ, data)
-        this.updateObjectValue('PaidByBonus', chequeRequest.paidByBonus || 0, data)
-        if (chequeRequest.type === 'Fiscal') {
-            this.addCoupons(chequeRequest, data)
+        const items: Item[] = []
+        for (const item of chequeRequest.items) {
+            items.push({
+                PositionNumber: {
+                    _text: item.id.toString()
+                },
+                Article: {
+                    _text: item.article
+                },
+                Quantity: {
+                    _text: item.count.toString()
+                },
+                Price: {
+                    _text: item.price.toString()
+                },
+                Discount: {
+                    _text: '0'
+                },
+                Summ: {
+                    _text: item.summ.toString()
+                },
+                SummDiscounted: {
+                    _text: item.summ.toString()
+                }
+            })
         }
-        // console.log('REQUEST', converter.js2xml(data, { compact: true }))
-        return converter.js2xml(data, { compact: true })
+        this.addObjectProperty(
+            'Items',
+            {
+                Item: items
+            },
+            data,
+            'ChequeRequest'
+        )
     }
 
-    private static addCoupons(chequeRequest: ChequeRequest, data: any) {
+    private static addCoupons(chequeRequest: ChequeRequest, data: any): void {
         if (chequeRequest.coupons) {
             this.addObjectProperty(
                 'Coupons',
