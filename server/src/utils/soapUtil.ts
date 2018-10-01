@@ -30,52 +30,6 @@ export default class SoapUtil {
         return this.sendRequest(url, this.getXmlRequestDataFromFile(pathToXml), headers)
     }
 
-    public static createXmlSoftChequeRequest(chequeRequest: SoftChequeRequest): string {
-        const data: ChequeRequestModel = CHEQUE_REQUEST
-        this.updateObjectValue('ChequeType', chequeRequest.type, data)
-        this.updateObjectValue('CardNumber', chequeRequest.cardNumber, data)
-        this.updateObjectValue('DateTime', chequeRequest.dateTime, data)
-        this.updateObjectValue('OperationType', chequeRequest.operationType, data)
-        for (const [index, item] of chequeRequest.items.entries()) {
-            this.updateObjectValue('PositionNumber', item.id, data, index)
-            this.updateObjectValue('Article', item.article, data, index)
-            this.updateObjectValue('Quantity', item.count, data, index)
-            this.updateObjectValue('Price', item.price, data, index)
-            this.updateObjectValue('Discount', 0, data, index)
-            this.updateObjectValue('Summ', item.summ, data, index)
-            this.updateObjectValue('SummDiscounted', item.summ, data, index)
-        }
-        this.updateObjectValue('Summ', chequeRequest.summ, data)
-        this.updateObjectValue('Discount', 0, data)
-        this.updateObjectValue('SummDiscounted', chequeRequest.summ, data)
-        this.updateObjectValue('PaidByBonus', chequeRequest.paidByBonus || 0, data)
-        return converter.js2xml(data, { compact: true })
-    }
-
-    public static createXmlFiscalChequeRequest(chequeRequest: FiscalChequeRequest): string {
-        const data: ChequeRequestModel = CHEQUE_REQUEST
-        this.updateObjectValue('ChequeType', chequeRequest.type, data)
-        this.updateObjectValue('CardNumber', chequeRequest.cardNumber, data)
-        this.updateObjectValue('DateTime', new Date().toISOString(), data)
-        this.updateObjectValue('OperationType', chequeRequest.operationType, data)
-        for (const [index, item] of chequeRequest.items.entries()) {
-            this.updateObjectValue('PositionNumber', item.id, data, index)
-            this.updateObjectValue('Article', item.article, data, index)
-            this.updateObjectValue('Quantity', item.count, data, index)
-            this.updateObjectValue('Price', item.price, data, index)
-            this.updateObjectValue('Discount', 0, data, index)
-            this.updateObjectValue('Summ', item.summ, data, index)
-            this.updateObjectValue('SummDiscounted', item.summ, data, index)
-        }
-        this.updateObjectValue('Summ', chequeRequest.summ, data)
-        this.updateObjectValue('Discount', 0, data)
-        this.updateObjectValue('SummDiscounted', chequeRequest.summ, data)
-        this.updateObjectValue('PaidByBonus', chequeRequest.paidByBonus || 0, data)
-        this.addCoupons(chequeRequest, data)
-        // console.log('REQUEST', converter.js2xml(data, { compact: true }))
-        return converter.js2xml(data, { compact: true })
-    }
-
     public static updateObjectValue<T>(property: string, value: T, object: any, index?: number): void {
         for (const key in object) {
             if (key === property) {
@@ -99,6 +53,32 @@ export default class SoapUtil {
                 this.addObjectProperty(property, value, object[key], parentProperty)
             }
         }
+    }
+
+    public static createChequeRequest(chequeRequest: SoftChequeRequest | FiscalChequeRequest): string {
+        const data: ChequeRequestModel = CHEQUE_REQUEST
+        this.updateObjectValue('ChequeType', chequeRequest.type, data)
+        this.updateObjectValue('CardNumber', chequeRequest.cardNumber, data)
+        this.updateObjectValue('DateTime', new Date().toISOString(), data)
+        this.updateObjectValue('OperationType', chequeRequest.operationType, data)
+        for (const [index, item] of chequeRequest.items.entries()) {
+            this.updateObjectValue('PositionNumber', item.id, data, index)
+            this.updateObjectValue('Article', item.article, data, index)
+            this.updateObjectValue('Quantity', item.count, data, index)
+            this.updateObjectValue('Price', item.price, data, index)
+            this.updateObjectValue('Discount', 0, data, index)
+            this.updateObjectValue('Summ', item.summ, data, index)
+            this.updateObjectValue('SummDiscounted', item.summ, data, index)
+        }
+        this.updateObjectValue('Summ', chequeRequest.summ, data)
+        this.updateObjectValue('Discount', 0, data)
+        this.updateObjectValue('SummDiscounted', chequeRequest.summ, data)
+        this.updateObjectValue('PaidByBonus', chequeRequest.paidByBonus || 0, data)
+        if (chequeRequest.type === 'Fiscal') {
+            this.addCoupons(chequeRequest, data)
+        }
+        // console.log('REQUEST', converter.js2xml(data, { compact: true }))
+        return converter.js2xml(data, { compact: true })
     }
 
     private static addCoupons(chequeRequest: FiscalChequeRequest, data: any) {
