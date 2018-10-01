@@ -16,7 +16,7 @@ export class ChequeController {
     @HttpCode(200)
     @Post('/fiscal')
     public async handleFiscalCheque(@Body() request: FiscalChequeRequest) {
-        return SoapUtil.sendRequestFromXml(MANZANA_CASH_URL, SoapUtil.createXmlSoftChequeRequest(request), {
+        return SoapUtil.sendRequestFromXml(MANZANA_CASH_URL, SoapUtil.createXmlFiscalChequeRequest(request), {
             'Content-Type': 'text/xml;charset=UTF-8'
         })
     }

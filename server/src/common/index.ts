@@ -1,10 +1,9 @@
-interface SoftChequeRequest {
-    requestId: string
+interface ChequeRequest {
     cardNumber: string
     dateTime: Date
-    number: string
     operationType: string
     summ: number
+    paidByBonus?: number
     items: [
         {
             id: number
@@ -16,20 +15,21 @@ interface SoftChequeRequest {
     ]
 }
 
-interface FiscalChequeRequest {
-    requestId: string
-    cardNumber: string
-    dateTime: Date
-    number: string
-    operationType: string
-    summ: number
-    items: [
+interface SoftChequeRequest extends ChequeRequest {
+    type: 'Soft'
+}
+
+interface FiscalChequeRequest extends ChequeRequest {
+    type: 'Fiscal'
+    coupons?: [
         {
-            id: number
-            article: string
-            count: number
-            price: number
-            summ: number
+            number: string
+        },
+        {
+            emissionId: string
+        },
+        {
+            typeId: string
         }
     ]
 }

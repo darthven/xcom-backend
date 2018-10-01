@@ -30,15 +30,13 @@ export default class SoapUtil {
         return this.sendRequest(url, this.getXmlRequestDataFromFile(pathToXml), headers)
     }
 
-    public static createXmlSoftChequeRequest(softChequeRequest: SoftChequeRequest): string {
+    public static createXmlSoftChequeRequest(chequeRequest: SoftChequeRequest): string {
         const data: ChequeRequestModel = CHEQUE_REQUEST
-        this.updateObjectValue('ChequeType', 'Soft', data)
-        this.updateObjectValue('RequestID', softChequeRequest.requestId, data)
-        this.updateObjectValue('CardNumber', softChequeRequest.cardNumber, data)
-        this.updateObjectValue('DateTime', softChequeRequest.dateTime, data)
-        this.updateObjectValue('Number', softChequeRequest.number, data)
-        this.updateObjectValue('OperationType', softChequeRequest.operationType, data)
-        for (const [index, item] of softChequeRequest.items.entries()) {
+        this.updateObjectValue('ChequeType', chequeRequest.type, data)
+        this.updateObjectValue('CardNumber', chequeRequest.cardNumber, data)
+        this.updateObjectValue('DateTime', chequeRequest.dateTime, data)
+        this.updateObjectValue('OperationType', chequeRequest.operationType, data)
+        for (const [index, item] of chequeRequest.items.entries()) {
             this.updateObjectValue('PositionNumber', item.id, data, index)
             this.updateObjectValue('Article', item.article, data, index)
             this.updateObjectValue('Quantity', item.count, data, index)
@@ -47,22 +45,20 @@ export default class SoapUtil {
             this.updateObjectValue('Summ', item.summ, data, index)
             this.updateObjectValue('SummDiscounted', item.summ, data, index)
         }
-        this.updateObjectValue('Summ', softChequeRequest.summ, data)
+        this.updateObjectValue('Summ', chequeRequest.summ, data)
         this.updateObjectValue('Discount', 0, data)
-        this.updateObjectValue('SummDiscounted', softChequeRequest.summ, data)
-        this.updateObjectValue('PaidByBonus', 0, data)
+        this.updateObjectValue('SummDiscounted', chequeRequest.summ, data)
+        this.updateObjectValue('PaidByBonus', chequeRequest.paidByBonus || 0, data)
         return converter.js2xml(data, { compact: true })
     }
 
-    public static createXmlFiscalChequeRequest(fiscalChequeRequest: FiscalChequeRequest): string {
+    public static createXmlFiscalChequeRequest(chequeRequest: FiscalChequeRequest): string {
         const data: ChequeRequestModel = CHEQUE_REQUEST
-        this.updateObjectValue('ChequeType', 'Fiscal', data)
-        this.updateObjectValue('RequestID', fiscalChequeRequest.requestId, data)
-        this.updateObjectValue('CardNumber', fiscalChequeRequest.cardNumber, data)
-        this.updateObjectValue('DateTime', fiscalChequeRequest.dateTime, data)
-        this.updateObjectValue('Number', fiscalChequeRequest.number, data)
-        this.updateObjectValue('OperationType', fiscalChequeRequest.operationType, data)
-        for (const [index, item] of fiscalChequeRequest.items.entries()) {
+        this.updateObjectValue('ChequeType', chequeRequest.type, data)
+        this.updateObjectValue('CardNumber', chequeRequest.cardNumber, data)
+        this.updateObjectValue('DateTime', new Date().toISOString(), data)
+        this.updateObjectValue('OperationType', chequeRequest.operationType, data)
+        for (const [index, item] of chequeRequest.items.entries()) {
             this.updateObjectValue('PositionNumber', item.id, data, index)
             this.updateObjectValue('Article', item.article, data, index)
             this.updateObjectValue('Quantity', item.count, data, index)
@@ -71,10 +67,12 @@ export default class SoapUtil {
             this.updateObjectValue('Summ', item.summ, data, index)
             this.updateObjectValue('SummDiscounted', item.summ, data, index)
         }
-        this.updateObjectValue('Summ', fiscalChequeRequest.summ, data)
+        this.updateObjectValue('Summ', chequeRequest.summ, data)
         this.updateObjectValue('Discount', 0, data)
-        this.updateObjectValue('SummDiscounted', fiscalChequeRequest.summ, data)
-        this.updateObjectValue('PaidByBonus', 0, data)
+        this.updateObjectValue('SummDiscounted', chequeRequest.summ, data)
+        this.updateObjectValue('PaidByBonus', chequeRequest.paidByBonus || 0, data)
+        this.addCoupons(chequeRequest, data)
+        // console.log('REQUEST', converter.js2xml(data, { compact: true }))
         return converter.js2xml(data, { compact: true })
     }
 
@@ -89,6 +87,46 @@ export default class SoapUtil {
             } else if (object[key] instanceof Object) {
                 this.updateObjectValue(property, value, object[key], index)
             }
+        }
+    }
+
+    public static addObjectProperty<T>(property: string, value: T, object: any, parentProperty: string): void {
+        for (const key in object) {
+            if (key === parentProperty) {
+                object[key][property] = value
+                break
+            } else if (object[key] instanceof Object) {
+                this.addObjectProperty(property, value, object[key], parentProperty)
+            }
+        }
+    }
+
+    private static addCoupons(chequeRequest: FiscalChequeRequest, data: any) {
+        if (chequeRequest.coupons) {
+            this.addObjectProperty(
+                'Coupons',
+                {
+                    Coupon: [
+                        {
+                            Number: {
+                                _text: chequeRequest.coupons[0].number
+                            }
+                        },
+                        {
+                            EmissionId: {
+                                _text: chequeRequest.coupons[1].emissionId
+                            }
+                        },
+                        {
+                            TypeId: {
+                                _text: chequeRequest.coupons[2].typeId
+                            }
+                        }
+                    ]
+                },
+                data,
+                'ChequeRequest'
+            )
         }
     }
 
@@ -127,26 +165,29 @@ export default class SoapUtil {
     }
 }
 
-const obj = {
-    a: {
-        b: 'dssd',
-        c: {
-            items: [
-                {
-                    q: 100
-                },
-                {
-                    q: 101
-                },
-                {
-                    q: 102
-                }
-            ]
-        }
-    }
-}
+// const obj = {
+//     a: {
+//         b: 'dssd',
+//         c: {
+//             items: [
+//                 {
+//                     q: 100
+//                 },
+//                 {
+//                     q: 101
+//                 },
+//                 {
+//                     q: 102
+//                 }
+//             ]
+//         }
+//     }
+// }
 
-SoapUtil.updateObjectValue<number>('q', 324, obj, 1)
+// SoapUtil.updateObjectValue<number>('q', 324, obj, 1)
+// SoapUtil.addObjectProperty('inner', { _text: 'test' }, obj, 'c')
+
+// console.log(JSON.stringify(obj, null, 4))
 
 // SoapUtil.sendRequestFromFile(MANZANA_CASH_URL, './request.xml', {
 //     'Content-Type': 'text/xml'
