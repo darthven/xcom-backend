@@ -2,7 +2,7 @@ import axios from 'axios'
 import * as fs from 'fs'
 import * as converter from 'xml-js'
 
-import { FiscalChequeRequest, SoftChequeRequest } from '../common'
+import { ChequeRequest } from '../common'
 import { MANZANA_CASH_URL } from '../config/env.config'
 import logger from '../config/logger.config'
 import { CHEQUE_REQUEST, ChequeRequestModel, ChequeResponseModel } from './soapDefinitions'
@@ -55,7 +55,7 @@ export default class SoapUtil {
         }
     }
 
-    public static createChequeRequest(chequeRequest: SoftChequeRequest | FiscalChequeRequest): string {
+    public static createChequeRequest(chequeRequest: ChequeRequest): string {
         const data: ChequeRequestModel = CHEQUE_REQUEST
         this.updateObjectValue('ChequeType', chequeRequest.type, data)
         this.updateObjectValue('CardNumber', chequeRequest.cardNumber, data)
@@ -81,7 +81,7 @@ export default class SoapUtil {
         return converter.js2xml(data, { compact: true })
     }
 
-    private static addCoupons(chequeRequest: FiscalChequeRequest, data: any) {
+    private static addCoupons(chequeRequest: ChequeRequest, data: any) {
         if (chequeRequest.coupons) {
             this.addObjectProperty(
                 'Coupons',

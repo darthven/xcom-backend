@@ -1,6 +1,6 @@
 interface ChequeRequest {
+    type: 'Soft' | 'Fiscal'
     cardNumber: string
-    dateTime: Date
     operationType: string
     summ: number
     paidByBonus?: number
@@ -13,14 +13,6 @@ interface ChequeRequest {
             summ: number
         }
     ]
-}
-
-interface SoftChequeRequest extends ChequeRequest {
-    type: 'Soft'
-}
-
-interface FiscalChequeRequest extends ChequeRequest {
-    type: 'Fiscal'
     coupons?: [
         {
             number: string
@@ -34,4 +26,4 @@ interface FiscalChequeRequest extends ChequeRequest {
     ]
 }
 
-export { SoftChequeRequest, FiscalChequeRequest }
+export { ChequeRequest }

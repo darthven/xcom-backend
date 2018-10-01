@@ -1,5 +1,5 @@
 import { Body, HttpCode, JsonController, Post } from 'routing-controllers'
-import { FiscalChequeRequest, SoftChequeRequest } from '../common'
+import { ChequeRequest } from '../common'
 import { MANZANA_CASH_URL } from '../config/env.config'
 import SoapUtil from '../utils/soapUtil'
 
@@ -7,7 +7,7 @@ import SoapUtil from '../utils/soapUtil'
 export class ChequeController {
     @HttpCode(200)
     @Post('/soft')
-    public async handleSoftCheque(@Body() request: SoftChequeRequest) {
+    public async handleSoftCheque(@Body() request: ChequeRequest) {
         return SoapUtil.sendRequestFromXml(MANZANA_CASH_URL, SoapUtil.createChequeRequest(request), {
             'Content-Type': 'text/xml;charset=UTF-8'
         })
@@ -15,7 +15,7 @@ export class ChequeController {
 
     @HttpCode(200)
     @Post('/fiscal')
-    public async handleFiscalCheque(@Body() request: FiscalChequeRequest) {
+    public async handleFiscalCheque(@Body() request: ChequeRequest) {
         return SoapUtil.sendRequestFromXml(MANZANA_CASH_URL, SoapUtil.createChequeRequest(request), {
             'Content-Type': 'text/xml;charset=UTF-8'
         })
