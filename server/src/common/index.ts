@@ -1,5 +1,4 @@
 interface ChequeRequest {
-    type: 'Soft' | 'Fiscal'
     cardNumber: string
     operationType: 'Sale'
     summ: number

@@ -1,11 +1,11 @@
 import axios from 'axios'
 import * as fs from 'fs'
+import { Service } from 'typedi'
 import * as converter from 'xml-js'
 
 import { ChequeRequest } from '../common'
-import { MANZANA_CASH_URL } from '../config/env.config'
 import logger from '../config/logger.config'
-import { CHEQUE_REQUEST, ChequeRequestModel, ChequeResponseModel, Item } from './soapDefinitions'
+import { CHEQUE_REQUEST, ChequeRequestModel, ChequeResponseModel, Coupons, Item } from './soapDefinitions'
 
 interface SoapHeaders {
     'user-agent'?: string
@@ -13,16 +13,13 @@ interface SoapHeaders {
     soapAction?: string
 }
 
+@Service()
 export default class SoapUtil {
-    public static async sendRequestFromXml(
-        url: string,
-        xml: string,
-        headers?: SoapHeaders
-    ): Promise<ChequeResponseModel> {
+    public async sendRequestFromXml(url: string, xml: string, headers?: SoapHeaders): Promise<ChequeResponseModel> {
         return this.sendRequest(url, xml, headers)
     }
 
-    public static async sendRequestFromFile(
+    public async sendRequestFromFile(
         url: string,
         pathToXml: string,
         headers?: SoapHeaders
@@ -30,7 +27,7 @@ export default class SoapUtil {
         return this.sendRequest(url, this.getXmlRequestDataFromFile(pathToXml), headers)
     }
 
-    public static updateObjectValue<T>(property: string, value: T, object: any, index?: number): void {
+    public updateObjectValue<T>(property: string, value: T, object: any, index?: number): void {
         for (const key in object) {
             if (key === property) {
                 object[key] = value
@@ -44,7 +41,7 @@ export default class SoapUtil {
         }
     }
 
-    public static addObjectProperty<T>(property: string, value: T, object: any, parentProperty: string): void {
+    public addObjectProperty<T>(property: string, value: T, object: any, parentProperty: string): void {
         for (const key in object) {
             if (key === parentProperty) {
                 object[key][property] = value
@@ -55,32 +52,27 @@ export default class SoapUtil {
         }
     }
 
-    public static createChequeRequest(chequeRequest: ChequeRequest): string {
-        const data: ChequeRequestModel = CHEQUE_REQUEST
-        this.updateObjectValue('ChequeType', chequeRequest.type, data)
-        this.updateObjectValue('CardNumber', chequeRequest.cardNumber, data)
-        this.updateObjectValue('DateTime', new Date().toISOString(), data)
-        this.updateObjectValue('OperationType', 'Sale', data)
-        this.updateObjectValue('Summ', chequeRequest.summ, data)
-        this.updateObjectValue('Discount', 0, data)
-        this.updateObjectValue('SummDiscounted', chequeRequest.summ, data)
-        this.updateObjectValue('PaidByBonus', chequeRequest.paidByBonus || 0, data)
+    public createChequeRequest(chequeRequest: ChequeRequest, type: string): string {
+        const data: ChequeRequestModel = { ...CHEQUE_REQUEST }
+        // console.log(JSON.stringify(data, null, 4))
+        this.updateObjectValue<number>('RequestID', Math.round(Math.random() * (1100 - 1000) + 1000), data)
+        this.updateObjectValue<string>('ChequeType', type, data)
+        this.updateObjectValue<string>('CardNumber', chequeRequest.cardNumber, data)
+        this.updateObjectValue<string>('DateTime', new Date().toISOString(), data)
+        this.updateObjectValue<string>('OperationType', 'Sale', data)
+        this.updateObjectValue<number>('Summ', chequeRequest.summ, data)
+        this.updateObjectValue<number>('Discount', 0, data)
+        this.updateObjectValue<number>('SummDiscounted', chequeRequest.summ, data)
+        this.updateObjectValue<number>('PaidByBonus', chequeRequest.paidByBonus || 0, data)
         this.addItems(chequeRequest, data)
-        this.addCoupons(chequeRequest, data)
+        if (chequeRequest.coupons) {
+            this.addCoupons(chequeRequest, data)
+        }
         // console.log('REQUEST', converter.js2xml(data, { compact: true }))
         return converter.js2xml(data, { compact: true })
     }
 
-    private static addItems(chequeRequest: ChequeRequest, data: any): void {
-        for (const [index, item] of chequeRequest.items.entries()) {
-            this.updateObjectValue('PositionNumber', item.id, data, index)
-            this.updateObjectValue('Article', item.article, data, index)
-            this.updateObjectValue('Quantity', item.count, data, index)
-            this.updateObjectValue('Price', item.price, data, index)
-            this.updateObjectValue('Discount', 0, data, index)
-            this.updateObjectValue('Summ', item.summ, data, index)
-            this.updateObjectValue('SummDiscounted', item.summ, data, index)
-        }
+    private addItems(chequeRequest: ChequeRequest, data: any): void {
         const items: Item[] = []
         for (const item of chequeRequest.items) {
             items.push({
@@ -107,7 +99,7 @@ export default class SoapUtil {
                 }
             })
         }
-        this.addObjectProperty(
+        this.addObjectProperty<{ Item: Item[] }>(
             'Items',
             {
                 Item: items
@@ -117,36 +109,34 @@ export default class SoapUtil {
         )
     }
 
-    private static addCoupons(chequeRequest: ChequeRequest, data: any): void {
-        if (chequeRequest.coupons) {
-            this.addObjectProperty(
-                'Coupons',
-                {
-                    Coupon: [
-                        {
-                            Number: {
-                                _text: chequeRequest.coupons[0].number
-                            }
-                        },
-                        {
-                            EmissionId: {
-                                _text: chequeRequest.coupons[1].emissionId
-                            }
-                        },
-                        {
-                            TypeId: {
-                                _text: chequeRequest.coupons[2].typeId
-                            }
+    private addCoupons(chequeRequest: ChequeRequest, data: any): void {
+        this.addObjectProperty<Coupons>(
+            'Coupons',
+            {
+                Coupon: [
+                    {
+                        Number: {
+                            _text: chequeRequest.coupons![0].number
                         }
-                    ]
-                },
-                data,
-                'ChequeRequest'
-            )
-        }
+                    },
+                    {
+                        EmissionId: {
+                            _text: chequeRequest.coupons![1].emissionId
+                        }
+                    },
+                    {
+                        TypeId: {
+                            _text: chequeRequest.coupons![2].typeId
+                        }
+                    }
+                ]
+            },
+            data,
+            'ChequeRequest'
+        )
     }
 
-    private static async sendRequest(url: string, data: string, headers?: SoapHeaders): Promise<ChequeResponseModel> {
+    private async sendRequest(url: string, data: string, headers?: SoapHeaders): Promise<ChequeResponseModel> {
         const { response } = await this.soapRequest(url, data, headers)
         const { body, statusCode } = response
         logger.info(statusCode)
@@ -154,11 +144,11 @@ export default class SoapUtil {
         return converter.xml2js(body, { compact: true, alwaysChildren: true }) as ChequeResponseModel
     }
 
-    private static getXmlRequestDataFromFile(path: string): string {
+    private getXmlRequestDataFromFile(path: string): string {
         return fs.readFileSync(path, 'utf-8')
     }
 
-    private static async soapRequest(url: string, xml: string, headers?: SoapHeaders): Promise<any> {
+    private async soapRequest(url: string, xml: string, headers?: SoapHeaders): Promise<any> {
         return new Promise((resolve, reject) => {
             axios({
                 method: 'post',

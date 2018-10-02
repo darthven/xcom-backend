@@ -12,6 +12,20 @@ interface Item {
     SummDiscounted: ElementValue
 }
 
+interface Coupons {
+    Coupon: [
+        {
+            Number: ElementValue
+        },
+        {
+            EmissionId: ElementValue
+        },
+        {
+            TypeId: ElementValue
+        }
+    ]
+}
+
 interface ChequeRequestModel {
     'soap:Envelope': {
         _attributes: {
@@ -46,6 +60,7 @@ interface ChequeRequestModel {
                         Items?: {
                             Item: Item[]
                         }
+                        Coupons?: Coupons
                     }
                 }
                 orgName: ElementValue
@@ -174,4 +189,4 @@ const CHEQUE_REQUEST: ChequeRequestModel = {
     }
 }
 
-export { Item, ChequeRequestModel, ChequeResponseModel, CHEQUE_REQUEST }
+export { Item, Coupons, ChequeRequestModel, ChequeResponseModel, CHEQUE_REQUEST }
