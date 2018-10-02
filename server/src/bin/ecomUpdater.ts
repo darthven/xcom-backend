@@ -12,14 +12,14 @@ async function start() {
     logger.debug('mongodb connected', mongodbOptions)
     const ecomUpdater = Container.get(EcomUpdater)
     // await ecomUpdater.updateStocks()
-    await ecomUpdater.updatePrices()
+    // await ecomUpdater.updatePrices()
     // await ecomUpdater.updateStoreLocations()
     // await ecomUpdater.updateStationsNearStore()
     // await ecomUpdater.updateStoreTypes()
     // await ecomUpdater.updateImages()
     // await ecomUpdater.updateRegionsPoly()
     // await ecomUpdater.updateGoods()
-    // await ecomUpdater.updateCategories()
+    await ecomUpdater.updateCategories()
     await Mongo.close()
 }
 
