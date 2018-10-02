@@ -10,7 +10,8 @@ import {
 import { Region } from '../../parameters/region'
 import { SkipTake } from '../../parameters/skipTake'
 import { GoodsHint } from '../queries/GoodsHint'
-import { GoodsQuery } from '../queries/GoodsQuery'
+import { GoodsNullQuery } from '../queries/GoodsNullQuery'
+import { GoodsSort } from '../queries/GoodsSort'
 import { GoodsStrictQuery } from '../queries/GoodsStrictQuery'
 import { Repository } from './repository'
 
@@ -65,17 +66,74 @@ export class GoodRepository extends Repository {
         return this.collection.updateOne({ id }, { $set: { img: `${id}${IMAGE_DEFAULT_TYPE}` } })
     }
 
-    public async getAll(match: GoodsQuery, skipTake: SkipTake, region: Region) {
-        return this.collection
-            .aggregate([
+    public async getAll(
+        match: GoodsStrictQuery,
+        withoutPriceMatch: GoodsNullQuery,
+        skipTake: SkipTake,
+        region: Region,
+        sort: GoodsSort,
+        hint: GoodsHint
+    ) {
+        let data: any[]
+        const fullLength = await this.getLength(match, hint)
+        const diff = fullLength - skipTake.skip
+        if (diff < 0) {
+            // only data without price
+            const withoutPriceSkipTake = new SkipTake({ skip: Math.abs(diff), take: skipTake.take })
+            data = await this.getAllWithoutPrice(withoutPriceMatch, withoutPriceSkipTake, sort)
+        } else if (diff < skipTake.take) {
+            // data with and without price
+            const withoutPriceSkipTake = new SkipTake({ skip: 0, take: skipTake.take - diff })
+            const withoutPriceRes = await this.getAllWithoutPrice(withoutPriceMatch, withoutPriceSkipTake, sort)
+            const withPriceRes = await this.getAllWithPrice(match, skipTake, region, sort)
+            data = withPriceRes.concat(withoutPriceRes)
+        } else {
+            // data only with price
+            data = await this.getAllWithPrice(match, skipTake, region, sort)
+        }
+        return {
+            fullLength,
+            data
+        }
+    }
+    public async getAllWithPrice(match: GoodsStrictQuery, skipTake: SkipTake, region: Region, sort: GoodsSort) {
+        let pipeline = [
+            { $match: match },
+            sort,
+            { $skip: skipTake.skip },
+            { $limit: skipTake.take },
+            { $project: this.firstProject },
+            { $unwind: '$price' },
+            { $match: { 'price.region': region.region } },
+            { $project: this.secondProject }
+        ]
+        if (sort.$sort.price) {
+            pipeline = [
                 { $match: match },
-                { $skip: skipTake.skip || 0 },
-                { $limit: skipTake.take || 10 },
                 { $project: this.firstProject },
-                { $unwind: { path: '$price', preserveNullAndEmptyArrays: true } },
-                { $match: { $or: [{ price: null }, { 'price.region': region.region }] } },
+                { $unwind: '$price' },
+                { $match: { 'price.region': region.region } },
+                sort,
+                { $skip: skipTake.skip },
+                { $limit: skipTake.take },
                 { $project: this.secondProject }
-            ])
+            ]
+        }
+        return this.collection.aggregate(pipeline, { allowDiskUse: true }).toArray()
+    }
+    public async getAllWithoutPrice(match: GoodsNullQuery, skipTake: SkipTake, sort: GoodsSort) {
+        return this.collection
+            .aggregate(
+                [
+                    { $match: match },
+                    sort,
+                    { $skip: skipTake.skip },
+                    { $limit: skipTake.take },
+                    { $project: this.firstProject },
+                    { $project: this.secondProject }
+                ],
+                { allowDiskUse: true }
+            )
             .toArray()
     }
     public async getByIds(ids: number[], region: Region) {
@@ -165,7 +223,6 @@ export class GoodRepository extends Repository {
             .aggregate(
                 [
                     { $match: match },
-                    { $limit: 1000 },
                     {
                         $project: {
                             _id: 0,
@@ -175,6 +232,7 @@ export class GoodRepository extends Repository {
                     },
                     { $unwind: '$price' },
                     { $match: { 'price.region': region.region } },
+                    { $limit: 1000 },
                     {
                         $bucket: {
                             groupBy: '$price.priceMax',

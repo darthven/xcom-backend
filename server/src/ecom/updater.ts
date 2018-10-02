@@ -159,6 +159,7 @@ export class EcomUpdater {
             await this.goods.collection.updateOne({ id: single.id }, { $set: { price: single.price } })
             logger.debug(`${single.id} updated`)
         }
+        logger.info(`prices updated`)
     }
     public async updateStoreLocations() {
         const stores = await this.stores.collection

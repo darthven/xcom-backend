@@ -20,6 +20,7 @@ export class CategoryRepository extends Repository {
         const query = new CategoriesQuery(search)
         return this.collection
             .aggregate([
+                { $match: { $or: [{ productCount: { $ne: 0 } }, { treeSumCount: { $ne: 0 } }] } },
                 { $match: query },
                 {
                     $project: {
