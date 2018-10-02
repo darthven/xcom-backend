@@ -29,6 +29,7 @@ export class CategoryRepository extends Repository {
                         parentId: 1,
                         level: 1,
                         productCount: 1,
+                        treeSumCount: 1,
                         icon: {
                             url: { $concat: [IMAGE_URL, IMAGE_CATEGORIES_FOLDER, '$img'] },
                             urls: null,
@@ -51,6 +52,7 @@ export class CategoryRepository extends Repository {
                         parentId: 1,
                         level: 1,
                         productCount: 1,
+                        treeSumCount: 1,
                         icon: {
                             url: { $concat: [IMAGE_URL, IMAGE_CATEGORIES_FOLDER, '$img'] },
                             urls: null,
