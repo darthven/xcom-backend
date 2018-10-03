@@ -27,6 +27,17 @@ import { ecomOptions } from './ecomOptions'
 
 @Service()
 export class EcomUpdater {
+    public static makePrefixes(value: string) {
+        const res: string[] = []
+        if (value) {
+            value.split(' ').forEach((val: string) => {
+                for (let i = 1; i < val.length; i++) {
+                    res.push(val.substr(0, i).toUpperCase())
+                }
+            })
+        }
+        return res
+    }
     @Inject()
     private categories!: CategoryRepository
     @Inject()
@@ -126,12 +137,14 @@ export class EcomUpdater {
                 count = res.goodsCount
                 if (count) {
                     for (const item of res.goods) {
+                        logger.debug(item.name)
+                        item.suffixes = EcomUpdater.makePrefixes(item.name)
                         await this.updateSingleGood(item)
                     }
                 }
                 logger.info(`goods page ${i} updated`)
             } catch (err) {
-                logger.error(`goods page ${i} failed`, { message: err.message, all: err })
+                logger.error(`goods page ${i} failed`, { err: err.message, all: err })
             }
         }
         logger.info('goods updated')

@@ -31,12 +31,15 @@ export class GoodRepository extends Repository {
     private secondProject = {
         id: 1,
         name: 1,
-        manufacturer: 1,
+        manufacturer: { $ifNull: ['$manufacturer', ''] },
         country: 1,
         activeSubstance: '$mnn',
         categoryId: '$siteCatId',
-        priceMin: '$price.priceMin',
-        priceMax: '$price.priceMax',
+        inStock: { $ifNull: ['$price.available', 0] },
+        price: {
+            min: { $ifNull: ['$price.priceMin', null] },
+            max: { $ifNull: ['$price.priceMax', null] }
+        },
         icon: {
             url: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, '$img'] },
             urls: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
@@ -48,7 +51,7 @@ export class GoodRepository extends Repository {
     }
     public async createCollection() {
         await super.createCollection()
-        await this.collection.createIndex({ name: 'text', tradeName: 'text' })
+        await this.collection.createIndex({ name: 'text', tradeName: 'text', suffixes: 'text' })
         await this.collection.createIndex({ id: 1 }, { unique: true })
         await this.collection.createIndex({ siteCatId: 1 })
         await this.collection.createIndex({ price: 1 }, { name: 'price' })
@@ -157,26 +160,14 @@ export class GoodRepository extends Repository {
             .aggregate([
                 { $match: { id } },
                 { $project: this.firstProject },
-                { $unwind: '$price' },
-                { $match: { 'price.region': region.region } },
                 {
-                    $project: {
-                        id: '$_id',
-                        _id: 0,
-                        name: 1,
-                        manufacturer: 1,
-                        country: 1,
-                        categoryId: '$siteCatId',
-                        priceMin: '$price.priceMin',
-                        priceMax: '$price.priceMax',
-                        availableCount: '$price.available',
-                        icon: {
-                            url: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, '$img'] },
-                            urls: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
-                            urlm: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
-                        }
+                    $unwind: {
+                        path: '$price',
+                        preserveNullAndEmptyArrays: true
                     }
-                }
+                },
+                { $match: { $or: [{ price: null }, { 'price.region': region.region }] } },
+                { $project: this.secondProject }
             ])
             .toArray()
     }
@@ -217,6 +208,40 @@ export class GoodRepository extends Repository {
             )
             .toArray()
         return res[0] ? res[0].categories : res
+    }
+    public async getMinMaxPrice(match: GoodsStrictQuery, region: Region, hint: GoodsHint) {
+        const res = await this.collection
+            .aggregate(
+                [
+                    { $match: match },
+                    {
+                        $project: {
+                            _id: 0,
+                            id: 1,
+                            price: 1
+                        }
+                    },
+                    { $unwind: '$price' },
+                    { $match: { 'price.region': region.region } },
+                    {
+                        $group: {
+                            _id: null,
+                            min: { $min: '$price.priceMin' },
+                            max: { $max: '$price.priceMax' }
+                        }
+                    },
+                    {
+                        $project: {
+                            min: 1,
+                            max: 1,
+                            _id: 0
+                        }
+                    }
+                ],
+                hint
+            )
+            .toArray()
+        return res[0]
     }
     public async getDensity(match: GoodsStrictQuery, region: Region, hint: GoodsHint) {
         return this.collection

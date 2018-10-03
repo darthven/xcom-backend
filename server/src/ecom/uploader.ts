@@ -13,8 +13,9 @@ import { RegionsRepository } from '../mongo/repository/regions'
 import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
 import { StoreTypeRepository } from '../mongo/repository/storeType'
+import { categoryImageExist } from '../utils/fileExist'
 import { ecomOptions } from './ecomOptions'
-import {categoryImageExist} from '../utils/fileExist'
+import { EcomUpdater } from './updater'
 
 @Service()
 export class EcomUploader {
@@ -110,6 +111,7 @@ export class EcomUploader {
             count = res.goodsCount
             for (const single of res.goods) {
                 try {
+                    single.suffixes = EcomUpdater.makePrefixes(single.name)
                     await this.goods.collection.insertOne(single)
                 } catch (e) {
                     // skip duplicated

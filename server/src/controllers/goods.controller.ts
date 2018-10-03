@@ -44,6 +44,7 @@ export class GoodsController {
             length: res.fullLength,
             categories: await this.goods.getCategories(withPriceMatch, hint),
             density: await this.goods.getDensity(withPriceMatch, region, hint),
+            price: await this.goods.getMinMaxPrice(withPriceMatch, region, hint),
             data: res.data
         }
     }
@@ -92,7 +93,8 @@ export class GoodsController {
         return {
             length: await this.goods.getLength(withPriceMatch, hint),
             categories: await this.goods.getCategories(withPriceMatch, hint),
-            density: await this.goods.getDensity(withPriceMatch, region, hint)
+            density: await this.goods.getDensity(withPriceMatch, region, hint),
+            price: await this.goods.getMinMaxPrice(withPriceMatch, region, hint)
         }
     }
     @Get('/:id')
