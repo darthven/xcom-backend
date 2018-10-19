@@ -25,4 +25,8 @@ export class StoresController {
         }
         return res[0]
     }
+    @Get('/ree/ree')
+    public async getRee() {
+        return this.stores.getRee()
+    }
 }

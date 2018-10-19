@@ -166,12 +166,13 @@ export class EcomUpdater {
     }
 
     public async updatePrices() {
-        const prices = await this.stores.getMinMax()
-        await this.goods.collection.updateMany({}, { $set: { price: null } })
-        for (const single of prices) {
-            await this.goods.collection.updateOne({ id: single.id }, { $set: { price: single.price } })
-            logger.debug(`${single.id} updated`)
-        }
+        console.log('in')
+        // const prices = await this.stores.getMinMax()
+        // await this.goods.collection.updateMany({}, { $set: { price: null } })
+        // for (const single of prices) {
+        //     await this.goods.collection.updateOne({ id: single.id }, { $set: { price: single.price } })
+        //     logger.debug(`${single.id} updated`)
+        // }
         logger.info(`prices updated`)
     }
     public async updateStoreLocations() {

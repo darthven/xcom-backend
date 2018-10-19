@@ -9,6 +9,7 @@ import {
 } from '../../config/env.config'
 import { Region } from '../../parameters/region'
 import { SkipTake } from '../../parameters/skipTake'
+import { Share } from '../entity/share'
 import { GoodsHint } from '../queries/GoodsHint'
 import { GoodsNullQuery } from '../queries/GoodsNullQuery'
 import { GoodsSort } from '../queries/GoodsSort'
@@ -24,9 +25,17 @@ export class GoodRepository extends Repository {
         manufacturer: 1,
         siteCatId: 1,
         country: 1,
+        byPrescription: 1,
         mnn: 1,
         price: 1,
-        img: 1
+        img: 1,
+        share: {
+            $cond: {
+                if: { $lt: ['$share.endDate', new Date()] },
+                then: '$$REMOVE',
+                else: '$share'
+            }
+        }
     }
     private secondProject = {
         id: 1,
@@ -35,6 +44,7 @@ export class GoodRepository extends Repository {
         country: 1,
         activeSubstance: '$mnn',
         categoryId: '$siteCatId',
+        byPrescription: { $ifNull: ['$byPrescription', false] },
         inStock: { $ifNull: ['$price.available', 0] },
         price: {
             min: { $ifNull: ['$price.priceMin', null] },
@@ -44,7 +54,35 @@ export class GoodRepository extends Repository {
             url: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, '$img'] },
             urls: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_S_SUBFOLDER, '$img'] },
             urlm: { $concat: [IMAGE_URL, IMAGE_GOOD_FOLDER, IMAGE_M_SUBFOLDER, '$img'] }
-        }
+        },
+        'share.id': 1,
+        'share.discountValue': 1,
+        'share.packCount': 1,
+        'share.attributeZOZ': 1,
+        'share.startDate': 1,
+        'share.endDate': 1,
+        'share.description': 1
+    }
+    private lookup = {
+        from: 'shares',
+        let: { id: '$id' },
+        pipeline: [
+            { $match: { $expr: { $eq: ['$goodId', '$$id'] } } },
+            {
+                $project: {
+                    _id: 0,
+                    id: 1,
+                    description: 1,
+                    discountValue: 1,
+                    packCount: 1,
+                    attributeZOZ: 1,
+                    startDate: 1,
+                    endDate: 1,
+                    regions: 1
+                }
+            }
+        ],
+        as: 'shares'
     }
     constructor() {
         super('goods')
@@ -52,13 +90,15 @@ export class GoodRepository extends Repository {
     public async createCollection() {
         await super.createCollection()
         await this.collection.createIndex({ name: 'text', tradeName: 'text', suffixes: 'text' })
-        await this.collection.createIndex({ id: 1 }, { unique: true })
+        await this.collection.createIndex({ id: 1 })
         await this.collection.createIndex({ siteCatId: 1 })
         await this.collection.createIndex({ price: 1 }, { name: 'price' })
+        await this.collection.createIndex({ img: 1 }, { name: 'img' })
         await this.collection.createIndex({ 'price.region': 1 }, { name: 'priceReg' })
         await this.collection.createIndex({ 'price.priceMin': 1 }, { name: 'priceMin' })
         await this.collection.createIndex({ 'price.priceMax': 1 }, { name: 'priceMax' })
         await this.collection.createIndex({ 'price.region': 1, 'price.priceMin': 1 }, { name: 'priceMinReg' })
+        await this.collection.createIndex({ 'price.region': 1, 'price.priceMax': 1 }, { name: 'priceMaxReg' })
         await this.collection.createIndex(
             { 'price.region': 1, 'price.priceMin': 1, 'price.priceMax': -1 },
             { name: 'priceMinMaxReg' }
@@ -69,6 +109,32 @@ export class GoodRepository extends Repository {
         return this.collection.updateOne({ id }, { $set: { img: `${id}${IMAGE_DEFAULT_TYPE}` } })
     }
 
+    public async updateIndexes() {
+        // await this.collection.dropIndex('id_1')
+        // await this.collection.dropIndex('img_1')
+        // await this.collection.dropIndex('siteCatId_1')
+        // await this.collection.dropIndex('priceMinReg')
+        // await this.collection.dropIndex('priceMinMaxReg')
+        // await this.collection.dropIndex('priceReg')
+        // await this.collection.dropIndex('price')
+        await this.collection.dropIndex('price.min')
+        await this.collection.dropIndex('price.max')
+        await this.collection.dropIndex('name_text_tradeName_text_suffixes_text')
+        await this.collection.createIndex({ name: 'text', tradeName: 'text', suffixes: 'text' })
+        await this.collection.createIndex({ id: 1 })
+        await this.collection.createIndex({ siteCatId: 1 })
+        await this.collection.createIndex({ price: 1 }, { name: 'price' })
+        await this.collection.createIndex({ img: 1 }, { name: 'img' })
+        await this.collection.createIndex({ 'price.region': 1 }, { name: 'priceReg' })
+        await this.collection.createIndex({ 'price.priceMin': 1 }, { name: 'priceMin' })
+        await this.collection.createIndex({ 'price.priceMax': 1 }, { name: 'priceMax' })
+        await this.collection.createIndex({ 'price.region': 1, 'price.priceMin': 1 }, { name: 'priceMinReg' })
+        await this.collection.createIndex({ 'price.region': 1, 'price.priceMax': 1 }, { name: 'priceMaxReg' })
+        await this.collection.createIndex(
+            { 'price.region': 1, 'price.priceMin': 1, 'price.priceMax': -1 },
+            { name: 'priceMinMaxReg' }
+        )
+    }
     public async getAll(
         match: GoodsStrictQuery,
         withoutPriceMatch: GoodsNullQuery,
@@ -77,6 +143,8 @@ export class GoodRepository extends Repository {
         sort: GoodsSort,
         hint: GoodsHint
     ) {
+        console.log(hint)
+        console.log(await this.collection.indexInformation())
         let data: any[]
         const fullLength = await this.getLength(match, hint)
         const diff = fullLength - skipTake.skip
@@ -180,6 +248,26 @@ export class GoodRepository extends Repository {
         }
         return this.collection.find(match).count()
     }
+    public async getByBarcode(barcode: string, region: Region) {
+        return this.collection
+            .aggregate([
+                {
+                    $match: {
+                        barcode: { $regex: `.*${barcode}.*` }
+                    }
+                },
+                { $project: this.firstProject },
+                {
+                    $unwind: {
+                        path: '$price',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                { $match: { $or: [{ price: null }, { 'price.region': region.region }] } },
+                { $project: this.secondProject }
+            ])
+            .toArray()
+    }
     public async getCategories(match: GoodsStrictQuery, hint: GoodsHint) {
         const res = await this.collection
             .aggregate(
@@ -241,9 +329,24 @@ export class GoodRepository extends Repository {
                 hint
             )
             .toArray()
-        return res[0]
+        if (res[0]) {
+            return res[0]
+        }
+        return {
+            min: null,
+            max: null
+        }
     }
-    public async getDensity(match: GoodsStrictQuery, region: Region, hint: GoodsHint) {
+    public async getDensity(match: GoodsStrictQuery, region: Region, hint: GoodsHint, max?: number) {
+        // generate boundaries
+        const min = 300
+        if (!max) {
+            max = 2500
+        }
+        const boundaries: number[] = [100, 200]
+        for (let i = min; i <= max; i += 100) {
+            boundaries.push(i)
+        }
         return this.collection
             .aggregate(
                 [
@@ -261,30 +364,7 @@ export class GoodRepository extends Repository {
                     {
                         $bucket: {
                             groupBy: '$price.priceMax',
-                            boundaries: [
-                                100,
-                                200,
-                                300,
-                                400,
-                                500,
-                                600,
-                                700,
-                                800,
-                                900,
-                                1000,
-                                1100,
-                                1200,
-                                1300,
-                                1400,
-                                1500,
-                                1600,
-                                1700,
-                                1800,
-                                1900,
-                                2000,
-                                2100,
-                                2200
-                            ],
+                            boundaries,
                             default: 'Other',
                             output: {
                                 count: { $sum: 1 }
@@ -302,5 +382,8 @@ export class GoodRepository extends Repository {
                 hint
             )
             .toArray()
+    }
+    public async setShare(share: Share) {
+        return this.collection.findOneAndUpdate({ id: share.goodId }, { $set: { share } })
     }
 }

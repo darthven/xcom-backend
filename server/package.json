@@ -7,6 +7,7 @@
         "start:prod": "node lib/bin/index.js",
         "ecom:upload": "ts-node src/bin/ecomUploader.ts",
         "ecom:update": "ts-node src/bin/ecomUpdater.ts",
+        "db:init": "ts-node src/bin/initializeDB.ts",
         "test": "NODE_ENV=test mocha -r ts-node/register test/**/**/*.spec.ts --exit",
         "build": "tsc -p .",
         "mongo:fix": "cp ./data/@types/mongodb/index.d.ts ./node_modules/@types/mongodb/",
@@ -37,6 +38,8 @@
     },
     "devDependencies": {
         "@types/app-root-path": "^1.2.4",
+        "@types/basic-auth": "^1.1.2",
+        "@types/bcrypt": "^3.0.0",
         "@types/chai": "^4.1.4",
         "@types/ftp": "^0.3.29",
         "@types/koa": "^2.0.46",
@@ -64,6 +67,9 @@
     "dependencies": {
         "@types/mongodb": "^3.1.7",
         "app-root-path": "^2.1.0",
+        "basic-auth": "^2.0.1",
+        "bcrypt": "^3.0.1",
+        "csvtojson": "^2.0.8",
         "ftp": "^0.3.10",
         "koa": "^2.5.2",
         "koa-bodyparser": "^4.2.1",

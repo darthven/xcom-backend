@@ -2,12 +2,14 @@ import { LocationFilter } from '../../parameters/locationFilter'
 
 export class LocationsQuery {
     public storeType?: string
-    public regionCode: number
+    public regionCode?: number
 
     constructor(filter: LocationFilter) {
         if (filter.type) {
             this.storeType = filter.type
         }
-        this.regionCode = filter.region
+        if (filter.region) {
+            this.regionCode = filter.region
+        }
     }
 }

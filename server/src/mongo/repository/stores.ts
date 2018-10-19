@@ -223,10 +223,29 @@ export class StoreRepository extends Repository {
             ])
             .toArray()
     }
+    public async getRee() {
+        return this.collection
+            .aggregate([
+                {
+                    $match: {
+                        GPS: { $exists: false }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        id: 1,
+                        name: 1,
+                        regionCode: 1,
+                        storeType: 1,
+                        address: 1,
+                        phoneNumber: 1,
+                        workTime: 1,
+                        GPS: 1,
+                        active: 1
+                    }
+                }
+            ])
+            .toArray()
+    }
 }
-
-
-/*
-
-debug: indexes {"0":{"v":2,"key":{"_id":1},"name":"_id_","ns":"xcom-prod.stores"},"1":{"v":2,"unique":true,"key":{"id":1},"name":"id_1","ns":"xcom-prod.stores"},"2":{"v":2,"key":{"storeType":1},"name":"storeType_1","ns":"xcom-prod.stores"},"3":{"v":2,"key":{"region":1},"name":"region_1","ns":"xcom-prod.stores"},"4":{"v":2,"key":{"regionCode":1},"name":"regionCode_1","ns":"xcom-prod.stores"}
-*/
