@@ -19,6 +19,8 @@ export const IMAGE_FOLDER = process.env.IMAGE_FOLDER || 'images/' // '/var/www/x
 export const IMAGE_GOOD_FOLDER = process.env.IMAGE_GOOD_FOLDER || 'goods/'
 export const IMAGE_STORE_TYPE_FOLDER = process.env.IMAGE_STORE_TYPE_FOLDER || 'types/'
 export const IMAGE_CATEGORIES_FOLDER = process.env.IMAGE_CATEGORIES_FOLDER || 'categories/'
+export const MANZANA_CASH_URL =
+    process.env.MANZANA_CASH_URL || 'http://mbsdevcrm15sp1.manzanagroup.ru:10001/POSProcessing.asmx'
 
 // 'http://ws.erkapharm.com:8990/ecom/hs/'
 // 'http://ws-dev.erkapharm.com:8990/ecom_test/hs'
