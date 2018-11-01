@@ -29,30 +29,29 @@ export class GoodsController {
         @State('region') region: Region,
         @State('productFilter') filter: ProductFilter
     ) {
-        // const sort = new GoodsSort(filter.sort, filter.order)
-        // const hint = new GoodsHint(filter.priceMin, filter.priceMax, filter.query)
-        // const withoutPriceMatch = new GoodsNullQuery(region.region, filter.query, filter.categories, filter.shares)
-        // const withPriceMatch = new GoodsStrictQuery(
-        //     region.region,
-        //     filter.query,
-        //     filter.categories,
-        //     filter.priceMin,
-        //     filter.priceMax,
-        //     filter.shares
-        // )
-        // const all = this.goods.getAll(withPriceMatch, withoutPriceMatch, skipTake, region, sort, hint)
-        // const categories = this.goods.getCategories(withPriceMatch, hint)
-        // const price = await this.goods.getMinMaxPrice(withPriceMatch, region, hint)
-        // const density = this.goods.getDensity(withPriceMatch, region, hint, price.max)
-        // const res = await all
-        // return {
-        //     length: res.fullLength,
-        //     categories: await categories,
-        //     density: await density,
-        //     price,
-        //     data: res.data
-        // }
-        await this.goods.updateIndexes()
+        const sort = new GoodsSort(filter.sort, filter.order)
+        const hint = new GoodsHint(filter.priceMin, filter.priceMax, filter.query)
+        const withoutPriceMatch = new GoodsNullQuery(region.region, filter.query, filter.categories, filter.shares)
+        const withPriceMatch = new GoodsStrictQuery(
+            region.region,
+            filter.query,
+            filter.categories,
+            filter.priceMin,
+            filter.priceMax,
+            filter.shares
+        )
+        const all = this.goods.getAll(withPriceMatch, withoutPriceMatch, skipTake, region, sort, hint)
+        const categories = this.goods.getCategories(withPriceMatch, hint)
+        const price = await this.goods.getMinMaxPrice(withPriceMatch, region, hint)
+        const density = this.goods.getDensity(withPriceMatch, region, hint, price.max)
+        const res = await all
+        return {
+            length: res.fullLength,
+            categories: await categories,
+            density: await density,
+            price,
+            data: res.data
+        }
     }
     @Get('/get/data')
     @UseBefore(SkipTakeInjectMiddleware)

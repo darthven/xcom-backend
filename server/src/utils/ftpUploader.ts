@@ -20,7 +20,7 @@ export async function uploadImage(imgLinkFTP: string) {
             const destination = `${appRoot}/${IMAGE_TMP_FOLDER}/${path.basename(imgLinkFTP)}`
             client.get(ftp, (err, stream) => {
                 if (err || !stream) {
-                    logger.error(`${imgLinkFTP} was failed.`)
+                    logger.error(`${imgLinkFTP} was failed.`, { err })
                     client.end()
                     reject(err)
                 } else {

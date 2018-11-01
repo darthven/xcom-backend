@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'xcom',
-      script: './lib/index.js',
+      script: './lib/bin/index.js',
       watch: false,
       env: {
         NODE_ENV: 'production',

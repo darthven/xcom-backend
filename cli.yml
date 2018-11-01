@@ -14,4 +14,3 @@ dependencies:
     - "npm i --save app-root-path winston"
     - "npm i --save-dev @types/app-root-path "
 
-

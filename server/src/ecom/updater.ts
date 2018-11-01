@@ -137,14 +137,13 @@ export class EcomUpdater {
                 count = res.goodsCount
                 if (count) {
                     for (const item of res.goods) {
-                        logger.debug(item.name)
                         item.suffixes = EcomUpdater.makePrefixes(item.name)
                         await this.updateSingleGood(item)
                     }
                 }
                 logger.info(`goods page ${i} updated`)
             } catch (err) {
-                logger.error(`goods page ${i} failed`, { err: err.message, all: err })
+                logger.error(`goods page ${i} failed`, { err: err.message })
             }
         }
         logger.info('goods updated')
@@ -166,13 +165,12 @@ export class EcomUpdater {
     }
 
     public async updatePrices() {
-        console.log('in')
-        // const prices = await this.stores.getMinMax()
-        // await this.goods.collection.updateMany({}, { $set: { price: null } })
-        // for (const single of prices) {
-        //     await this.goods.collection.updateOne({ id: single.id }, { $set: { price: single.price } })
-        //     logger.debug(`${single.id} updated`)
-        // }
+        const prices = await this.stores.getMinMax()
+        await this.goods.collection.updateMany({}, { $set: { price: null } })
+        for (const single of prices) {
+            await this.goods.collection.updateOne({ id: single.id }, { $set: { price: single.price } })
+            logger.debug(`${single.id} updated`)
+        }
         logger.info(`prices updated`)
     }
     public async updateStoreLocations() {
@@ -281,19 +279,20 @@ export class EcomUpdater {
     private async updateSingleGood(item: Good) {
         const updated = await this.goods.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
         if (!updated.value) {
+            // TODO update price
             // if new item added
             // update price
         }
         if (item.imgLinkFTP && !goodImageExist(item.id)) {
             // upload image from ftp
-            const tmpFile = await uploadImage(item.imgLinkFTP)
             try {
+                const tmpFile = await uploadImage(item.imgLinkFTP)
                 await saveGoodImage(tmpFile, item.id)
                 await this.goods.updateImageLink(item.id)
+                logger.info(`image for good saved ${item.id}`)
             } catch (e) {
-                logger.error('err while updating image', e.message)
+                logger.error('err while updating image', { err: e.message })
             }
-            logger.info(`image for good saved ${item.id}`)
         }
     }
 }
