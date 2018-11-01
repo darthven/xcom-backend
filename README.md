@@ -23,8 +23,11 @@ In root of project:
 1) ```cd server/ ```
 1) ```npm install```  
 1) ```npm run types:fix``` 
-1) ```npm start ``` 
+1) ```npm start ```  
 
+Now you can check in browser by default information path: ```http://localhost:1340/api``` (or by another host and port)!  
+You should see something like:  
+```{"status":"available","info":"xcom api","version":"1.1.0","startAt":"2018-11-01T22:59:03.273Z"}```
 
 ## Production
 ### Dependencies
@@ -48,4 +51,8 @@ In root of project:
 1) ```npm install```  
 1) ```npm run types:fix``` 
 1) ```npm run build``` 
-1) ```pm2 start ecosystem.config.js ``` 
+1) ```pm2 start ecosystem.config.js ```   
+
+Now you can check in browser by default information path: ```http://localhost:1340/api``` (or by another host and port)!  
+You should see something like:  
+```{"status":"available","info":"xcom api","version":"1.1.0","startAt":"2018-11-01T22:59:03.273Z"}```
