@@ -43,7 +43,7 @@ You can configure:
 - Manzana url;  
 
 And all other stuff!  
-All useful environments you can find and specify in ```.env``` file!   
+All useful environments you can find and specify in ```ecosystem.config.js``` file!   
 ```./server/ecosystem.config.js``` configuration file.
 ### How to start
 In root of project:
