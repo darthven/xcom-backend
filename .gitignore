@@ -5,4 +5,5 @@ node_modules/
 raw/*.json
 ./server/ecosystem.config.js
 server/images/
-server/tmp/*g
+server/tmp/*
+server/lib/
