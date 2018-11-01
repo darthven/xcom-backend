@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "xcom backend node.js app",
     "scripts": {
-        "start": "ts-node src/bin/index.ts",
+        "start": "env-cmd .env ts-node src/bin/index.ts",
         "start:prod": "node lib/bin/index.js",
         "ecom:upload": "ts-node src/bin/ecomUploader.ts",
         "ecom:update": "ts-node src/bin/ecomUpdater.ts",
@@ -55,6 +55,7 @@
         "@types/sinon": "^5.0.1",
         "@types/supertest": "^2.0.5",
         "chai": "^4.1.2",
+        "env-cmd": "^8.0.2",
         "mocha": "^5.2.0",
         "prettier": "^1.14.2",
         "sinon": "^6.1.4",
