@@ -1,108 +1,44 @@
 version: '3'
 services:
-  redis:
-    image: redis:latest
-    networks:
-      - webnet
-  sms-db:
-    image: postgres
-    container_name:
-      sms_app_db
-    environment:
-      POSTGRES_PASSWORD: 12345678
-      POSTGRES_USER: admin
-      POSTGRES_DB: sms_app_db_dev
-    networks:
-      - webnet
-  sms-app:
-    image: appshop/sms-service
-    depends_on:
-      - sms-db
-      - redis
-    environment:
-      PORT: 80
-      NODE_ENV: production
-      PG_DB: sms_app_db_dev
-      PG_USER: admin
-      PG_PASSWORD: 12345678
-      PG_HOST: sms-db
-      REDIS_HOST: redis
-      TW_SID: AC94d7879854da55ed50ad0781c123a56b
-      TW_TOKEN: dd2f087c4a0006a4fa1bf1ff4a23dc9d
-      TW_NUMBER: +14387006921
-    command:
-      ["npm", "run", "db+start:prod"]
-    networks:
-      - webnet
-  push-db:
-    image: postgres
-    container_name:
-      push_app_db
-    environment:
-      POSTGRES_PASSWORD: 12345678
-      POSTGRES_USER: push
-      POSTGRES_DB: push_db
-    networks:
-      - webnet
-  push-app:
-    image: appshop/push-service
-    container_name:
-      push_app
-    depends_on:
-      - push-db
-    environment:
-      PG_HOST: push-db
-      FIREBASE_DB: "https://youhire-1529927192984.firebaseio.com"
-      SERVICE_ACCOUNT:  '{
-                          "type": "service_account",
-                          "project_id": "youhire-1529927192984",
-                          "private_key_id": "ef4412a34b69ed2828a871203af21454e9709c57",
-                          "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDIw5MbmPDlZo7O\nqXcmftvLZ1Bd2DR58fPlJBTjsYzcqbCEO98plnheczmorEi9cDFP+SgIyCRBjULE\nldWpgjYJvQFSUKgNip6/Ny0sCETFm2x8yBChZPCfaFEwbM3cECf8jcX3sca1kYZz\nXcAzbakd08jNVq9m4X4xt9MIy5ENO1RHHPd9kEsAOO/LJm7soxvDpLAaP3lx/fWM\nFhc5U+Pd/Irnoaf+JdmMsgKUpmjsdhYfLqherT1Qg5WXOZ21z7rpEnw4MHv76Vkc\ng1ijiuiAbnQQAM1mXAzmGwautx0pkEoPOmDfbC6SntSpRDR7wP9Lhf9qQfMBVtbK\nbNw2eCthAgMBAAECggEACC4eV0l2ds1kiBeD9iTE+0Mj1VgM7tNQxgtP4dVrHTZZ\njbDEE3Vo5QXOQZD4A4Z/zt+yvbVcc1KQd/K4Noh6f8/0fuRwDYGyfU1v7O9vEGto\nWqb69P2IN6GMLdRAGM1seKwU5vZWl7E01IxrS3kmUvOdNt8nZVJupjNUkSMcv1iD\nEqPcpSrRLByvqDi/K6Z5mDmXOOrvghkL9I06R7cu1skUh/bi6N0wVHsxcx68S+/O\n4LCXmmw8ltXprEaNMXmmha0d6U4FKzElLyjxcxduXyOkOHK2kZTOrTQ2RngC2ru5\nxvlQLBzKjexoK9W9uOiQ0N3DPKwJsEjjQlg7guqO0QKBgQDvRS7otrsP3L701HF8\ntR0edzLc1QC4u6ahkuMlBqcbo9A5crPGTvHGhExJzVQ9Zt01eRN6kgRCXgyNq+7F\nYr8ZrDEXeT5FNL/k9RCw4iJaNEZEuRKPbEUtsh2aKsZY+y6MtDTEyH5x+Pkw041e\nebk2lz5E+1at3YO/Z5vXUvDbMQKBgQDWzSX505fWGwL7LqfSjE42Ukr3q3+IBUQV\nTsMw5tQC4lKu78mEc6pVg3qV/XaSfhdk9czTbfgKgDyobXX6Hyepn/7e7q725ybs\n0V0DrbHgCXeGH1CmYspED+Zks+U7J7F4vgD//4Qjmk3I9fn8ljpnvszeSd0BRQ9P\nkR852qXnMQKBgQCk9Z6cpHadPgSNCPZhEwDLY0S2yUdhFUaReJKPkWGehbbmFHVr\nEDxSMB3kd+JPHt79ocbTJ142X17qQZIxlZ3I1lVWKKnMzsxJzsc+G/mxFP8pHCt2\npB+hnH4aLslmyW3TZd5HmS7L5unuRrvdWbBeubEdn+anoePWD1l6/1y80QKBgFDr\nbeAEv1GQUXow5FYkNx6tt8I/4EZsvW5Ngqj8fGgtvLpcaQ01ybh3VIoGt1GOoN+O\n3b/U0Lmb/73vpp84d2emd4yiXFV1VSun36OQHs9ooZdsWqSj2ND1MHVFdBjp5ii3\nY4cNSkljSuRnDesC6TPGJEWli9V7n734zMutvAwxAoGBAJA7yh2OgM7Pjw8uQyfh\nb61y4/+jyHY0v5GKTbkQnMpbELKvxVDboIkTZdj1kV7AwSCK3ULWO9gpyCKFcPsE\n6U4TXpxcvWJq+1a3FbKXCby4Y5QKIiMQZ4Iu3eydmLi4wOXdwPuIcwQGRYl5PUrS\nUQnjVtkCTaSs2fR9+2ZE0vI2\n-----END PRIVATE KEY-----\n",
-                          "client_email": "firebase-adminsdk-9d0xz@youhire-1529927192984.iam.gserviceaccount.com",
-                          "client_id": "117976147861898117939",
-                          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                          "token_uri": "https://accounts.google.com/o/oauth2/token",
-                          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-9d0xz%40youhire-1529927192984.iam.gserviceaccount.com"
-                        }'
-    command:
-      ["npm", "run", "db+start:prod"]
-    networks:
-      - webnet
-  db:
-    image: postgres
-    container_name:
-      youhire_db
-    environment:
-      POSTGRES_PASSWORD: 12345678
-      POSTGRES_USER: admin
-      POSTGRES_DB: youhire_db
-    networks:
-      - webnet
   server:
-    image: darthven/youhire-backend
-    container_name:
-      youhire_server
+    image: server
+    build: ./server
+    container_name: xcom-server
     depends_on:
-      - db
-      - sms-app
-      - push-app
+      - mongodb
     environment:
-      PG_HOST: db
-      PORT: 80
-      SMS_APP_HOST: sms-app
-      SMS_APP_PORT: 80
-      PUSH_APP_HOST: push-app
-      FILE_APP_HOST: https://fileservice.ga
       NODE_ENV: development
+      PORT: 80
+      IMAGE_URL: http://localhost/static/images/
+      MANZANA_CASH_URL: http://mbsdevcrm15sp1.manzanagroup.ru:10001/POSProcessing.asmx
+      ECOM_URL: http://ws.erkapharm.com:8990/ecom/hs/
+      ECOM_USER: IdEast
+      ECOM_PASS: KZMY5N
+      MONGO_URI: mongodb://localhost:27017
+      MONGO_DB: xcom-db
+      FTP_CLIENT_HOST: ftp.stoletov.ru
+      FTP_CLIENT_USER: ws_ImagineWeb
+      FTP_CLIENT_PASSWORD: 9035-51109aefc7dd
     command:
       ["npm", "run", "start"]
     ports:
-      - "2043:80"
+      - "1340:80"
     volumes:
-      - ./server:/usr/seed/app
+      - ./server:/usr/src/app
     networks:
       - webnet
+  mongodb:
+    image: mongo:latest
+    container_name: xcom-mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=xcom
+      - MONGO_INITDB_ROOT_PASSWORD=xcompass
+      - MONGO_INITDB_DATABASE=xcom-db
+    ports:
+      - 27017:27017
+    networks:
+      - webnet
+
 networks:
   webnet:
 

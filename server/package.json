@@ -10,7 +10,7 @@
         "db:init": "ts-node src/bin/initializeDB.ts",
         "test": "NODE_ENV=test mocha -r ts-node/register test/**/**/*.spec.ts --exit",
         "build": "tsc -p .",
-        "mongo:fix": "cp ./data/@types/mongodb/index.d.ts ./node_modules/@types/mongodb/",
+        "types:fix": "cp ./data/@types/mongodb/index.d.ts ./node_modules/@types/mongodb/",
         "lint": "tslint -p .",
         "lint:fix": "tslint --fix -p .",
         "lint:check": "tslint-config-prettier-check ./tslint.json"
@@ -46,6 +46,7 @@
         "@types/koa-bodyparser": "^5.0.1",
         "@types/koa-router": "^7.0.31",
         "@types/mocha": "^5.2.5",
+        "@types/mongodb": "^3.1.14",
         "@types/node": "^10.5.7",
         "@types/node-schedule": "^1.2.2",
         "@types/request": "^2.47.1",
@@ -65,8 +66,8 @@
         "typescript": "^3.0.1"
     },
     "dependencies": {
-        "@types/mongodb": "^3.1.7",
         "app-root-path": "^2.1.0",
+        "axios": "^0.18.0",
         "basic-auth": "^2.0.1",
         "bcrypt": "^3.0.1",
         "csvtojson": "^2.0.8",
@@ -83,6 +84,7 @@
         "routing-controllers": "^0.7.7",
         "sharp": "^0.20.8",
         "typedi": "^0.8.0",
-        "winston": "^3.0.0"
+        "winston": "^3.0.0",
+        "xml-js": "^1.6.8"
     }
 }
