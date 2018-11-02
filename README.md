@@ -15,9 +15,6 @@ You can configure:
 And all other stuff!  
 All useful environments you can find and specify in ```.env``` file!   
 ```./server/.env``` configuration file.
-
-
-All usefullt
 ### How to start
 In root of project:
 1) ```cd server/ ```
@@ -25,7 +22,7 @@ In root of project:
 1) ```npm run types:fix``` 
 1) ```npm start ```  
 
-Now you can check in browser by default information path: ```http://localhost:1340/api``` (or by another host and port)!  
+Now you can check in browser by default information url: ```http://localhost:1340/api``` (or by another host and port)!  
 You should see something like:  
 ```{"status":"available","info":"xcom api","version":"1.1.0","startAt":"2018-11-01T22:59:03.273Z"}```
 
@@ -53,6 +50,7 @@ In root of project:
 1) ```npm run build``` 
 1) ```pm2 start ecosystem.config.js ```   
 
-Now you can check in browser by default information path: ```http://localhost:1340/api``` (or by another host and port)!  
+Now you can check in browser by default information url: ```http://localhost:1340/api``` (or by another host and port)!  
 You should see something like:  
 ```{"status":"available","info":"xcom api","version":"1.1.0","startAt":"2018-11-01T22:59:03.273Z"}```
+Also you can type ```pm2 status``` and check your process.
