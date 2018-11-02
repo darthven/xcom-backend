@@ -223,29 +223,4 @@ export class StoreRepository extends Repository {
             ])
             .toArray()
     }
-    public async getRee() {
-        return this.collection
-            .aggregate([
-                {
-                    $match: {
-                        GPS: { $exists: false }
-                    }
-                },
-                {
-                    $project: {
-                        _id: 0,
-                        id: 1,
-                        name: 1,
-                        regionCode: 1,
-                        storeType: 1,
-                        address: 1,
-                        phoneNumber: 1,
-                        workTime: 1,
-                        GPS: 1,
-                        active: 1
-                    }
-                }
-            ])
-            .toArray()
-    }
 }
