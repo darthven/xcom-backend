@@ -1,11 +1,12 @@
 import { path } from 'app-root-path'
 import { createLogger, format, transports } from 'winston'
+import { LOGS_FOLDER } from './env.config'
 
 const options = {
     error: {
         name: 'error-file',
         level: 'error',
-        filename: `${path}/logs/error.log`,
+        filename: `${path}/${LOGS_FOLDER}error.log`,
         handleExceptions: true,
         maxsize: 5242880,
         maxFiles: 5
@@ -13,7 +14,7 @@ const options = {
     info: {
         name: 'info-file',
         level: 'info',
-        filename: `${path}/logs/info.log`,
+        filename: `${path}/${LOGS_FOLDER}info.log`,
         handleExceptions: true,
         maxsize: 5242880,
         maxFiles: 5
