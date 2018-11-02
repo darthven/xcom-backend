@@ -52,5 +52,5 @@ In root of project:
 
 Now you can check in browser by default information url: ```http://localhost:1340/api``` (or by another host and port)!  
 You should see something like:  
-```{"status":"available","info":"xcom api","version":"1.1.0","startAt":"2018-11-01T22:59:03.273Z"}```
+```{"status":"available","info":"xcom api","version":"1.1.0","startAt":"2018-11-01T22:59:03.273Z"}```  
 Also you can type ```pm2 status``` and check your process.
