@@ -14,13 +14,13 @@ You can configure:
 
 And all other stuff!  
 All useful environments you can find and specify in ```.env``` file!   
-```./server/.env``` configuration file.
+```./server/.env``` - configuration file.
 ### How to start
 In root of project:
 1) ```cd server/ ```
 1) ```npm install```  
-1) ```npm run types:fix``` 
-1) ```npm start ```  
+1) ```npm run fs:init``` 
+1) ```npm run start ```  
 
 Now you can check in browser by default information url: ```http://localhost:1340/api``` (or by another host and port)!  
 You should see something like:  
@@ -40,15 +40,16 @@ You can configure:
 - Manzana url;  
 
 And all other stuff!  
-All useful environments you can find and specify in ```ecosystem.config.js``` file!   
-```./server/ecosystem.config.js``` configuration file.
+All useful environments you can find and specify in ```.env.prod``` file!   
+```./server/.env.prod``` - configuration file.
+```./server/ecosystem.config.js``` - pm2 config file.
 ### How to start
 In root of project:
 1) ```cd server/ ```
 1) ```npm install```  
-1) ```npm run types:fix``` 
-1) ```npm run build``` 
-1) ```pm2 start ecosystem.config.js ```   
+1) ```npm run build```  
+1) ```npm run fs:init:prod``` 
+1) ```npm run start:prod ``` - using pm2
 
 Now you can check in browser by default information url: ```http://localhost:1340/api``` (or by another host and port)!  
 You should see something like:  
