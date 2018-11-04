@@ -1,7 +1,8 @@
-import { Context } from "koa";
+import { Context } from 'koa'
 import { stringify } from 'querystring'
 import * as requestPromise from 'request-promise-native'
 import { Ctx, Get, JsonController, NotFoundError, Param, Req, Res, State, UseBefore } from 'routing-controllers'
+import { parse } from 'url'
 import { LoggingMiddleware } from '../../lib/middlewares/logging.middleware'
 import { ECOM_URL, MANZANA_CLIENT_URL } from '../config/env.config'
 import logger from '../config/logger.config'
@@ -38,7 +39,8 @@ export class GoodsController {
                     throw e
                 }
                 // use proxied url path with parameters
-                const path = `/ecom/hs/clients/${user.MobilePhone}/orders`
+                const pathPrefix = parse(ECOM_URL).pathname
+                const path = `${pathPrefix}/clients/${user.MobilePhone}/orders`
                 const ecomParams = {
                     fields: 'id,date,storeId,statusId,payType',
                     expand: 'basket,statuses'
