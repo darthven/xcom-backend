@@ -76,6 +76,7 @@
         "csvtojson": "^2.0.8",
         "ftp": "^0.3.10",
         "koa": "^2.5.2",
+        "koa-better-http-proxy": "^0.2.4",
         "koa-bodyparser": "^4.2.1",
         "koa-multer": "^1.0.2",
         "koa-router": "^7.4.0",

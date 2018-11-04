@@ -22,6 +22,8 @@ export const IMAGE_DEFAULT_TYPE = process.env.IMAGE_DEFAULT_TYPE || '.jpeg'
 export const IMAGE_CATEGORY_TYPE = process.env.IMAGE_DEFAULT_TYPE || '.png'
 export const MANZANA_CASH_URL =
     process.env.MANZANA_CASH_URL || 'http://mbsdevcrm15sp1.manzanagroup.ru:10001/POSProcessing.asmx'
+export const MANZANA_CLIENT_URL =
+    process.env.MANZANA_CLIENT_URL || 'https://cosnozerki.manzanagroup.ru/customerofficeservice/'
 
 // 'http://ws.erkapharm.com:8990/ecom/hs/'
 // 'http://ws-dev.erkapharm.com:8990/ecom_test/hs'
