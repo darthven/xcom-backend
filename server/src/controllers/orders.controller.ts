@@ -1,43 +1,26 @@
 import { Context } from 'koa'
 import { stringify } from 'querystring'
-import * as requestPromise from 'request-promise-native'
-import { Ctx, Get, JsonController, NotFoundError, Param, Req, Res, State, UseBefore } from 'routing-controllers'
+import { Get, JsonController, Req, Res, UseBefore } from 'routing-controllers'
+import { Container } from 'typedi'
 import { parse } from 'url'
-import { LoggingMiddleware } from '../../lib/middlewares/logging.middleware'
-import { ECOM_URL, MANZANA_CLIENT_URL } from '../config/env.config'
+import { ECOM_PASS, ECOM_URL, ECOM_USER } from '../config/env.config'
 import logger from '../config/logger.config'
-import { ecomOptions } from '../ecom/ecomOptions'
+import { ManzanaService } from '../manzana/manzanaService'
 import { ProxyMiddleware } from '../middlewares/proxy.middleware'
 
-const ECOM_BASIC_AUTH_TOKEN = Buffer.from(`${ecomOptions.auth.user}:${ecomOptions.auth.pass}`).toString('base64')
+const ECOM_BASIC_AUTH_TOKEN = Buffer.from(`${ECOM_USER}:${ECOM_PASS}`).toString('base64')
 
 @JsonController('/orders')
-export class GoodsController {
+export class OrdersController {
     @Get()
     @UseBefore(
         ProxyMiddleware(ECOM_URL, {
             headers: {
                 Authorization: `Basic ${ECOM_BASIC_AUTH_TOKEN}`
             },
-            proxyReqPathResolver: async (ctx: Context): Promise<string> => {
-                const reqOptions = {
-                    method: 'GET',
-                    uri: `${MANZANA_CLIENT_URL}Contact/Get`,
-                    qs: {
-                        sessionid: ctx.query.sessionid,
-                        id: ctx.query.id
-                    },
-                    json: true
-                }
-                let user
-                try {
-                    user = await requestPromise(reqOptions)
-                } catch (e) {
-                    // propagate at least status code to upstream
-                    e.status = e.statusCode
-                    e.expose = true
-                    throw e
-                }
+            proxyReqPathResolver: async (ctx: Context) => {
+                const manzana = Container.get(ManzanaService)
+                const user = await manzana.getCurrentUser(ctx.query.sessionid, ctx.query.id)
                 // use proxied url path with parameters
                 const pathPrefix = parse(ECOM_URL).pathname
                 const path = `${pathPrefix}/clients/${user.MobilePhone}/orders`
