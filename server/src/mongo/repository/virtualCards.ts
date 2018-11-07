@@ -16,12 +16,15 @@ export class VirtualCardsRepository extends Repository {
                 },
                 {
                     $sample: { size: 1 }
+                },
+                {
+                    $project: { _id: 0 }
                 }
             ])
             .next()
     }
 
     public async updateOne(virtualCard: VirtualCard) {
-        return this.collection.replaceOne({ cardNumber: virtualCard.cardNumber }, virtualCard)
+        return this.collection.updateOne({ cardNumber: virtualCard.cardNumber }, { $set: virtualCard })
     }
 }

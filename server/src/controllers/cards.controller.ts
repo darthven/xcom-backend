@@ -13,12 +13,12 @@ export class CardsController {
     @UseBefore(ManzanaAuthMiddleware)
     public async bindVirtualCard(@State('manzanaClient') manzana: ManzanaUserApiClient) {
         const virtualCard = await this.virtualCardsRepository.getRandomAvailable()
-        if (virtualCard == null) {
+        if (!virtualCard) {
             throw new NotFoundError('No available virtual cards found')
         }
-        const result = await manzana.bindVirtualLoyaltyCard(virtualCard)
+        await manzana.bindVirtualLoyaltyCard(virtualCard)
         virtualCard.used = true
         await this.virtualCardsRepository.updateOne(virtualCard)
-        return result
+        return virtualCard
     }
 }
