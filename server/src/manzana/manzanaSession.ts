@@ -3,10 +3,10 @@ import { IsDefined, IsNotEmpty } from 'class-validator'
 export class ManzanaSession {
     @IsDefined()
     @IsNotEmpty()
-    public sessionid?: string
+    public sessionid: string
     @IsDefined()
     @IsNotEmpty()
-    public id?: string
+    public id: string
 
     constructor(sessionid: string, id: string) {
         this.sessionid = sessionid
