@@ -21,7 +21,7 @@ export function ProxyMiddleware(url: string, options?: proxy.IOptions) {
             return proxy(url, { ...defaults, ...options })(context, next)
         }
 
-        private pathResolver = (ctx: koa.Context): string => {
+        public pathResolver = (ctx: koa.Context): string => {
             // use proxied url path with parameters
             const params = stringify({ ...this.proxyUrl.query, ...ctx.query })
             return `${this.proxyUrl.pathname}?${params}`
