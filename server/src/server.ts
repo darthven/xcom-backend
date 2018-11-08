@@ -15,6 +15,7 @@ export default useKoaServer(koa, {
     authorizationChecker,
     middlewares: [LoggingMiddleware],
     controllers: [__dirname + '/controllers/**/*'],
+    cors: true,
     validation: {
         skipMissingProperties: true
     }
