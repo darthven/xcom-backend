@@ -8,6 +8,11 @@ export class VirtualCardsRepository extends Repository {
         super('virtualCards')
     }
 
+    public async createCollection() {
+        await super.createCollection()
+        await this.collection.createIndex({ cardNumber: 1 }, { unique: true })
+    }
+
     public async getRandomAvailable(): Promise<VirtualCard> {
         return this.collection
             .aggregate([
@@ -26,5 +31,13 @@ export class VirtualCardsRepository extends Repository {
 
     public async updateOne(virtualCard: VirtualCard) {
         return this.collection.updateOne({ cardNumber: virtualCard.cardNumber }, { $set: virtualCard })
+    }
+
+    public async insertBulk(virtualCards: VirtualCard[]) {
+        const bulk = this.collection.initializeUnorderedBulkOp()
+        for (const card of virtualCards) {
+            bulk.insert(card)
+        }
+        return bulk.execute()
     }
 }

@@ -12,16 +12,12 @@ export class LoggingMiddleware implements KoaMiddlewareInterface {
             ip: context.ip
         })
         try {
-            await next()
-            logger.info(`RES ${i} ${context.method} ${context.url}`, {
-                statusCode: context.response.status
-            })
-        } catch (e) {
-            logger.info(`RES ${i} ${context.method} ${context.url}`, {
-                statusCode: e.status
-            })
-            throw e
+            return await next()
         } finally {
+            logger.info(`RES ${i} ${context.method} ${context.url}`, {
+                statusCode: context.response.status,
+                body: context.response.body
+            })
             i++
         }
     }
