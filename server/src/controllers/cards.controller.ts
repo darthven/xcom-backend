@@ -64,7 +64,7 @@ export class CardsController {
                 throw e
             }
         }
-        logger.info(result)
+        logger.info('importCSV', result)
         return result
     }
 }
