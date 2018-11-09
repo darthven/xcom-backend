@@ -49,11 +49,22 @@ export class CardsController {
             }
             return new VirtualCard(item.field1, false)
         })
-        await this.virtualCardsRepository.insertBulk(cards)
-        logger.info(`imported ${data.length} records from csv file`)
-        return {
-            success: true,
-            message: `imported ${data.length} records from csv file`
+        const result = {
+            inserted: 0,
+            errors: 0
         }
+        try {
+            const writeResult = await this.virtualCardsRepository.insertBulk(cards)
+            result.inserted = writeResult.insertedCount
+        } catch (e) {
+            if (e.name === 'BulkWriteError') {
+                result.inserted = e.result.nInserted
+                result.errors = e.result.getWriteErrorCount()
+            } else {
+                throw e
+            }
+        }
+        logger.info(result)
+        return result
     }
 }

@@ -34,10 +34,6 @@ export class VirtualCardsRepository extends Repository {
     }
 
     public async insertBulk(virtualCards: VirtualCard[]) {
-        const bulk = this.collection.initializeUnorderedBulkOp()
-        for (const card of virtualCards) {
-            bulk.insert(card)
-        }
-        return bulk.execute()
+        return this.collection.insertMany(virtualCards, { ordered: false })
     }
 }
