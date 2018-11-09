@@ -1,4 +1,6 @@
 import * as requestPromise from 'request-promise-native'
+import { StatusCodeError } from 'request-promise-native/errors'
+import { HttpError } from 'routing-controllers'
 import { MANZANA_CLIENT_URL } from '../config/env.config'
 import { VirtualCard } from '../mongo/entity/virtualCard'
 import { BindCardRequest } from './bindCardRequest'
@@ -41,8 +43,10 @@ export class ManzanaUserApiClient {
             return await requestPromise({ ...defaultOpts, ...options })
         } catch (e) {
             // propagate at least status code to upstream
-            e.status = e.statusCode
-            e.expose = true
+            if (e instanceof StatusCodeError) {
+                const err = new HttpError(e.statusCode, e.message)
+                throw Object.assign(err, e.response.body)
+            }
             throw e
         }
     }

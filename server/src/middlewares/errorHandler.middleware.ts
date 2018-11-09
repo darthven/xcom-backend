@@ -13,7 +13,7 @@ export class ErrorHandlerMiddleware implements KoaMiddlewareInterface {
         } catch (e) {
             context.body = this.processJsonError(e)
             // set http status
-            context.status = (e instanceof HttpError && e.httpCode) ? e.httpCode : 500
+            context.status = e.statusCode || e.httpCode || 500
             logger.error(e.stack)
         }
     }
