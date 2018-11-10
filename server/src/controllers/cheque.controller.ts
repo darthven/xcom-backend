@@ -1,21 +1,28 @@
-import { Body, HttpCode, JsonController, Param, Post } from 'routing-controllers'
+import { Body, JsonController, MethodNotAllowedError, Param, Post } from 'routing-controllers'
 import { Inject } from 'typedi'
-import { ChequeRequest } from '../common/checkRequest'
-import { MANZANA_CASH_URL } from '../config/env.config'
+import { ChequeRequest } from '../common/chequeRequest'
 
-import SoapUtil from '../utils/soapUtil'
+import { Cheque } from '../common/cheque'
+import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
+import { SoftChequeRequest } from '../common/softChequeRequest'
+import { ManzanaCheque } from '../manzana/manzanaCheque'
+import { ManzanaPosService } from '../manzana/manzanaPosService'
 
 @JsonController('/cheque')
 export class ChequeController {
     @Inject()
-    private readonly soapUtil!: SoapUtil
+    private readonly manzanaPosService!: ManzanaPosService
 
-    @HttpCode(200)
-    @Post('/:type')
-    public async handleSoftCheque(@Body() request: ChequeRequest, @Param('type') type: string) {
-        console.log('type', type)
-        return this.soapUtil.sendRequestFromXml(MANZANA_CASH_URL, this.soapUtil.createChequeRequest(request, type), {
-            'Content-Type': 'text/xml;charset=UTF-8'
-        })
+    @Post('/soft')
+    public async handleSoftCheque(
+        @Body() request: SoftChequeRequest,
+        @Param('type') type: string
+    ): Promise<ManzanaCheque> {
+        throw this.manzanaPosService.getCheque(request)
+    }
+
+    @Post('/fiscal')
+    public async postFiscalCheque(@Body() request: FiscalChequeRequest) {
+        const cheque = this.manzanaPosService.getCheque(request)
     }
 }
