@@ -1,17 +1,43 @@
-import { Body, JsonController, MethodNotAllowedError, Param, Post } from 'routing-controllers'
+import {
+    BadRequestError,
+    Body,
+    Ctx,
+    Get,
+    HttpError,
+    JsonController,
+    NotFoundError,
+    Param,
+    Post,
+    QueryParam
+} from 'routing-controllers'
 import { Inject } from 'typedi'
-import { ChequeRequest } from '../common/chequeRequest'
 
-import { Cheque } from '../common/cheque'
+import { Context } from 'koa'
+import { stringify } from 'querystring'
+import { createEcomOrder } from '../common/ecomOrder'
 import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
 import { SoftChequeRequest } from '../common/softChequeRequest'
+import { EcomService } from '../ecom/ecomService'
+import { PayType } from '../ecom/payType'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { ManzanaPosService } from '../manzana/manzanaPosService'
+import { OrdersRepository } from '../mongo/repository/orders'
+import { StatusCode } from '../sbol/orderStatus'
+import { SbolService } from '../sbol/sbolService'
+
+const PARAM_ORDER_ID = 'orderNumber'
+const PARAM_SBOL_REDIRECT_RESULT = 'success'
 
 @JsonController('/cheque')
 export class ChequeController {
     @Inject()
     private readonly manzanaPosService!: ManzanaPosService
+    @Inject()
+    private readonly sbolService!: SbolService
+    @Inject()
+    private readonly ordersRepository!: OrdersRepository
+    @Inject()
+    private readonly ecom!: EcomService
 
     @Post('/soft')
     public async handleSoftCheque(
@@ -22,7 +48,48 @@ export class ChequeController {
     }
 
     @Post('/fiscal')
-    public async postFiscalCheque(@Body() request: FiscalChequeRequest) {
-        const cheque = this.manzanaPosService.getCheque(request)
+    public async postFiscalCheque(@Ctx() ctx: Context, @Body() request: FiscalChequeRequest) {
+        const cheque = await this.manzanaPosService.getCheque(request)
+        const order = await this.ordersRepository.insert(createEcomOrder(request, cheque))
+
+        switch (order.payType) {
+            case PayType.CASH:
+                return this.ecom.postOrder(order)
+            case PayType.ONLINE:
+                const sbolResponse = await this.sbolService.registerPreAuth({
+                    orderNumber: order.extId,
+                    failUrl: this.getRedirectUrl(order.extId, false),
+                    returnUrl: this.getRedirectUrl(order.extId, true),
+                    description: `Авторизация заказа из мобильного приложения`,
+                    amount: cheque.amount,
+                    clientId: request.clientTel,
+                    pageView: 'MOBILE'
+                })
+                return ctx.redirect(sbolResponse.formUrl)
+            default:
+                throw new BadRequestError(`payType ${order.payType} not supported`)
+        }
+    }
+
+    @Get('/fiscal/callback')
+    public async processSbolCallback(@QueryParam(PARAM_ORDER_ID, { required: true }) orderId: string) {
+        const order = await this.ordersRepository.findById(orderId)
+        if (!order) {
+            throw new NotFoundError('no authorized payment with this id')
+        }
+        const status = await this.sbolService.getOrderStatus({ orderNumber: orderId })
+        if (status.orderStatus === StatusCode.PREAUTHORIZED) {
+            // successfully pre-authorized - send to ecom
+            return this.ecom.postOrder(order)
+        } else {
+            throw new HttpError(402, status.actionCodeDescription)
+        }
+    }
+
+    private getRedirectUrl(orderNumber: string, success: boolean) {
+        const params: any = {}
+        params[PARAM_ORDER_ID] = orderNumber
+        params[PARAM_SBOL_REDIRECT_RESULT] = success
+        return `xcom://gateway.result?${stringify(params)}`
     }
 }
