@@ -1,4 +1,4 @@
-import { IsDefined, IsNotEmpty, IsInt } from 'class-validator'
+import { IsDefined, IsInt } from 'class-validator'
 
 export class Item {
     @IsDefined()

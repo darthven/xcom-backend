@@ -143,8 +143,6 @@ export class GoodRepository extends Repository {
         sort: GoodsSort,
         hint: GoodsHint
     ) {
-        console.log(hint)
-        console.log(await this.collection.indexInformation())
         let data: any[]
         const fullLength = await this.getLength(match, hint)
         const diff = fullLength - skipTake.skip
@@ -291,8 +289,7 @@ export class GoodRepository extends Repository {
                             categories: 1
                         }
                     }
-                ],
-                hint
+                ]
             )
             .toArray()
         return res[0] ? res[0].categories : res
@@ -325,8 +322,7 @@ export class GoodRepository extends Repository {
                             _id: 0
                         }
                     }
-                ],
-                hint
+                ]
             )
             .toArray()
         if (res[0]) {
@@ -378,8 +374,7 @@ export class GoodRepository extends Repository {
                             _id: 0
                         }
                     }
-                ],
-                hint
+                ]
             )
             .toArray()
     }
