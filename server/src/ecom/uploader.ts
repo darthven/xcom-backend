@@ -37,8 +37,10 @@ export class EcomUploader {
     private storeTypes!: StoreTypeRepository
 
     public async uploadCategories() {
-        ecomOptions.uri = `${ECOM_URL}/categories`
-        const res: any = await requestPromise(ecomOptions)
+        const res: any = await requestPromise({
+            ...ecomOptions,
+            uri: `${ECOM_URL}/categories`
+        })
         await this.categories.dropCollection()
         await this.categories.createCollection()
         for (const single of res.categories) {
@@ -54,8 +56,10 @@ export class EcomUploader {
     }
 
     public async uploadStores() {
-        ecomOptions.uri = `${ECOM_URL}/stores`
-        const res: any = await requestPromise(ecomOptions)
+        const res: any = await requestPromise({
+            ...ecomOptions,
+            uri: `${ECOM_URL}/stores`
+        })
         await this.stores.dropCollection()
         await this.stores.createCollection()
         for (const single of res.stores) {
@@ -85,8 +89,10 @@ export class EcomUploader {
     }
 
     public async uploadOrderStatuses() {
-        ecomOptions.uri = `${ECOM_URL}/order_statuses`
-        const res: any = await requestPromise(ecomOptions)
+        const res: any = await requestPromise({
+            ...ecomOptions,
+            uri: `${ECOM_URL}/order_statuses`
+        })
         await this.orderStatuses.dropCollection()
         await this.orderStatuses.createCollection()
         await this.orderStatuses.collection.insertMany(res.orderStatuses)
@@ -94,8 +100,10 @@ export class EcomUploader {
     }
 
     public async uploadPayTypes() {
-        ecomOptions.uri = `${ECOM_URL}/pay_types`
-        const res: any = await requestPromise(ecomOptions)
+        const res: any = await requestPromise({
+            ...ecomOptions,
+            uri: `${ECOM_URL}/pay_types`
+        })
         await this.payTypes.dropCollection()
         await this.payTypes.createCollection()
         await this.payTypes.collection.insertMany(res.payTypes)
@@ -106,8 +114,10 @@ export class EcomUploader {
         await this.goods.dropCollection()
         await this.goods.createCollection()
         for (let i = 1, count = 1; count; i++) {
-            ecomOptions.uri = `${ECOM_URL}/goods?page=${i}`
-            const res: any = await requestPromise(ecomOptions)
+            const res: any = await requestPromise({
+                ...ecomOptions,
+                uri: `${ECOM_URL}/goods?page=${i}`
+            })
             count = res.goodsCount
             for (const single of res.goods) {
                 try {

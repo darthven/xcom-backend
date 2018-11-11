@@ -3,6 +3,10 @@ import { IMAGE_STORE_TYPE_FOLDER, IMAGE_URL } from '../../config/env.config'
 import { LocationsQuery } from '../queries/LocationsQuery'
 import { Repository } from './repository'
 
+export interface INN {
+    INN: string
+}
+
 @Service()
 export class StoreRepository extends Repository {
     constructor() {
@@ -222,5 +226,20 @@ export class StoreRepository extends Repository {
                 }
             ])
             .toArray()
+    }
+
+    public async getInn(id: string): Promise<INN | null> {
+        return this.collection
+            .aggregate([
+                {
+                    $match: { id }
+                },
+                {
+                    $project: {
+                        INN: 1
+                    }
+                }
+            ])
+            .next()
     }
 }

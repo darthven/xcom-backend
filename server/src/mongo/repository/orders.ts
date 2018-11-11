@@ -1,9 +1,10 @@
 import { ObjectId } from 'bson'
 import { InsertOneWriteOpResult } from 'mongodb'
 import { Service } from 'typedi'
-import { EcomOrder } from '../../common/ecomOrder'
+import { EcomOrder } from '../../ecom/ecomOrder'
 import { Order } from '../entity/order'
 import { Repository } from './repository'
+import {INN} from "./stores";
 
 /**
  * Used as a temporary order storage for payment gateway processing.
@@ -33,7 +34,7 @@ export class OrdersRepository extends Repository {
             .next()
     }
 
-    public async insert(order: EcomOrder): Promise<Order> {
+    public async insert(order: EcomOrder & INN): Promise<Order> {
         const writeResult = await this.collection.insertOne(order)
         return {
             ...order,
