@@ -25,8 +25,6 @@ export const MANZANA_CASH_URL =
 export const MANZANA_CLIENT_URL =
     process.env.MANZANA_CLIENT_URL || 'https://cosnozerki.manzanagroup.ru/customerofficeservice/'
 export const SBOL_GATEWAY_URL: string = process.env.SBOL_GATEWAY_URL!
-export const SBOL_DEFAULT_USER: string = process.env.SBOL_DEFAULT_USER!
-export const SBOL_DEFAULT_PASSWORD: string = process.env.SBOL_DEFAULT_PASSWORD!
 
 // 'http://ws.erkapharm.com:8990/ecom/hs/'
 // 'http://ws-dev.erkapharm.com:8990/ecom_test/hs'

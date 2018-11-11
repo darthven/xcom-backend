@@ -1,9 +1,9 @@
 import * as requestPromise from 'request-promise-native'
-import { MethodNotAllowedError } from 'routing-controllers'
+import { NotFoundError } from 'routing-controllers'
 import { Service } from 'typedi'
-import { SBOL_DEFAULT_PASSWORD, SBOL_DEFAULT_USER, SBOL_GATEWAY_URL } from '../config/env.config'
+import { SBOL_GATEWAY_URL } from '../config/env.config'
 import { INN } from '../mongo/repository/stores'
-import { AuthorizedRequest } from './authorizedRequest'
+import { ACCOUNTS } from './accounts'
 import { OrderStatusRequest } from './orderStatusRequest'
 import { OrderStatusResponse } from './orderStatusResponse'
 import { PreAuthRequest } from './preAuthRequest'
@@ -19,15 +19,17 @@ export class SbolService {
         return this.request('rest/getOrderStatusExtended.do', params)
     }
 
-    private async request(method: string, params: any) {
-        const qs: AuthorizedRequest = {
-            ...params,
-            userName: SBOL_DEFAULT_USER, // TODO figure out passwords by INN?
-            password: SBOL_DEFAULT_PASSWORD
+    private async request(method: string, params: INN) {
+        const credentials = ACCOUNTS[params.INN]
+        if (!credentials) {
+            throw new NotFoundError(`No SBOL account found with this store's INN`)
         }
         const options = {
             uri: SBOL_GATEWAY_URL + method,
-            qs
+            qs: {
+                ...params,
+                ...credentials
+            }
         }
         return requestPromise(options)
     }
