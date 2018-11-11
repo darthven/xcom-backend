@@ -39,6 +39,8 @@ export class ChequeController {
     private readonly ordersRepository!: OrdersRepository
     @Inject()
     private readonly ecom!: EcomService
+    @Inject()
+    private readonly stores!: StoreRepository
 
     @Post('/soft')
     public async handleSoftCheque(
@@ -51,7 +53,11 @@ export class ChequeController {
     @Post('/fiscal')
     public async postFiscalCheque(@Ctx() ctx: Context, @Body() request: FiscalChequeRequest) {
         const cheque = await this.manzanaPosService.getCheque(request)
-        const order = await this.ordersRepository.insert(await createEcomOrder(request, cheque))
+        const storeLookup = await this.stores.getInn(request.storeId)
+        if (!storeLookup) {
+            throw new NotFoundError('store with this id not found')
+        }
+        const order = await this.ordersRepository.insert(createEcomOrder(request, cheque, storeLookup.INN))
 
         switch (order.payType) {
             case PayType.CASH:

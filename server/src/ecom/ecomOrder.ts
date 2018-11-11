@@ -2,9 +2,7 @@
 import { ChequeItem } from '../common/chequeItem'
 import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
-import {INN, StoreRepository} from "../mongo/repository/stores";
-import {Container} from "typedi";
-import {NotFoundError} from "routing-controllers";
+import { INN } from '../mongo/repository/stores'
 
 export interface EcomOrderMeta {
     storeId: string // Код склада
@@ -35,15 +33,11 @@ export interface EcomOrder extends EcomOrderMeta {
     basket: ChequeItem[] // Корзина товара (массив элементов)
 }
 
-export const createEcomOrder = async (
+export const createEcomOrder = (
     { storeId, loyaltyCard, clientName, clientTel, payType }: FiscalChequeRequest,
-    manzanaCheque: ManzanaCheque
-): Promise<EcomOrder & INN> => {
-    const stores = Container.get(StoreRepository)
-    const storeLookup = await stores.getInn(storeId)
-    if (!storeLookup) {
-        throw new NotFoundError('store with this id not found')
-    }
+    manzanaCheque: ManzanaCheque,
+    inn: string
+): EcomOrder & INN => {
     return {
         storeId,
         loyaltyCard,
@@ -53,6 +47,6 @@ export const createEcomOrder = async (
         paySum: manzanaCheque.amount,
         extDate: new Date().toDateString(),
         basket: manzanaCheque.basket,
-        INN: storeLookup.INN
+        INN: inn
     }
 }
