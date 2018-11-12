@@ -6,6 +6,7 @@ import { ChequeRequest } from '../common/chequeRequest'
 import { SoftChequeRequest } from '../common/softChequeRequest'
 import logger from '../config/logger.config'
 import { CHEQUE_REQUEST, ChequeRequestModel, ChequeResponseModel, Coupons, Item } from './soapDefinitions'
+import { ManzanaCheque } from '../manzana/manzanaCheque';
 
 interface SoapHeaders {
     'user-agent'?: string
@@ -15,8 +16,30 @@ interface SoapHeaders {
 
 @Service()
 export default class SoapUtil {
-    public async sendRequestFromXml(url: string, xml: string, headers?: SoapHeaders): Promise<ChequeResponseModel> {
-        return this.sendRequest(url, xml, headers)
+    public async sendRequestFromXml(url: string, xml: string, headers?: SoapHeaders): Promise<ManzanaCheque> {
+        const response: ChequeResponseModel = await this.sendRequest(url, xml, headers)
+        // tslint:disable-next-line:no-object-literal-type-assertion
+        const data = response['soap:Envelope']['soap:Body'].ProcessRequestResponse.ProcessRequestResult.ChequeResponse
+        console.log(JSON.stringify(response, null, 4))
+        return {
+            chargedBonus: data.ChargedBonus ? parseFloat(data.ChargedBonus._text) : 0,
+            chargedStatusBonus: data.ChargedStatusBonus ? parseFloat(data.ChargedStatusBonus._text) : 0,
+            writeOffBonus: data.WriteoffBonus ? parseFloat(data.WriteoffBonus._text) : 0,
+            writeOffStatusBonus: data.ChargedStatusBonus ? parseFloat(data.ChargedStatusBonus._text) : 0,
+            activeChargedBonus: data.ActiveChargedBonus ? parseFloat(data.ActiveChargedBonus._text) : 0,
+            activeChargedStatusBonus: data.ActiveChargedStatusBonus
+                ? parseFloat(data.ActiveChargedStatusBonus._text)
+                : 0,
+            amount: data.Summ ? parseFloat(data.Summ._text) : 0,
+            discount: data.Discount ? parseFloat(data.Discount._text) : 0,
+            basket: data.Items ? data.Items.Item.map(item => {
+                return {
+                    price: parseFloat(item.Price._text),
+                    amount: parseFloat(item.Quantity._text),
+                    discount: parseFloat(item.Discount._text)
+                }
+            }) : []
+        }
     }
 
     public async sendRequestFromFile(

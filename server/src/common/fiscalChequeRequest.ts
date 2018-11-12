@@ -12,4 +12,8 @@ export class FiscalChequeRequest extends SoftChequeRequest implements EcomOrderM
     @IsDefined()
     @ArrayNotEmpty()
     public clientTel: string = ''
+
+    @IsDefined()
+    @IsInt()
+    public payType: number = 0
 }
