@@ -1,12 +1,15 @@
 import axios from 'axios'
 import * as fs from 'fs'
-import { Service } from 'typedi'
+import { HttpError } from 'routing-controllers'
+import { Inject, Service } from 'typedi'
 import * as converter from 'xml-js'
 import { ChequeRequest } from '../common/chequeRequest'
 import { SoftChequeRequest } from '../common/softChequeRequest'
 import logger from '../config/logger.config'
+import { EcomService } from '../ecom/ecomService'
+import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { CHEQUE_REQUEST, ChequeRequestModel, ChequeResponseModel, Coupons, Item } from './soapDefinitions'
-import { ManzanaCheque } from '../manzana/manzanaCheque';
+import { isArray } from 'util';
 
 interface SoapHeaders {
     'user-agent'?: string
@@ -16,11 +19,17 @@ interface SoapHeaders {
 
 @Service()
 export default class SoapUtil {
+    @Inject()
+    private ecomService!: EcomService
+
     public async sendRequestFromXml(url: string, xml: string, headers?: SoapHeaders): Promise<ManzanaCheque> {
         const response: ChequeResponseModel = await this.sendRequest(url, xml, headers)
-        // tslint:disable-next-line:no-object-literal-type-assertion
         const data = response['soap:Envelope']['soap:Body'].ProcessRequestResponse.ProcessRequestResult.ChequeResponse
         console.log(JSON.stringify(response, null, 4))
+        if (data.Message._text !== 'OK') {
+            throw new HttpError(parseInt(data.ReturnCode._text, 10), data.Message._text)
+        }
+        const items: Item[] = isArray(data.Item) ? data.Item : [data.Item]
         return {
             chargedBonus: data.ChargedBonus ? parseFloat(data.ChargedBonus._text) : 0,
             chargedStatusBonus: data.ChargedStatusBonus ? parseFloat(data.ChargedStatusBonus._text) : 0,
@@ -30,15 +39,15 @@ export default class SoapUtil {
             activeChargedStatusBonus: data.ActiveChargedStatusBonus
                 ? parseFloat(data.ActiveChargedStatusBonus._text)
                 : 0,
-            amount: data.Summ ? parseFloat(data.Summ._text) : 0,
+            amount: data.SummDiscounted ? parseFloat(data.Summ._text) : 0,
             discount: data.Discount ? parseFloat(data.Discount._text) : 0,
-            basket: data.Items ? data.Items.Item.map(item => {
+            basket: items.map(item => {
                 return {
                     price: parseFloat(item.Price._text),
-                    amount: parseFloat(item.Quantity._text),
+                    amount: parseFloat(item.SummDiscounted._text),
                     discount: parseFloat(item.Discount._text)
                 }
-            }) : []
+            })
         }
     }
 
@@ -75,79 +84,58 @@ export default class SoapUtil {
         }
     }
 
-    public createSoftChequeRequest(chequeRequest: SoftChequeRequest): string {
+    public async createSoftChequeRequest(chequeRequest: SoftChequeRequest): Promise<string> {
         const data: ChequeRequestModel = { ...CHEQUE_REQUEST }
         this.updateObjectValue<number>('RequestID', Math.round(Math.random() * (1100 - 1000) + 1000), data)
         this.updateObjectValue<string>('ChequeType', 'Soft', data)
         this.updateObjectValue<string>('CardNumber', chequeRequest.loyaltyCard, data)
         this.updateObjectValue<string>('DateTime', new Date().toISOString(), data)
         this.updateObjectValue<string>('OperationType', 'Sale', data)
-        this.updateObjectValue<number>('Summ', 0, data)
         this.updateObjectValue<number>('Discount', 0, data)
-        this.updateObjectValue<number>('SummDiscounted', 0, data)
         this.updateObjectValue<number>('PaidByBonus', 0, data)
-        this.addItems(chequeRequest, data)
-        if (chequeRequest.coupons) {
+        await this.addItems(chequeRequest, data)
+        if (chequeRequest.coupons && chequeRequest.coupons.length > 0) {
+            console.log(chequeRequest.coupons)
             this.addCoupons(chequeRequest, data)
         }
-        return converter.js2xml(data, { compact: true })
+        const result = converter.js2xml(data, { compact: true })
+        console.log(result)
+        return result
     }
 
-    // public createChequeRequest(chequeRequest: ChequeRequest, type: string): string {
-    //     const data: ChequeRequestModel = { ...CHEQUE_REQUEST }
-    //     // console.log(JSON.stringify(data, null, 4))
-    //     this.updateObjectValue<number>('RequestID', Math.round(Math.random() * (1100 - 1000) + 1000), data)
-    //     this.updateObjectValue<string>('ChequeType', type, data)
-    //     this.updateObjectValue<string>('CardNumber', chequeRequest.cardNumber, data)
-    //     this.updateObjectValue<string>('DateTime', new Date().toISOString(), data)
-    //     this.updateObjectValue<string>('OperationType', 'Sale', data)
-    //     this.updateObjectValue<number>('Summ', chequeRequest.summ, data)
-    //     this.updateObjectValue<number>('Discount', 0, data)
-    //     this.updateObjectValue<number>('SummDiscounted', chequeRequest.summ, data)
-    //     this.updateObjectValue<number>('PaidByBonus', chequeRequest.paidByBonus || 0, data)
-    //     this.addItems(chequeRequest, data)
-    //     if (chequeRequest.coupons) {
-    //         this.addCoupons(chequeRequest, data)
-    //     }
-    //     // console.log('REQUEST', converter.js2xml(data, { compact: true }))
-    //     return converter.js2xml(data, { compact: true })
-    // }
-
-    private addItems(chequeRequest: ChequeRequest, data: any): void {
+    private async addItems(chequeRequest: SoftChequeRequest, data: any): Promise<void> {
         const items: Item[] = []
-        for (const item of chequeRequest.basket) {
+        let summ: number = 0
+        for (const [index, item] of chequeRequest.basket.entries()) {
+            const price: number = await this.ecomService.getPrice(item.goodsId!, chequeRequest.storeId)
+            summ += price * item.quantity!
             items.push({
                 PositionNumber: {
-                    _text: item.goodsId!.toString()
+                    _text: (index + 1).toString()
                 },
                 Article: {
-                    _text: 'A'
+                    _text: item.goodsId!.toString()
                 },
                 Quantity: {
                     _text: item.quantity!.toString()
                 },
                 Price: {
-                    _text: '0'
+                    _text: price.toString()
                 },
                 Discount: {
                     _text: '0'
                 },
                 Summ: {
-                    _text: '0'
+                    _text: (price * item.quantity!).toString()
                 },
                 SummDiscounted: {
-                    _text: '0'
+                    _text: (price * item.quantity!).toString()
                 }
             })
         }
-        this.addObjectProperty<{ Item: Item[] }>(
-            'Items',
-            {
-                Item: items
-            },
-            data,
-            'SoftChequeRequest'
-        )
+        this.updateObjectValue<number>('Summ', summ, data)
+        this.updateObjectValue<number>('SummDiscounted', summ, data)
+        this.addObjectProperty<Item[]>('Item', items, data, 'ChequeRequest')
     }
 
     private addCoupons(chequeRequest: SoftChequeRequest, data: any): void {
@@ -159,21 +147,11 @@ export default class SoapUtil {
                         Number: {
                             _text: chequeRequest.coupons![0].number || ' '
                         }
-                    },
-                    {
-                        EmissionId: {
-                            _text: chequeRequest.coupons![1].emissionId || ' '
-                        }
-                    },
-                    {
-                        TypeId: {
-                            _text: chequeRequest.coupons![2].typeId || ' '
-                        }
                     }
                 ]
             },
             data,
-            'SoftChequeRequest'
+            'ChequeRequest'
         )
     }
 

@@ -13,7 +13,7 @@ export class ManzanaPosService {
     public async getCheque(chequeRequest: SoftChequeRequest): Promise<ManzanaCheque> {
         return this.soapUtil.sendRequestFromXml(
             MANZANA_CASH_URL,
-            this.soapUtil.createSoftChequeRequest(chequeRequest),
+            await this.soapUtil.createSoftChequeRequest(chequeRequest),
             {
                 'Content-Type': 'text/xml;charset=UTF-8'
             }
