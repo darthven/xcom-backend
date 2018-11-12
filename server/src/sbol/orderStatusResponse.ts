@@ -1,4 +1,4 @@
-export interface OrderStatus {
+export interface OrderStatusResponse {
     /**
      * Номер (идентификатор) заказа в системе магазина.
      */

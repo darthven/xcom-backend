@@ -1,7 +1,6 @@
-import { Cheque } from '../common/cheque'
 import { ManzanaChequeItem } from './manzanaChequeItem'
 
-export interface ManzanaCheque extends Cheque {
+export interface ManzanaCheque {
     /**
      * Всего начислено баллов
      */
@@ -31,6 +30,10 @@ export interface ManzanaCheque extends Cheque {
      * Всего начислено активных статусных бонусных баллов
      */
     activeChargedStatusBonus: number
+
+    amount: number // total amount
+
+    discount: number // total discount
 
     basket: ManzanaChequeItem[]
 }

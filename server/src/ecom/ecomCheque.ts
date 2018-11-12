@@ -1,6 +1,5 @@
-import { Cheque } from '../common/cheque'
-import { EcomChequeItem } from './ecomChequeItem'
+import { EcomItem } from './ecomItem'
 
-export interface EcomCheque extends Cheque {
-    basket: EcomChequeItem[]
+export interface EcomCheque {
+    basket: EcomItem[]
 }

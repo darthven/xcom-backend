@@ -1,7 +1,5 @@
 import { MethodNotAllowedError } from 'routing-controllers'
 import { Inject, Service } from 'typedi'
-import * as converter from 'xml-js'
-import { Cheque } from '../common/cheque'
 import { SoftChequeRequest } from '../common/softChequeRequest'
 import { MANZANA_CASH_URL } from '../config/env.config'
 import SoapUtil from '../utils/soapUtil'

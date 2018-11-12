@@ -1,15 +1,23 @@
-import { MethodNotAllowedError } from 'routing-controllers'
+import { CoreOptions, RequiredUriUrl } from 'request'
+import * as requestPromise from 'request-promise-native'
 import { Service } from 'typedi'
+import { ECOM_URL } from '../config/env.config'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { Order } from '../mongo/entity/order'
+import { ecomOptions } from './ecomOptions'
 
 @Service()
 export class EcomService {
     public async postOrder(order: Order): Promise<ManzanaCheque> {
-        // TODO:
-        // return this.soapUtil.sendRequestFromXml(MANZANA_CASH_URL, this.soapUtil.createChequeRequest(request, 'soft'), {
-        //     'Content-Type': 'text/xml;charset=UTF-8'
-        // })
-        throw new MethodNotAllowedError()
+        return this.request({
+            ...ecomOptions,
+            method: 'POST',
+            uri: `${ECOM_URL}/orders`,
+            body: order
+        })
+    }
+
+    private async request(options: CoreOptions & RequiredUriUrl) {
+        return requestPromise(options)
     }
 }

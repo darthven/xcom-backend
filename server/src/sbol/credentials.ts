@@ -1,4 +1,4 @@
-export interface AuthorizedRequest {
+export interface Credentials {
     /**
      * Логин магазина, полученный при подключении
      */

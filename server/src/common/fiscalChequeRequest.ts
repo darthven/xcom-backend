@@ -1,19 +1,19 @@
 import { ArrayNotEmpty, IsDefined, IsInt, IsNotEmpty, ValidateIf } from 'class-validator'
+import { EcomOrderMeta } from '../ecom/ecomOrder'
 import { ChequeRequest } from './chequeRequest'
 import { Coupon } from './coupon'
-import { EcomOrderMeta } from './ecomOrder'
 import { SoftChequeRequest } from './softChequeRequest'
 
 export class FiscalChequeRequest extends SoftChequeRequest implements EcomOrderMeta {
     @IsDefined()
-    @ArrayNotEmpty()
+    @IsNotEmpty()
     public clientName: string = ''
 
     @IsDefined()
-    @ArrayNotEmpty()
+    @IsNotEmpty()
     public clientTel: string = ''
 
     @IsDefined()
-    @IsInt()
+    @IsNotEmpty()
     public payType: number = 0
 }

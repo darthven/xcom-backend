@@ -16,7 +16,7 @@ import { PayTypeRepository } from '../mongo/repository/payTypes'
 import { RegionsRepository } from '../mongo/repository/regions'
 import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
-import { StoreTypeRepository } from '../mongo/repository/storeType'
+import { StoreTypeRepository } from '../mongo/repository/storeTypes'
 import { getStationsInRadius } from '../utils/distanceByCoord'
 import { categoryImageExist, goodImageExist } from '../utils/fileExist'
 import { uploadImage } from '../utils/ftpUploader'
@@ -56,8 +56,11 @@ export class EcomUpdater {
     private storeTypes!: StoreTypeRepository
 
     public async updateCategories() {
-        ecomOptions.uri = `${ECOM_URL}/categories`
-        const res: any = await requestPromise(ecomOptions)
+        const options = {
+            ...ecomOptions,
+            uri: `${ECOM_URL}/categories`
+        }
+        const res: any = await requestPromise(options)
         // SET IMAGE FOR CATEGORIES AND FIND PRODUCTS COUNT
         for (const item of res.categories) {
             const imgName = categoryImageExist(item.id)
@@ -75,8 +78,11 @@ export class EcomUpdater {
     }
 
     public async updateStores() {
-        ecomOptions.uri = `${ECOM_URL}/stores`
-        const res: any = await requestPromise(ecomOptions)
+        const options = {
+            ...ecomOptions,
+            uri: `${ECOM_URL}/stores`
+        }
+        const res: any = await requestPromise(options)
         for (const item of res.stores) {
             await this.stores.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
@@ -112,8 +118,11 @@ export class EcomUpdater {
     }
 
     public async updateOrderStatuses() {
-        ecomOptions.uri = `${ECOM_URL}/order_statuses`
-        const res: any = await requestPromise(ecomOptions)
+        const options = {
+            ...ecomOptions,
+            uri: `${ECOM_URL}/order_statuses`
+        }
+        const res: any = await requestPromise(options)
         for (const item of res.orderStatuses) {
             await this.orderStatuses.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
@@ -121,8 +130,11 @@ export class EcomUpdater {
     }
 
     public async updatePayTypes() {
-        ecomOptions.uri = `${ECOM_URL}/pay_types`
-        const res: any = await requestPromise(ecomOptions)
+        const options = {
+            ...ecomOptions,
+            uri: `${ECOM_URL}/pay_types`
+        }
+        const res: any = await requestPromise(options)
         for (const item of res.payTypes) {
             await this.payTypes.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
@@ -131,9 +143,12 @@ export class EcomUpdater {
 
     public async updateGoods() {
         for (let i = 1, count = 1; count; i++) {
-            ecomOptions.uri = `${ECOM_URL}/goods?page=${i}`
+            const options = {
+                ...ecomOptions,
+                uri: `${ECOM_URL}/goods?page=${i}`
+            }
             try {
-                const res: any = await requestPromise(ecomOptions)
+                const res: any = await requestPromise(options)
                 count = res.goodsCount
                 if (count) {
                     for (const item of res.goods) {
@@ -152,10 +167,13 @@ export class EcomUpdater {
     public async updateStocks() {
         const stores: any[] = await this.stores.collection.find().toArray()
         for (let i = 0; i < stores.length; i++) {
-            ecomOptions.uri = `${ECOM_URL}/stocks/${stores[i].id}`
+            const options = {
+                ...ecomOptions,
+                uri: `${ECOM_URL}/stocks/${stores[i].id}`
+            }
             try {
                 logger.debug('request stock', { id: stores[i].id })
-                const res: any = await requestPromise(ecomOptions)
+                const res: any = await requestPromise(options)
                 await this.stores.collection.updateOne({ id: stores[i].id }, { $set: { stocks: res.stocks } })
             } catch (err) {
                 logger.error(`${stores[i].id} didn't updated`, err.message)

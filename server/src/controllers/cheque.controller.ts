@@ -15,15 +15,16 @@ import { Inject } from 'typedi'
 
 import { Context } from 'koa'
 import { stringify } from 'querystring'
-import { createEcomOrder } from '../common/ecomOrder'
 import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
 import { SoftChequeRequest } from '../common/softChequeRequest'
+import { createEcomOrder } from '../ecom/ecomOrder'
 import { EcomService } from '../ecom/ecomService'
 import { PayType } from '../ecom/payType'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { ManzanaPosService } from '../manzana/manzanaPosService'
 import { OrdersRepository } from '../mongo/repository/orders'
-import { StatusCode } from '../sbol/orderStatus'
+import { INN, StoreRepository } from '../mongo/repository/stores'
+import { StatusCode } from '../sbol/orderStatusResponse'
 import { SbolService } from '../sbol/sbolService'
 
 const PARAM_ORDER_ID = 'orderNumber'
@@ -39,6 +40,8 @@ export class ChequeController {
     private readonly ordersRepository!: OrdersRepository
     @Inject()
     private readonly ecom!: EcomService
+    @Inject()
+    private readonly stores!: StoreRepository
 
     @Post('/soft')
     @HttpCode(200)
@@ -49,7 +52,12 @@ export class ChequeController {
     @Post('/fiscal')
     public async postFiscalCheque(@Ctx() ctx: Context, @Body() request: FiscalChequeRequest) {
         const cheque = await this.manzanaPosService.getCheque(request)
-        const order = await this.ordersRepository.insert(createEcomOrder(request, cheque))
+        const storeLookup = await this.stores.getInn(request.storeId)
+        if (!storeLookup) {
+            throw new NotFoundError('store with this id not found')
+        }
+        const order = await this.ordersRepository.insert(createEcomOrder(request, cheque, storeLookup.INN))
+
         switch (order.payType) {
             case PayType.CASH:
                 return this.ecom.postOrder(order)
@@ -61,6 +69,7 @@ export class ChequeController {
                     description: `Авторизация заказа из мобильного приложения`,
                     amount: cheque.amount,
                     clientId: request.clientTel,
+                    INN: order.INN,
                     pageView: 'MOBILE'
                 })
                 return ctx.redirect(sbolResponse.formUrl)
@@ -75,12 +84,16 @@ export class ChequeController {
         if (!order) {
             throw new NotFoundError('no authorized payment with this id')
         }
-        const status = await this.sbolService.getOrderStatus({ orderNumber: orderId })
+        const status = await this.sbolService.getOrderStatus({
+            orderNumber: orderId,
+            INN: order.INN
+        })
         if (status.orderStatus === StatusCode.PREAUTHORIZED) {
             // successfully pre-authorized - send to ecom
             return this.ecom.postOrder(order)
         } else {
-            throw new HttpError(402, status.actionCodeDescription)
+            const err = new HttpError(402, status.actionCodeDescription)
+            throw Object.assign(err, status) // send status to user
         }
     }
 

@@ -1,7 +1,8 @@
 // https://docs.google.com/document/d/12qB6IpXknP48yfyHkfkvrCxZ-NvEKq-hMchIRLeuHdc/edit#heading=h.bn92tmk9unyx
+import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
+import { Item } from '../common/item'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
-import { ChequeItem } from './chequeItem'
-import { FiscalChequeRequest } from './fiscalChequeRequest'
+import { INN } from '../mongo/repository/stores'
 
 export interface EcomOrderMeta {
     storeId: string // Код склада
@@ -29,13 +30,22 @@ export interface EcomOrder extends EcomOrderMeta {
     deliveryTimeFrom?: string // Дата доставки с * (Если в заказе указать сервис доставки, то все поля “delivery*” становятся обязательными)
     deliveryTimeTo?: string // Дата доставки по * (Если в заказе указать сервис доставки, то все поля “delivery*” становятся обязательными)
     additionalFields?: {} // Список дополнительных полей
-    basket: ChequeItem[] // Корзина товара (массив элементов)
+    basket: OrderItem[] // Корзина товара (массив элементов)
+}
+
+export interface OrderItem extends Item {
+    price: number
+    batch?: string // Идентификатор партии
+    analogAllow?: boolean // Признак, искать по всем аналогам. (используется для предзаказов товара)
+    amount?: number // Сумма по строке. (Если передается сумма по строке и она меньше кол-во*цена, то рассчитывается скидка)
+    discount?: number // Сумма скидки. (Если не передается сумма по строке, то сумма рассчитывается кол-во*цена - сумма скидки)
 }
 
 export const createEcomOrder = (
     { storeId, loyaltyCard, clientName, clientTel, payType }: FiscalChequeRequest,
-    manzanaCheque: ManzanaCheque
-): EcomOrder => {
+    manzanaCheque: ManzanaCheque,
+    inn: string
+): EcomOrder & INN => {
     return {
         storeId,
         loyaltyCard,
@@ -44,6 +54,7 @@ export const createEcomOrder = (
         payType,
         paySum: manzanaCheque.amount,
         extDate: new Date().toDateString(),
-        basket: manzanaCheque.basket
+        basket: manzanaCheque.basket,
+        INN: inn
     }
 }
