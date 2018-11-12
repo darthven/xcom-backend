@@ -1,6 +1,5 @@
 import { MethodNotAllowedError } from 'routing-controllers'
 import { Service } from 'typedi'
-import { Cheque } from '../common/cheque'
 import { SoftChequeRequest } from '../common/softChequeRequest'
 import { ManzanaCheque } from './manzanaCheque'
 

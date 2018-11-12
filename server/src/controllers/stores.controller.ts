@@ -1,6 +1,18 @@
-import { Get, JsonController, NotFoundError, Param, State, UseBefore } from 'routing-controllers'
+import {
+    Body,
+    Get,
+    JsonController,
+    NotFoundError,
+    Param,
+    Post,
+    QueryParam,
+    State,
+    UseBefore
+} from 'routing-controllers'
 import { Inject } from 'typedi'
 
+import { ChequeRequest } from '../common/chequeRequest'
+import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
 import { LocationFilterInjectMiddleware } from '../middlewares/locationFilter.inject.middleware'
 import { LocationsQuery } from '../mongo/queries/LocationsQuery'
 import { StoreRepository } from '../mongo/repository/stores'
@@ -13,7 +25,11 @@ export class StoresController {
 
     @Get()
     @UseBefore(LocationFilterInjectMiddleware)
-    public async getLocations(@State('locationFilter') filter: LocationFilter) {
+    public async getLocations(@State('locationFilter') filter: LocationFilter, @QueryParam('goodsId') goodsId: any) {
+        if (goodsId) {
+            const ids = (Array.isArray(goodsId) ? goodsId : [goodsId]).map(Number)
+            return this.stores.getStoresAndStocksForProductList(filter, ids)
+        }
         const query = new LocationsQuery(filter)
         return this.stores.getAll(query)
     }

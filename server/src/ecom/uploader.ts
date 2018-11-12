@@ -12,8 +12,9 @@ import { PayTypeRepository } from '../mongo/repository/payTypes'
 import { RegionsRepository } from '../mongo/repository/regions'
 import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
-import { StoreTypeRepository } from '../mongo/repository/storeType'
+import { StoreTypeRepository } from '../mongo/repository/storeTypes'
 import { categoryImageExist } from '../utils/fileExist'
+import { storeTypesIconsMap } from '../utils/storeTypesIcons'
 import { ecomOptions } from './ecomOptions'
 import { EcomUpdater } from './updater'
 
@@ -84,7 +85,10 @@ export class EcomUploader {
         const types = await this.stores.getLocationsType()
         await this.storeTypes.dropCollection()
         await this.storeTypes.createCollection()
-        await this.storeTypes.collection.insertMany(types)
+        for (const item of types) {
+            item.img = storeTypesIconsMap.get(item.name)
+        }
+        await this.storeTypes.insertMany(types)
         logger.info('store types uploaded')
     }
 

@@ -1,5 +1,6 @@
 import { Service } from 'typedi'
 import { IMAGE_STORE_TYPE_FOLDER, IMAGE_URL } from '../../config/env.config'
+import { StoreType } from '../entity/storeType'
 import { Repository } from './repository'
 
 @Service()
@@ -53,5 +54,9 @@ export class StoreTypeRepository extends Repository {
                 }
             ])
             .toArray()
+    }
+
+    public async insertMany(storeTypes: StoreType[]) {
+        return this.collection.insertMany(storeTypes)
     }
 }
