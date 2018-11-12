@@ -24,6 +24,7 @@ export const MANZANA_CASH_URL =
     process.env.MANZANA_CASH_URL || 'http://mbsdevcrm15sp1.manzanagroup.ru:10001/POSProcessing.asmx'
 export const MANZANA_CLIENT_URL =
     process.env.MANZANA_CLIENT_URL || 'https://cosnozerki.manzanagroup.ru/customerofficeservice/'
+export const SBOL_GATEWAY_URL: string = process.env.SBOL_GATEWAY_URL!
 
 // 'http://ws.erkapharm.com:8990/ecom/hs/'
 // 'http://ws-dev.erkapharm.com:8990/ecom_test/hs'

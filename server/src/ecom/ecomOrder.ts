@@ -1,7 +1,8 @@
 // https://docs.google.com/document/d/12qB6IpXknP48yfyHkfkvrCxZ-NvEKq-hMchIRLeuHdc/edit#heading=h.bn92tmk9unyx
+import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
+import { Item } from '../common/item'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
-import { ChequeItem } from './chequeItem'
-import { FiscalChequeRequest } from './fiscalChequeRequest'
+import { INN } from '../mongo/repository/stores'
 
 export interface EcomOrderMeta {
     storeId: string // Код склада
@@ -13,7 +14,7 @@ export interface EcomOrderMeta {
 export interface EcomOrder extends EcomOrderMeta {
     serviceDetail?: string // Детали источника заказа (переход с яндекс маркета и т.п.)
     preorder?: boolean // Признак предзаказа (Заказ того, чего нет на остатках в данный момент)
-    extId: string // Код заказа источника
+    extId?: string // Код заказа источника
     extDate: string // Дата заказа источника
     extStatusId?: string // Внешний статус источника (если есть)
     extComment?: string // Комментарий от внешней системы
@@ -22,50 +23,38 @@ export interface EcomOrder extends EcomOrderMeta {
     clientAddress?: string // Адрес доставки
     clientComment?: string // Комментарий от клиента
     loyaltyCardType?: string // Тип карты лояльности (“Забота о здоровье” и т.п.)
+    paySum?: number // Сумма оплаты
     payGUID?: string // Идентификатор транзакции платежной системы
     payType?: number // Тип оплаты
-    paySum?: string // Сумма оплаты
     deliveryServiceId?: string // Сервис доставки
     deliveryTimeFrom?: string // Дата доставки с * (Если в заказе указать сервис доставки, то все поля “delivery*” становятся обязательными)
     deliveryTimeTo?: string // Дата доставки по * (Если в заказе указать сервис доставки, то все поля “delivery*” становятся обязательными)
     additionalFields?: {} // Список дополнительных полей
-    basket: ChequeItem[] // Корзина товара (массив элементов)
+    basket: OrderItem[] // Корзина товара (массив элементов)
 }
 
-export interface SbolAuthorizedEcomOrder extends EcomOrder {
-    payType: number
-    payGUID: string
+export interface OrderItem extends Item {
+    price: number
+    batch?: string // Идентификатор партии
+    analogAllow?: boolean // Признак, искать по всем аналогам. (используется для предзаказов товара)
+    amount?: number // Сумма по строке. (Если передается сумма по строке и она меньше кол-во*цена, то рассчитывается скидка)
+    discount?: number // Сумма скидки. (Если не передается сумма по строке, то сумма рассчитывается кол-во*цена - сумма скидки)
 }
 
-export const createPickupOrderRequest = (
-    { storeId, loyaltyCard, clientName, clientTel }: FiscalChequeRequest,
-    manzanaCheque: ManzanaCheque
-): EcomOrder => {
-    return {
-        storeId,
-        loyaltyCard,
-        clientName,
-        clientTel,
-        extId: '123', // TODO generate id
-        extDate: new Date().toDateString(),
-        basket: manzanaCheque.basket
-    }
-}
-
-export const createSbolAuthorizedOrderRequest = (
-    { storeId, loyaltyCard, clientName, clientTel }: FiscalChequeRequest,
+export const createEcomOrder = (
+    { storeId, loyaltyCard, clientName, clientTel, payType }: FiscalChequeRequest,
     manzanaCheque: ManzanaCheque,
-    payGUID: string
-): SbolAuthorizedEcomOrder => {
+    inn: string
+): EcomOrder & INN => {
     return {
         storeId,
         loyaltyCard,
         clientName,
         clientTel,
-        payGUID,
-        payType: 1, // Оплата онлайн
-        extId: '123', // TODO generate id
+        payType,
+        paySum: manzanaCheque.amount,
         extDate: new Date().toDateString(),
-        basket: manzanaCheque.basket
+        basket: manzanaCheque.basket,
+        INN: inn
     }
 }
