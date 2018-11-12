@@ -1,7 +1,7 @@
 import { Get, JsonController, QueryParam } from 'routing-controllers'
 import { Inject } from 'typedi'
 
-import { StoreTypeRepository } from '../mongo/repository/storeType'
+import { StoreTypeRepository } from '../mongo/repository/storeTypes'
 
 @JsonController('/storeTypes')
 export class StoresController {

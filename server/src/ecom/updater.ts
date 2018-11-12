@@ -5,6 +5,7 @@ import { Inject, Service } from 'typedi'
 
 import { ECOM_URL } from '../config/env.config'
 import logger from '../config/logger.config'
+import { Category } from '../mongo/entity/category'
 import { Good } from '../mongo/entity/good'
 import { Station } from '../mongo/entity/station'
 import { Store } from '../mongo/entity/store'
@@ -15,9 +16,9 @@ import { PayTypeRepository } from '../mongo/repository/payTypes'
 import { RegionsRepository } from '../mongo/repository/regions'
 import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
-import { StoreTypeRepository } from '../mongo/repository/storeType'
+import { StoreTypeRepository } from '../mongo/repository/storeTypes'
 import { getStationsInRadius } from '../utils/distanceByCoord'
-import { goodImageExist } from '../utils/fileExist'
+import { categoryImageExist, goodImageExist } from '../utils/fileExist'
 import { uploadImage } from '../utils/ftpUploader'
 import { saveGoodImage } from '../utils/imageSaver'
 import { invalidGoodImages } from '../utils/invalidGoodImages'
@@ -26,6 +27,17 @@ import { ecomOptions } from './ecomOptions'
 
 @Service()
 export class EcomUpdater {
+    public static makePrefixes(value: string) {
+        const res: string[] = []
+        if (value) {
+            value.split(' ').forEach((val: string) => {
+                for (let i = 1; i < val.length; i++) {
+                    res.push(val.substr(0, i).toUpperCase())
+                }
+            })
+        }
+        return res
+    }
     @Inject()
     private categories!: CategoryRepository
     @Inject()
@@ -44,18 +56,33 @@ export class EcomUpdater {
     private storeTypes!: StoreTypeRepository
 
     public async updateCategories() {
-        ecomOptions.uri = `${ECOM_URL}/categories`
-        const res: any = await requestPromise(ecomOptions)
+        const options = {
+            ...ecomOptions,
+            uri: `${ECOM_URL}/categories`
+        }
+        const res: any = await requestPromise(options)
+        // SET IMAGE FOR CATEGORIES AND FIND PRODUCTS COUNT
         for (const item of res.categories) {
+            const imgName = categoryImageExist(item.id)
+            if (imgName) {
+                item.img = imgName
+            }
             item.productCount = await this.goods.collection.find({ siteCatId: item.id }).count()
+        }
+        // COUNT A TREE SUM USING PRODUCTS COUNT
+        for (const item of res.categories) {
+            item.treeSumCount = this.recursiveCategoryCount(res.categories, item.id)
             await this.categories.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
         logger.info('categories updated')
     }
 
     public async updateStores() {
-        ecomOptions.uri = `${ECOM_URL}/stores`
-        const res: any = await requestPromise(ecomOptions)
+        const options = {
+            ...ecomOptions,
+            uri: `${ECOM_URL}/stores`
+        }
+        const res: any = await requestPromise(options)
         for (const item of res.stores) {
             await this.stores.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
@@ -91,8 +118,11 @@ export class EcomUpdater {
     }
 
     public async updateOrderStatuses() {
-        ecomOptions.uri = `${ECOM_URL}/order_statuses`
-        const res: any = await requestPromise(ecomOptions)
+        const options = {
+            ...ecomOptions,
+            uri: `${ECOM_URL}/order_statuses`
+        }
+        const res: any = await requestPromise(options)
         for (const item of res.orderStatuses) {
             await this.orderStatuses.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
@@ -100,8 +130,11 @@ export class EcomUpdater {
     }
 
     public async updatePayTypes() {
-        ecomOptions.uri = `${ECOM_URL}/pay_types`
-        const res: any = await requestPromise(ecomOptions)
+        const options = {
+            ...ecomOptions,
+            uri: `${ECOM_URL}/pay_types`
+        }
+        const res: any = await requestPromise(options)
         for (const item of res.payTypes) {
             await this.payTypes.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         }
@@ -110,18 +143,22 @@ export class EcomUpdater {
 
     public async updateGoods() {
         for (let i = 1, count = 1; count; i++) {
-            ecomOptions.uri = `${ECOM_URL}/goods?page=${i}`
+            const options = {
+                ...ecomOptions,
+                uri: `${ECOM_URL}/goods?page=${i}`
+            }
             try {
-                const res: any = await requestPromise(ecomOptions)
+                const res: any = await requestPromise(options)
                 count = res.goodsCount
                 if (count) {
                     for (const item of res.goods) {
+                        item.suffixes = EcomUpdater.makePrefixes(item.name)
                         await this.updateSingleGood(item)
                     }
                 }
                 logger.info(`goods page ${i} updated`)
             } catch (err) {
-                logger.error(`goods page ${i} failed`, { message: err.message, all: err })
+                logger.error(`goods page ${i} failed`, { err: err.message })
             }
         }
         logger.info('goods updated')
@@ -130,10 +167,13 @@ export class EcomUpdater {
     public async updateStocks() {
         const stores: any[] = await this.stores.collection.find().toArray()
         for (let i = 0; i < stores.length; i++) {
-            ecomOptions.uri = `${ECOM_URL}/stocks/${stores[i].id}`
+            const options = {
+                ...ecomOptions,
+                uri: `${ECOM_URL}/stocks/${stores[i].id}`
+            }
             try {
                 logger.debug('request stock', { id: stores[i].id })
-                const res: any = await requestPromise(ecomOptions)
+                const res: any = await requestPromise(options)
                 await this.stores.collection.updateOne({ id: stores[i].id }, { $set: { stocks: res.stocks } })
             } catch (err) {
                 logger.error(`${stores[i].id} didn't updated`, err.message)
@@ -149,8 +189,9 @@ export class EcomUpdater {
             await this.goods.collection.updateOne({ id: single.id }, { $set: { price: single.price } })
             logger.debug(`${single.id} updated`)
         }
+        logger.info(`prices updated`)
     }
-    public async updateLocations() {
+    public async updateStoreLocations() {
         const stores = await this.stores.collection
             .find({})
             .project({ _id: 1, GPS: 1 })
@@ -176,6 +217,7 @@ export class EcomUpdater {
                 )
             }
         }
+        logger.info('store locations updated')
     }
 
     public async updateStations() {
@@ -215,7 +257,7 @@ export class EcomUpdater {
         }
     }
 
-    public async updateStationsNear() {
+    public async updateStationsNearStore() {
         const stores: Store[] = await this.stores.collection
             .find({})
             .project({ _id: 0, id: 1, location: 1 })
@@ -239,24 +281,36 @@ export class EcomUpdater {
                 )
             }
         }
+        logger.info('stations near stores updated updated')
+    }
+
+    private recursiveCategoryCount(categories: Category[], parentId: number): number {
+        let sum = 0
+        for (const item of categories) {
+            if (item.parentId === parentId) {
+                sum += item.productCount + this.recursiveCategoryCount(categories, item.id)
+            }
+        }
+        return sum
     }
 
     private async updateSingleGood(item: Good) {
         const updated = await this.goods.collection.findOneAndUpdate({ id: item.id }, { $set: item }, { upsert: true })
         if (!updated.value) {
+            // TODO update price
             // if new item added
             // update price
         }
         if (item.imgLinkFTP && !goodImageExist(item.id)) {
             // upload image from ftp
-            const tmpFile = await uploadImage(item.imgLinkFTP)
             try {
+                const tmpFile = await uploadImage(item.imgLinkFTP)
                 await saveGoodImage(tmpFile, item.id)
                 await this.goods.updateImageLink(item.id)
+                logger.info(`image for good saved ${item.id}`)
             } catch (e) {
-                logger.error('err while updating image', e.message)
+                logger.error('err while updating image', { err: e.message })
             }
-            logger.info(`image for good saved ${item.id}`)
         }
     }
 }

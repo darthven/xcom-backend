@@ -6,6 +6,7 @@ COPY package*.json tsconfig.json ./
 RUN npm install
 COPY . .
 
-RUN mkdir -p logs/
+RUN npm run types:fix
+RUN mkdir -p images/
 
 VOLUME [ "/usr/src/app" ]

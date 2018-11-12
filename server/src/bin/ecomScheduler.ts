@@ -19,7 +19,7 @@ async function shedulerStart(ecomUpdater: EcomUpdater) {
     schedule.scheduleJob('0 0 * * *', () => {
         ecomUpdater.updateCategories()
         ecomUpdater.updateStores()
-        ecomUpdater.updateLocations()
+        ecomUpdater.updateStoreLocations()
         ecomUpdater.updateGoods()
     })
 

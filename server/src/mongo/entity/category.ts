@@ -3,4 +3,5 @@ export interface Category {
     name: string
     parentId: number
     level: number
+    productCount: number
 }

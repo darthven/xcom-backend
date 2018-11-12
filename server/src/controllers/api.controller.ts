@@ -7,7 +7,7 @@ export class ApiController {
         return {
             status: 'available',
             info: 'xcom api',
-            version: '1.1.0',
+            version: '1.10.0',
             startAt: new Date()
         }
     }

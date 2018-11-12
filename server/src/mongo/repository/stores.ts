@@ -1,7 +1,12 @@
 import { Service } from 'typedi'
 import { IMAGE_STORE_TYPE_FOLDER, IMAGE_URL } from '../../config/env.config'
+import { LocationFilter } from '../../parameters/locationFilter'
 import { LocationsQuery } from '../queries/LocationsQuery'
 import { Repository } from './repository'
+
+export interface INN {
+    INN: string
+}
 
 @Service()
 export class StoreRepository extends Repository {
@@ -223,9 +228,71 @@ export class StoreRepository extends Repository {
             ])
             .toArray()
     }
+
+    public async getInn(id: number): Promise<INN | null> {
+        return this.collection
+            .aggregate([
+                {
+                    $match: { id }
+                },
+                {
+                    $project: {
+                        INN: 1
+                    }
+                }
+            ])
+            .next()
+    }
+
+    public async getStoresAndStocksForProductList(filter: LocationFilter, ids: number[]) {
+        const query: any = {
+            regionCode: filter.region
+        }
+        if (filter.stores) {
+            query.id = { $in: filter.stores }
+        }
+        if (filter.type) {
+            query.storeType = filter.type
+        }
+        return this.collection
+            .aggregate([
+                { $match: query },
+                {
+                    $lookup: {
+                        from: 'storeTypes',
+                        localField: 'storeType',
+                        foreignField: 'name',
+                        as: 'type'
+                    }
+                },
+                { $unwind: '$type' },
+                {
+                    $project: {
+                        _id: 0,
+                        id: 1,
+                        name: 1,
+                        region: '$regionCode',
+                        address: 1,
+                        phone: '$phoneNumber',
+                        workTime: 1,
+                        location: 1,
+                        stations: 1,
+                        'type.name': 1,
+                        'type.icon': {
+                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$type.img'] },
+                            urls: null,
+                            urlm: null
+                        },
+                        stocks: {
+                            $filter: {
+                                input: '$stocks',
+                                as: 'stock',
+                                cond: { $in: ['$$stock.goodsId', ids] }
+                            }
+                        }
+                    }
+                }
+            ])
+            .toArray()
+    }
 }
-
-/*
-
-debug: indexes {"0":{"v":2,"key":{"_id":1},"name":"_id_","ns":"xcom-prod.stores"},"1":{"v":2,"unique":true,"key":{"id":1},"name":"id_1","ns":"xcom-prod.stores"},"2":{"v":2,"key":{"storeType":1},"name":"storeType_1","ns":"xcom-prod.stores"},"3":{"v":2,"key":{"region":1},"name":"region_1","ns":"xcom-prod.stores"},"4":{"v":2,"key":{"regionCode":1},"name":"regionCode_1","ns":"xcom-prod.stores"}
-*/

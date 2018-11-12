@@ -1,4 +1,4 @@
-import { IsArray, IsEnum, IsPositive, Length } from 'class-validator'
+import { IsArray, IsPositive } from 'class-validator'
 
 export class Ids {
     @IsArray()

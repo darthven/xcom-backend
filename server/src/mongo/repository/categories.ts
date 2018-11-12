@@ -1,5 +1,6 @@
 import { Service } from 'typedi'
 
+import { IMAGE_CATEGORIES_FOLDER, IMAGE_URL } from '../../config/env.config'
 import { CategoriesQuery } from '../queries/CategoriesQuery'
 import { Repository } from './repository'
 
@@ -18,14 +19,49 @@ export class CategoryRepository extends Repository {
     public async getAll(search: string | undefined) {
         const query = new CategoriesQuery(search)
         return this.collection
-            .find(query)
-            .project({ _id: 0 })
+            .aggregate([
+                { $match: { $or: [{ productCount: { $ne: 0 } }, { treeSumCount: { $ne: 0 } }] } },
+                { $match: query },
+                {
+                    $project: {
+                        id: 1,
+                        name: 1,
+                        parentId: 1,
+                        level: 1,
+                        productCount: 1,
+                        treeSumCount: 1,
+                        icon: {
+                            url: { $concat: [IMAGE_URL, IMAGE_CATEGORIES_FOLDER, '$img'] },
+                            urls: null,
+                            urlm: null
+                        },
+                        _id: 0
+                    }
+                }
+            ])
             .toArray()
     }
     public async getSingle(id: number) {
         return this.collection
-            .find({ id })
-            .project({ _id: 0 })
+            .aggregate([
+                { $match: { id } },
+                {
+                    $project: {
+                        id: 1,
+                        name: 1,
+                        parentId: 1,
+                        level: 1,
+                        productCount: 1,
+                        treeSumCount: 1,
+                        icon: {
+                            url: { $concat: [IMAGE_URL, IMAGE_CATEGORIES_FOLDER, '$img'] },
+                            urls: null,
+                            urlm: null
+                        },
+                        _id: 0
+                    }
+                }
+            ])
             .toArray()
     }
 }

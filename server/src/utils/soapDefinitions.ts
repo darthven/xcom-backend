@@ -16,12 +16,6 @@ interface Coupons {
     Coupon: [
         {
             Number: ElementValue
-        },
-        {
-            EmissionId: ElementValue
-        },
-        {
-            TypeId: ElementValue
         }
     ]
 }
@@ -57,9 +51,7 @@ interface ChequeRequestModel {
                         Discount: ElementValue
                         SummDiscounted: ElementValue
                         PaidByBonus: ElementValue
-                        Items?: {
-                            Item: Item[]
-                        }
+                        Item?: Item[]
                         Coupons?: Coupons
                     }
                 }
@@ -114,9 +106,7 @@ interface ChequeResponseModel {
                         ActiveChargedStatusBonus: ElementValue
                         AvailablePayment: ElementValue
                         WriteoffBonus: ElementValue
-                        Items?: {
-                            Item: Item[]
-                        }
+                        Item: Item[]
                     }
                 }
             }
