@@ -18,7 +18,8 @@ async function start() {
     // await ecomUpdater.updateStoreTypes()
     // await ecomUpdater.updateImages()
     // await ecomUpdater.updateRegionsPoly()
-    await ecomUpdater.updateGoods()
+    await ecomUpdater.updateStocksCollection()
+    // await ecomUpdater.updateGoods()
     // await ecomUpdater.updateCategories()
     await Mongo.close()
 }
