@@ -1,5 +1,6 @@
-import { MethodNotAllowedError } from 'routing-controllers'
 import { Inject, Service } from 'typedi'
+
+import { InvalidCoupon } from '../common/invalidCoupon'
 import { SoftChequeRequest } from '../common/softChequeRequest'
 import { MANZANA_CASH_URL } from '../config/env.config'
 import SoapUtil from '../utils/soapUtil'
@@ -10,13 +11,7 @@ export class ManzanaPosService {
     @Inject()
     private soapUtil!: SoapUtil
 
-    public async getCheque(chequeRequest: SoftChequeRequest): Promise<ManzanaCheque> {
-        return this.soapUtil.sendRequestFromXml(
-            MANZANA_CASH_URL,
-            await this.soapUtil.createSoftChequeRequest(chequeRequest),
-            {
-                'Content-Type': 'text/xml;charset=UTF-8'
-            }
-        )
+    public async getCheque(chequeRequest: SoftChequeRequest): Promise<ManzanaCheque | InvalidCoupon[]> {
+        return this.soapUtil.sendRequest(MANZANA_CASH_URL, chequeRequest)
     }
 }

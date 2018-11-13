@@ -12,12 +12,68 @@ interface Item {
     SummDiscounted: ElementValue
 }
 
+interface CouponDefinition {
+    Number?: ElementValue
+    EmissionId?: ElementValue
+    TypeId?: ElementValue
+    ApplicabilityMessage?: ElementValue
+    ApplicabilityCode?: ElementValue
+}
+
 interface Coupons {
-    Coupon: [
-        {
-            Number: ElementValue
-        }
-    ]
+    Coupon: CouponDefinition[]
+}
+
+interface ChequeRequest {
+    _attributes: {
+        ChequeType: string
+    }
+    RequestID: ElementValue
+    DateTime: ElementValue
+    Organization: ElementValue
+    BusinessUnit: ElementValue
+    POS: ElementValue
+    Card: {
+        CardNumber: ElementValue
+    }
+    Number: ElementValue
+    OperationType: ElementValue
+    Summ: ElementValue
+    Discount: ElementValue
+    SummDiscounted: ElementValue
+    PaidByBonus: ElementValue
+    Item?: Item[]
+    Coupons?: Coupons
+}
+
+interface ChequeResponse {
+    TransactionID: ElementValue
+    RequestID: ElementValue
+    Processed: ElementValue
+    ReturnCode: ElementValue
+    Message: ElementValue
+    CardBalance: ElementValue
+    CardNormalBalance: ElementValue
+    CardStatusBalance: ElementValue
+    CardActiveBalance: ElementValue
+    CardNormalActiveBalance: ElementValue
+    CardStatusActiveBalance: ElementValue
+    CardSumm: ElementValue
+    CardDiscount: ElementValue
+    CardChargedMoney: ElementValue
+    CardWriteoffMoney: ElementValue
+    CardMoneyBalance: ElementValue
+    Summ: ElementValue
+    Discount: ElementValue
+    SummDiscounted: ElementValue
+    ChargedBonus: ElementValue
+    ActiveChargedBonus: ElementValue
+    ChargedStatusBonus: ElementValue
+    ActiveChargedStatusBonus: ElementValue
+    AvailablePayment: ElementValue
+    WriteoffBonus: ElementValue
+    Item: Item[]
+    Coupons?: Coupons
 }
 
 interface ChequeRequestModel {
@@ -33,27 +89,7 @@ interface ChequeRequestModel {
                     xmlns: string
                 }
                 request: {
-                    ChequeRequest: {
-                        _attributes: {
-                            ChequeType: string
-                        }
-                        RequestID: ElementValue
-                        DateTime: ElementValue
-                        Organization: ElementValue
-                        BusinessUnit: ElementValue
-                        POS: ElementValue
-                        Card: {
-                            CardNumber: ElementValue
-                        }
-                        Number: ElementValue
-                        OperationType: ElementValue
-                        Summ: ElementValue
-                        Discount: ElementValue
-                        SummDiscounted: ElementValue
-                        PaidByBonus: ElementValue
-                        Item?: Item[]
-                        Coupons?: Coupons
-                    }
+                    ChequeRequest: ChequeRequest
                 }
                 orgName: ElementValue
             }
@@ -80,34 +116,7 @@ interface ChequeResponseModel {
                     xmlns: string
                 }
                 ProcessRequestResult: {
-                    ChequeResponse: {
-                        TransactionID: ElementValue
-                        RequestID: ElementValue
-                        Processed: ElementValue
-                        ReturnCode: ElementValue
-                        Message: ElementValue
-                        CardBalance: ElementValue
-                        CardNormalBalance: ElementValue
-                        CardStatusBalance: ElementValue
-                        CardActiveBalance: ElementValue
-                        CardNormalActiveBalance: ElementValue
-                        CardStatusActiveBalance: ElementValue
-                        CardSumm: ElementValue
-                        CardDiscount: ElementValue
-                        CardChargedMoney: ElementValue
-                        CardWriteoffMoney: ElementValue
-                        CardMoneyBalance: ElementValue
-                        Summ: ElementValue
-                        Discount: ElementValue
-                        SummDiscounted: ElementValue
-                        ChargedBonus: ElementValue
-                        ActiveChargedBonus: ElementValue
-                        ChargedStatusBonus: ElementValue
-                        ActiveChargedStatusBonus: ElementValue
-                        AvailablePayment: ElementValue
-                        WriteoffBonus: ElementValue
-                        Item: Item[]
-                    }
+                    ChequeResponse: ChequeResponse
                 }
             }
         }
@@ -179,4 +188,13 @@ const CHEQUE_REQUEST: ChequeRequestModel = {
     }
 }
 
-export { Item, Coupons, ChequeRequestModel, ChequeResponseModel, CHEQUE_REQUEST }
+export {
+    Item,
+    CouponDefinition,
+    Coupons,
+    ChequeRequest,
+    ChequeResponse,
+    ChequeRequestModel,
+    ChequeResponseModel,
+    CHEQUE_REQUEST
+}

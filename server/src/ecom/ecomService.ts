@@ -1,6 +1,6 @@
 import { CoreOptions, RequiredUriUrl } from 'request'
 import * as requestPromise from 'request-promise-native'
-import { NotFoundError } from 'routing-controllers'
+import { HttpError } from 'routing-controllers'
 import { Service } from 'typedi'
 import { ECOM_URL } from '../config/env.config'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
@@ -19,17 +19,21 @@ export class EcomService {
         })
     }
 
-    public async getPrice(goodsId: number, storeId: number): Promise<number> {
+    public async getPrices(goodsIds: number[], storeId: number): Promise<Array<{ goodsId: number; price: number }>> {
         const response = await this.request({
             ...ecomOptions,
-            method: 'GET',
-            uri: `${ECOM_URL}/stocks/${storeId}`
+            method: 'POST',
+            uri: `${ECOM_URL}/prices`,
+            body: {
+                stores: [storeId],
+                goods: goodsIds
+            }
         })
-        const stock: Stock = response.stocks.find((it: Stock) => it.goodsId === goodsId)
-        if (!stock) {
-            throw new NotFoundError(`In stocks of the store "${storeId}" there are no goods with id "${goodsId}"`)
+        const { prices } = response
+        if (!prices) {
+            throw new HttpError(400, 'No prices are defined for the current goods')
         }
-        return stock.ecomPrice
+        return prices
     }
 
     private async request(options: CoreOptions & RequiredUriUrl) {
