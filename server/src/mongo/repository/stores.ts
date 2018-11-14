@@ -1,8 +1,9 @@
-import { Service } from 'typedi'
+import { Inject, Service } from 'typedi'
 import { IMAGE_STORE_TYPE_FOLDER, IMAGE_URL } from '../../config/env.config'
 import { LocationFilter } from '../../parameters/locationFilter'
 import { LocationsQuery } from '../queries/LocationsQuery'
 import { Repository } from './repository'
+import { StocksRepository } from './stocks'
 
 export interface INN {
     INN: string
@@ -10,6 +11,9 @@ export interface INN {
 
 @Service()
 export class StoreRepository extends Repository {
+    @Inject()
+    private readonly stocks!: StocksRepository
+
     constructor() {
         super('stores')
     }
@@ -245,54 +249,10 @@ export class StoreRepository extends Repository {
     }
 
     public async getStoresAndStocksForProductList(filter: LocationFilter, ids: number[]) {
-        const query: any = {
-            regionCode: filter.region
+        const stores = await this.getAll(new LocationsQuery(filter))
+        for (const store of stores) {
+            store.stocks = await this.stocks.getForStore(store.id, ids)
         }
-        if (filter.stores) {
-            query.id = { $in: filter.stores }
-        }
-        if (filter.type) {
-            query.storeType = filter.type
-        }
-        return this.collection
-            .aggregate([
-                { $match: query },
-                {
-                    $lookup: {
-                        from: 'storeTypes',
-                        localField: 'storeType',
-                        foreignField: 'name',
-                        as: 'type'
-                    }
-                },
-                { $unwind: '$type' },
-                {
-                    $project: {
-                        _id: 0,
-                        id: 1,
-                        name: 1,
-                        region: '$regionCode',
-                        address: 1,
-                        phone: '$phoneNumber',
-                        workTime: 1,
-                        location: 1,
-                        stations: 1,
-                        'type.name': 1,
-                        'type.icon': {
-                            url: { $concat: [IMAGE_URL, IMAGE_STORE_TYPE_FOLDER, '$type.img'] },
-                            urls: null,
-                            urlm: null
-                        },
-                        stocks: {
-                            $filter: {
-                                input: '$stocks',
-                                as: 'stock',
-                                cond: { $in: ['$$stock.goodsId', ids] }
-                            }
-                        }
-                    }
-                }
-            ])
-            .toArray()
+        return stores
     }
 }

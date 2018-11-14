@@ -198,19 +198,16 @@ export class EcomUpdater {
                     ...ecomOptions,
                     uri: `${ECOM_URL}/stocks/${store.id}`
                 })
-                if (res.stocks.length > 0) {
-                    const bulk = this.stocks.collection.initializeUnorderedBulkOp()
-                    for (const stock of res.stocks) {
-                        bulk.find({ goodsId: stock.goodsId })
-                            .upsert()
-                            .replaceOne(stock)
-                    }
-                    await bulk.execute()
+                await this.stocks.collection.deleteMany({ storeId: store.id })
+                // TODO: possible race condition on stocks :(
+                if (res.stocks && res.stocks.length > 0) {
+                    await this.stocks.collection.insertMany(res.stocks)
                 }
                 updatedCount++
                 logger.info(`${updatedCount + failedCount}/${stores.length} updated`)
             } catch (err) {
-                logger.error(`stocks for store ${store.id} update failed`, err)
+                logger.error(`stocks for store ${store.id} update failed`)
+                logger.error(err.stack)
                 failedCount++
             }
         }

@@ -3,7 +3,6 @@ import {
     Body,
     Ctx,
     Get,
-    HttpCode,
     HttpError,
     JsonController,
     NotFoundError,
@@ -44,7 +43,6 @@ export class ChequeController {
     private readonly stores!: StoreRepository
 
     @Post('/soft')
-    @HttpCode(200)
     public async handleSoftCheque(@Body() request: SoftChequeRequest): Promise<ManzanaCheque> {
         return this.manzanaPosService.getCheque(request)
     }
@@ -67,7 +65,7 @@ export class ChequeController {
                     failUrl: this.getRedirectUrl(order.extId, false),
                     returnUrl: this.getRedirectUrl(order.extId, true),
                     description: `Авторизация заказа из мобильного приложения`,
-                    amount: cheque.amount,
+                    amount: cheque.amount * 100,
                     clientId: request.clientTel,
                     INN: order.INN,
                     pageView: 'MOBILE'
