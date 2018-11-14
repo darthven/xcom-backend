@@ -8,6 +8,7 @@ import logger from '../config/logger.config'
 import { Category } from '../mongo/entity/category'
 import { Good } from '../mongo/entity/good'
 import { Station } from '../mongo/entity/station'
+import { Stock } from '../mongo/entity/stock'
 import { Store } from '../mongo/entity/store'
 import { CategoryRepository } from '../mongo/repository/categories'
 import { GoodRepository } from '../mongo/repository/goods'
@@ -15,6 +16,7 @@ import { OrderStatusRepository } from '../mongo/repository/orderStatuses'
 import { PayTypeRepository } from '../mongo/repository/payTypes'
 import { RegionsRepository } from '../mongo/repository/regions'
 import { StationsRepository } from '../mongo/repository/stations'
+import { StocksRepository } from '../mongo/repository/stocks'
 import { StoreRepository } from '../mongo/repository/stores'
 import { StoreTypeRepository } from '../mongo/repository/storeTypes'
 import { getStationsInRadius } from '../utils/distanceByCoord'
@@ -54,6 +56,8 @@ export class EcomUpdater {
     private regions!: RegionsRepository
     @Inject()
     private storeTypes!: StoreTypeRepository
+    @Inject()
+    private stocks!: StocksRepository
 
     public async updateCategories() {
         const options = {
@@ -180,6 +184,36 @@ export class EcomUpdater {
             }
             logger.info(`${i + 1}/${stores.length} updated`)
         }
+    }
+
+    public async updateStocksCollection() {
+        const stores: any[] = await this.stores.collection.aggregate([{ $project: { id: 1 } }]).toArray()
+        await this.stocks.createCollection()
+        let updatedCount = 0
+        let failedCount = 0
+        const failedIds = []
+        for (const store of stores) {
+            try {
+                logger.debug(`requesting stock for store ${store.id}`)
+                const res: { stocks: Stock[] } = await requestPromise({
+                    ...ecomOptions,
+                    uri: `${ECOM_URL}/stocks/${store.id}`
+                })
+                await this.stocks.collection.deleteMany({ storeId: store.id })
+                // TODO: possible race condition on stocks :(
+                if (res.stocks && res.stocks.length > 0) {
+                    await this.stocks.collection.insertMany(res.stocks)
+                }
+                updatedCount++
+                logger.info(`${updatedCount + failedCount}/${stores.length} updated`)
+            } catch (err) {
+                failedIds.push(store.id)
+                logger.error(`stocks for store ${store.id} update failed`, { failedIds })
+                logger.error(err.stack)
+                failedCount++
+            }
+        }
+        logger.info(`stocks update finished`, { updatedCount, failedCount })
     }
 
     public async updatePrices() {
