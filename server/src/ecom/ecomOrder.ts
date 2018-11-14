@@ -5,7 +5,7 @@ import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { INN } from '../mongo/repository/stores'
 
 export interface EcomOrderMeta {
-    storeId: string // Код склада
+    storeId: number // Код склада
     loyaltyCard?: string // Код карты клиента
     clientName: string // ФИО Клиента
     clientTel: string // Номер телефона клиента (7XXXXXXXXXX)

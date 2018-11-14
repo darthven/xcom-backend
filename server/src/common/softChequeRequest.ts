@@ -1,16 +1,14 @@
-import { ArrayNotEmpty, IsDefined, IsInt, IsNotEmpty, ValidateIf } from 'class-validator'
+import { ArrayNotEmpty, IsDefined, IsInt, IsNotEmpty, IsString, NotEquals, ValidateIf } from 'class-validator'
 import { ChequeRequest } from './chequeRequest'
 import { Coupon } from './coupon'
 
 export class SoftChequeRequest extends ChequeRequest {
     @IsDefined()
-    @IsNotEmpty()
-    public storeId: string = ''
+    public storeId!: number
 
-    @IsDefined()
     @IsNotEmpty()
-    public loyaltyCard: string = ''
+    @IsString()
+    public loyaltyCard!: string
 
-    @IsDefined()
-    public coupons?: Coupon[] = []
+    public coupons?: Coupon[]
 }

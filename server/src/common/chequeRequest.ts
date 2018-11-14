@@ -5,5 +5,5 @@ import { Item } from './item'
 export class ChequeRequest {
     @IsDefined()
     @ArrayNotEmpty()
-    public basket: Item[] = []
+    public basket!: Item[]
 }

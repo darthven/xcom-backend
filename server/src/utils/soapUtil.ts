@@ -126,7 +126,7 @@ export default class SoapUtil {
         const items: Item[] = []
         const prices: Array<{ goodsId: number; price: number }> = await this.ecomService.getPrices(
             chequeRequest.basket.map(it => it.goodsId!),
-            parseInt(chequeRequest.storeId, 10)
+            chequeRequest.storeId
         )
         let summ: number = 0
         for (const [index, item] of chequeRequest.basket.entries()) {
@@ -203,8 +203,8 @@ export default class SoapUtil {
                     couponId: couponsFromRequest.Coupon[index].Number
                         ? couponsFromRequest.Coupon[index].Number!._text
                         : couponsFromRequest.Coupon[index].EmissionId
-                        ? couponsFromRequest.Coupon[index].EmissionId!._text
-                        : couponsFromRequest.Coupon[index].TypeId!._text
+                            ? couponsFromRequest.Coupon[index].EmissionId!._text
+                            : couponsFromRequest.Coupon[index].TypeId!._text
                 })
             }
         }
@@ -219,7 +219,7 @@ export default class SoapUtil {
             body: xml,
             json: false
         })
-        logger.info(response)
+        logger.debug(`manzana response ${response}`)
         return converter.xml2js(response, { compact: true, alwaysChildren: true }) as ChequeResponseModel
     }
 

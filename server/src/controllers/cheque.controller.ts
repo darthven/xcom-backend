@@ -6,7 +6,6 @@ import {
     HttpError,
     JsonController,
     NotFoundError,
-    Param,
     Post,
     QueryParam
 } from 'routing-controllers'
@@ -21,9 +20,11 @@ import { EcomService } from '../ecom/ecomService'
 import { PayType } from '../ecom/payType'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { ManzanaPosService } from '../manzana/manzanaPosService'
+import { Order } from '../mongo/entity/order'
 import { OrdersRepository } from '../mongo/repository/orders'
-import { INN, StoreRepository } from '../mongo/repository/stores'
+import { StoreRepository } from '../mongo/repository/stores'
 import { StatusCode } from '../sbol/orderStatusResponse'
+import { PreAuthResponse } from '../sbol/preAuthResponse'
 import { SbolService } from '../sbol/sbolService'
 
 const PARAM_ORDER_ID = 'orderNumber'
@@ -48,19 +49,23 @@ export class ChequeController {
     }
 
     @Post('/fiscal')
-    public async postFiscalCheque(@Ctx() ctx: Context, @Body() request: FiscalChequeRequest) {
-        const cheque = (await this.manzanaPosService.getCheque(request)) as ManzanaCheque
-        const storeLookup = await this.stores.getInn(parseInt(request.storeId, 10))
+    public async postFiscalCheque(
+        @Ctx() ctx: Context,
+        @Body() request: FiscalChequeRequest
+    ): Promise<Order | PreAuthResponse> {
+        const cheque = await this.manzanaPosService.getCheque(request)
+        const storeLookup = await this.stores.getInn(request.storeId)
         if (!storeLookup) {
             throw new NotFoundError('store with this id not found')
         }
+        // store order in local db and assign id
         const order = await this.ordersRepository.insert(createEcomOrder(request, cheque, storeLookup.INN))
 
         switch (order.payType) {
             case PayType.CASH:
                 return this.ecom.postOrder(order)
             case PayType.ONLINE:
-                const sbolResponse = await this.sbolService.registerPreAuth({
+                return this.sbolService.registerPreAuth({
                     orderNumber: order.extId,
                     failUrl: this.getRedirectUrl(order.extId, false),
                     returnUrl: this.getRedirectUrl(order.extId, true),
@@ -70,7 +75,6 @@ export class ChequeController {
                     INN: order.INN,
                     pageView: 'MOBILE'
                 })
-                return ctx.redirect(sbolResponse.formUrl)
             default:
                 throw new BadRequestError(`payType ${order.payType} not supported`)
         }
