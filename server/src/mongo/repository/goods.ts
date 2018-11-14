@@ -268,62 +268,58 @@ export class GoodRepository extends Repository {
     }
     public async getCategories(match: GoodsStrictQuery, hint: GoodsHint) {
         const res = await this.collection
-            .aggregate(
-                [
-                    { $match: match },
-                    { $limit: 1000 },
-                    {
-                        $group: {
-                            _id: '$siteCatId'
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: {},
-                            categories: { $push: '$_id' }
-                        }
-                    },
-                    {
-                        $project: {
-                            _id: 0,
-                            categories: 1
-                        }
+            .aggregate([
+                { $match: match },
+                { $limit: 1000 },
+                {
+                    $group: {
+                        _id: '$siteCatId'
                     }
-                ]
-            )
+                },
+                {
+                    $group: {
+                        _id: {},
+                        categories: { $push: '$_id' }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        categories: 1
+                    }
+                }
+            ])
             .toArray()
         return res[0] ? res[0].categories : res
     }
     public async getMinMaxPrice(match: GoodsStrictQuery, region: Region, hint: GoodsHint) {
         const res = await this.collection
-            .aggregate(
-                [
-                    { $match: match },
-                    {
-                        $project: {
-                            _id: 0,
-                            id: 1,
-                            price: 1
-                        }
-                    },
-                    { $unwind: '$price' },
-                    { $match: { 'price.region': region.region } },
-                    {
-                        $group: {
-                            _id: null,
-                            min: { $min: '$price.priceMin' },
-                            max: { $max: '$price.priceMax' }
-                        }
-                    },
-                    {
-                        $project: {
-                            min: 1,
-                            max: 1,
-                            _id: 0
-                        }
+            .aggregate([
+                { $match: match },
+                {
+                    $project: {
+                        _id: 0,
+                        id: 1,
+                        price: 1
                     }
-                ]
-            )
+                },
+                { $unwind: '$price' },
+                { $match: { 'price.region': region.region } },
+                {
+                    $group: {
+                        _id: null,
+                        min: { $min: '$price.priceMin' },
+                        max: { $max: '$price.priceMax' }
+                    }
+                },
+                {
+                    $project: {
+                        min: 1,
+                        max: 1,
+                        _id: 0
+                    }
+                }
+            ])
             .toArray()
         if (res[0]) {
             return res[0]
@@ -344,38 +340,36 @@ export class GoodRepository extends Repository {
             boundaries.push(i)
         }
         return this.collection
-            .aggregate(
-                [
-                    { $match: match },
-                    {
-                        $project: {
-                            _id: 0,
-                            id: 1,
-                            price: 1
-                        }
-                    },
-                    { $unwind: '$price' },
-                    { $match: { 'price.region': region.region } },
-                    { $limit: 1000 },
-                    {
-                        $bucket: {
-                            groupBy: '$price.priceMax',
-                            boundaries,
-                            default: 'Other',
-                            output: {
-                                count: { $sum: 1 }
-                            }
-                        }
-                    },
-                    {
-                        $project: {
-                            value: '$_id',
-                            count: 1,
-                            _id: 0
+            .aggregate([
+                { $match: match },
+                {
+                    $project: {
+                        _id: 0,
+                        id: 1,
+                        price: 1
+                    }
+                },
+                { $unwind: '$price' },
+                { $match: { 'price.region': region.region } },
+                { $limit: 1000 },
+                {
+                    $bucket: {
+                        groupBy: '$price.priceMax',
+                        boundaries,
+                        default: 'Other',
+                        output: {
+                            count: { $sum: 1 }
                         }
                     }
-                ]
-            )
+                },
+                {
+                    $project: {
+                        value: '$_id',
+                        count: 1,
+                        _id: 0
+                    }
+                }
+            ])
             .toArray()
     }
     public async setShare(share: Share) {

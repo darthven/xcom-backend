@@ -233,7 +233,7 @@ export class StoreRepository extends Repository {
             .toArray()
     }
 
-    public async getInn(id: string): Promise<INN | null> {
+    public async getInn(id: number): Promise<INN | null> {
         return this.collection
             .aggregate([
                 {

@@ -3,7 +3,7 @@
 import 'reflect-metadata'
 import { MONGO_DB, MONGO_URI, NODE_ENV, PORT } from '../config/env.config'
 import logger from '../config/logger.config'
-import Mongo from '../mongo/index'
+import Mongo from '../mongo'
 import server from '../server'
 
 function startServer() {

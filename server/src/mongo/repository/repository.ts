@@ -1,4 +1,4 @@
-import Mongo from '../index'
+import Mongo from '..'
 
 export abstract class Repository {
     public readonly name: string

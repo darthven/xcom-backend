@@ -12,6 +12,5 @@ export class SoftChequeRequest extends ChequeRequest {
     public loyaltyCard: string = ''
 
     @IsDefined()
-    @ArrayNotEmpty()
-    public coupons: Coupon[] = []
+    public coupons?: Coupon[] = []
 }

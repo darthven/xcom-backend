@@ -10,7 +10,8 @@
         "object-literal-sort-keys": false,
         "interface-name": false,
         "prettier": true,
-        "prefer-object-spread": false
+        "prefer-object-spread": false,
+        "max-classes-per-file": false
     },
     "rulesDirectory": ["tslint-plugin-prettier"]
 }

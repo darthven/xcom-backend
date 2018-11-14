@@ -49,8 +49,8 @@ export class ChequeController {
 
     @Post('/fiscal')
     public async postFiscalCheque(@Ctx() ctx: Context, @Body() request: FiscalChequeRequest) {
-        const cheque = await this.manzanaPosService.getCheque(request)
-        const storeLookup = await this.stores.getInn(request.storeId)
+        const cheque = (await this.manzanaPosService.getCheque(request)) as ManzanaCheque
+        const storeLookup = await this.stores.getInn(parseInt(request.storeId, 10))
         if (!storeLookup) {
             throw new NotFoundError('store with this id not found')
         }
