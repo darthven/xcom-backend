@@ -12,10 +12,10 @@ import logger from '../config/logger.config'
 import { EcomService } from '../ecom/ecomService'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
 import {
-    CHEQUE_REQUEST,
     ChequeRequestModel,
     ChequeResponse,
     ChequeResponseModel,
+    ChequeSoapRequest,
     CouponDefinition,
     Coupons,
     Item
@@ -82,7 +82,7 @@ export default class SoapUtil {
     }
 
     public async createSoftChequeRequest(chequeRequest: SoftChequeRequest): Promise<ChequeRequestModel> {
-        const data: ChequeRequestModel = { ...CHEQUE_REQUEST }
+        const data: ChequeRequestModel = new ChequeSoapRequest()
         this.updateObjectValue<number>('RequestID', Math.round(Math.random() * (1100 - 1000) + 1000), data)
         this.updateObjectValue<string>('ChequeType', 'Soft', data)
         this.updateObjectValue<string>('CardNumber', chequeRequest.loyaltyCard, data)
@@ -203,8 +203,8 @@ export default class SoapUtil {
                     couponId: couponsFromRequest.Coupon[index].Number
                         ? couponsFromRequest.Coupon[index].Number!._text
                         : couponsFromRequest.Coupon[index].EmissionId
-                            ? couponsFromRequest.Coupon[index].EmissionId!._text
-                            : couponsFromRequest.Coupon[index].TypeId!._text
+                        ? couponsFromRequest.Coupon[index].EmissionId!._text
+                        : couponsFromRequest.Coupon[index].TypeId!._text
                 })
             }
         }

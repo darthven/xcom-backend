@@ -1,8 +1,8 @@
-interface ElementValue {
+export interface ElementValue {
     _text: string
 }
 
-interface Item {
+export interface Item {
     PositionNumber: ElementValue
     Article: ElementValue
     Price: ElementValue
@@ -12,7 +12,7 @@ interface Item {
     SummDiscounted: ElementValue
 }
 
-interface CouponDefinition {
+export interface CouponDefinition {
     Number?: ElementValue
     EmissionId?: ElementValue
     TypeId?: ElementValue
@@ -20,11 +20,11 @@ interface CouponDefinition {
     ApplicabilityCode?: ElementValue
 }
 
-interface Coupons {
+export interface Coupons {
     Coupon: CouponDefinition[]
 }
 
-interface ChequeRequest {
+export interface ChequeRequest {
     _attributes: {
         ChequeType: string
     }
@@ -46,7 +46,7 @@ interface ChequeRequest {
     Coupons?: Coupons
 }
 
-interface ChequeResponse {
+export interface ChequeResponse {
     TransactionID: ElementValue
     RequestID: ElementValue
     Processed: ElementValue
@@ -76,7 +76,7 @@ interface ChequeResponse {
     Coupons?: Coupons
 }
 
-interface ChequeRequestModel {
+export interface ChequeRequestModel {
     'soap:Envelope': {
         _attributes: {
             'xmlns:xsi': string
@@ -97,7 +97,7 @@ interface ChequeRequestModel {
     }
 }
 
-interface ChequeResponseModel {
+export interface ChequeResponseModel {
     _declaration: {
         _attributes: {
             version: string
@@ -123,8 +123,8 @@ interface ChequeResponseModel {
     }
 }
 
-const CHEQUE_REQUEST: ChequeRequestModel = {
-    'soap:Envelope': {
+export class ChequeSoapRequest implements ChequeRequestModel {
+    public 'soap:Envelope' = {
         _attributes: {
             'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
             'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
@@ -186,15 +186,4 @@ const CHEQUE_REQUEST: ChequeRequestModel = {
             }
         }
     }
-}
-
-export {
-    Item,
-    CouponDefinition,
-    Coupons,
-    ChequeRequest,
-    ChequeResponse,
-    ChequeRequestModel,
-    ChequeResponseModel,
-    CHEQUE_REQUEST
 }

@@ -4,7 +4,7 @@ import { Service } from 'typedi'
 import { EcomOrder } from '../../ecom/ecomOrder'
 import { Order } from '../entity/order'
 import { Repository } from './repository'
-import {INN} from "./stores";
+import { INN } from './stores'
 
 /**
  * Used as a temporary order storage for payment gateway processing.
