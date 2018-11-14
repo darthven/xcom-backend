@@ -5,7 +5,7 @@ import { Coupon } from './coupon'
 export class SoftChequeRequest extends ChequeRequest {
     @IsDefined()
     @IsNotEmpty()
-    public storeId: number = 0
+    public storeId: string = ''
 
     @IsDefined()
     @IsNotEmpty()

@@ -5,6 +5,7 @@ import { Inject, Service } from 'typedi'
 import { isArray } from 'util'
 import * as converter from 'xml-js'
 
+import { CouponError } from '../common/errors'
 import { InvalidCoupon } from '../common/invalidCoupon'
 import { SoftChequeRequest } from '../common/softChequeRequest'
 import logger from '../config/logger.config'
@@ -31,7 +32,7 @@ export default class SoapUtil {
     @Inject()
     private ecomService!: EcomService
 
-    public async sendRequest(url: string, chequeRequest: SoftChequeRequest): Promise<ManzanaCheque | InvalidCoupon[]> {
+    public async sendRequest(url: string, chequeRequest: SoftChequeRequest): Promise<ManzanaCheque> {
         const requestData: ChequeRequestModel = await this.createSoftChequeRequest(chequeRequest)
         const xmlData: string = converter.js2xml(requestData, { compact: true })
         const response: ChequeResponseModel = await this.sendSoapRequest(url, xmlData, {
@@ -47,7 +48,7 @@ export default class SoapUtil {
                 .Coupons!
             const invalidCoupons = this.checkCoupons(data.Coupons, coupons)
             if (invalidCoupons.length > 0) {
-                return invalidCoupons
+                throw new CouponError(invalidCoupons)
             }
         }
         const items: Item[] = isArray(data.Item) ? data.Item : [data.Item]
@@ -125,7 +126,7 @@ export default class SoapUtil {
         const items: Item[] = []
         const prices: Array<{ goodsId: number; price: number }> = await this.ecomService.getPrices(
             chequeRequest.basket.map(it => it.goodsId!),
-            chequeRequest.storeId
+            parseInt(chequeRequest.storeId, 10)
         )
         let summ: number = 0
         for (const [index, item] of chequeRequest.basket.entries()) {

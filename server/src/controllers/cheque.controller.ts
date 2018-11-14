@@ -16,7 +16,6 @@ import { Inject } from 'typedi'
 import { Context } from 'koa'
 import { stringify } from 'querystring'
 import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
-import { InvalidCoupon } from '../common/invalidCoupon'
 import { SoftChequeRequest } from '../common/softChequeRequest'
 import { createEcomOrder } from '../ecom/ecomOrder'
 import { EcomService } from '../ecom/ecomService'
@@ -46,14 +45,14 @@ export class ChequeController {
 
     @Post('/soft')
     @HttpCode(200)
-    public async handleSoftCheque(@Body() request: SoftChequeRequest): Promise<ManzanaCheque | InvalidCoupon[]> {
+    public async handleSoftCheque(@Body() request: SoftChequeRequest): Promise<ManzanaCheque> {
         return this.manzanaPosService.getCheque(request)
     }
 
     @Post('/fiscal')
     public async postFiscalCheque(@Ctx() ctx: Context, @Body() request: FiscalChequeRequest) {
         const cheque = (await this.manzanaPosService.getCheque(request)) as ManzanaCheque
-        const storeLookup = await this.stores.getInn(request.storeId)
+        const storeLookup = await this.stores.getInn(parseInt(request.storeId, 10))
         if (!storeLookup) {
             throw new NotFoundError('store with this id not found')
         }
