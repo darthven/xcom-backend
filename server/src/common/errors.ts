@@ -10,3 +10,15 @@ export class CouponError extends HttpError {
         this.invalidCoupons = invalidCoupons
     }
 }
+
+export class PriceError extends HttpError {
+    private storeId: number
+    private goodsIds: number[]
+
+    constructor(storeId: number, goodsIds: number[]) {
+        super(426, 'Cannot get prices for goods. Wrong "storeId" or "goodsIds" are defined.')
+        this.name = 'PriceError'
+        this.storeId = storeId
+        this.goodsIds = goodsIds
+    }
+}

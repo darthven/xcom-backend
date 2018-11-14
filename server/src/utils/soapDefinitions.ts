@@ -124,7 +124,7 @@ export interface ChequeResponseModel {
 }
 
 export class ChequeSoapRequest implements ChequeRequestModel {
-    public 'soap:Envelope' = {
+    public readonly 'soap:Envelope' = {
         _attributes: {
             'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
             'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
