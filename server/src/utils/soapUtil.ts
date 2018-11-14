@@ -51,7 +51,7 @@ export default class SoapUtil {
                 throw new CouponError(invalidCoupons)
             }
         }
-        const items: Item[] = isArray(data.Item) ? data.Item : [data.Item]
+        const items: Item[] = Array.isArray(data.Item) ? data.Item : [data.Item]
         return {
             chargedBonus: data.ChargedBonus ? parseFloat(data.ChargedBonus._text) : 0,
             chargedStatusBonus: data.ChargedStatusBonus ? parseFloat(data.ChargedStatusBonus._text) : 0,
@@ -65,6 +65,8 @@ export default class SoapUtil {
             discount: data.Discount ? parseFloat(data.Discount._text) : 0,
             basket: items.map(item => {
                 return {
+                    goodsId: parseInt(item.Article._text, 10),
+                    quantity: parseInt(item.Article._text, 10),
                     price: parseFloat(item.Price._text),
                     amount: parseFloat(item.SummDiscounted._text),
                     discount: parseFloat(item.Discount._text)
