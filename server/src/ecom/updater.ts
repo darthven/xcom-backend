@@ -191,6 +191,7 @@ export class EcomUpdater {
         await this.stocks.createCollection()
         let updatedCount = 0
         let failedCount = 0
+        const failedIds = []
         for (const store of stores) {
             try {
                 logger.debug(`requesting stock for store ${store.id}`)
@@ -206,7 +207,8 @@ export class EcomUpdater {
                 updatedCount++
                 logger.info(`${updatedCount + failedCount}/${stores.length} updated`)
             } catch (err) {
-                logger.error(`stocks for store ${store.id} update failed`)
+                failedIds.push(store.id)
+                logger.error(`stocks for store ${store.id} update failed`, { failedIds })
                 logger.error(err.stack)
                 failedCount++
             }
