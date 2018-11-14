@@ -39,16 +39,4 @@ export class StoresController {
         }
         return res[0]
     }
-    @Get('/:id/payTypes')
-    public async getAvailablePayTypes(@Param('id') id: number) {
-        const inn = await this.stores.getInn(id)
-        if (!inn) {
-            throw new BadRequestError(`Store with id ${id} not found`)
-        }
-        const payTypes = [PayType.CASH]
-        if (inn.INN && ACCOUNTS[inn.INN]) {
-            payTypes.push(PayType.ONLINE)
-        }
-        return payTypes
-    }
 }

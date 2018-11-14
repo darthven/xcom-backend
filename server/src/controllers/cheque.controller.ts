@@ -23,6 +23,7 @@ import { ManzanaPosService } from '../manzana/manzanaPosService'
 import { Order } from '../mongo/entity/order'
 import { OrdersRepository } from '../mongo/repository/orders'
 import { StoreRepository } from '../mongo/repository/stores'
+import { ACCOUNTS } from '../sbol/accounts'
 import { StatusCode } from '../sbol/orderStatusResponse'
 import { PreAuthResponse } from '../sbol/preAuthResponse'
 import { SbolService } from '../sbol/sbolService'
@@ -44,8 +45,23 @@ export class ChequeController {
     private readonly stores!: StoreRepository
 
     @Post('/soft')
-    public async handleSoftCheque(@Body() request: SoftChequeRequest): Promise<ManzanaCheque> {
-        return this.manzanaPosService.getCheque(request)
+    public async handleSoftCheque(
+        @Body() request: SoftChequeRequest
+    ): Promise<ManzanaCheque & { payTypes: PayType[] }> {
+        const manzanaCheque = this.manzanaPosService.getCheque(request)
+        const inn = await this.stores.getInn(request.storeId)
+        if (!inn) {
+            throw new BadRequestError(`Store with id ${request.storeId} not found`)
+        }
+        const payTypes = [PayType.CASH]
+        // check if has a gateway account with this INN
+        if (inn.INN && ACCOUNTS[inn.INN]) {
+            payTypes.push(PayType.ONLINE)
+        }
+        return {
+            ...(await manzanaCheque),
+            payTypes
+        }
     }
 
     @Post('/fiscal')
