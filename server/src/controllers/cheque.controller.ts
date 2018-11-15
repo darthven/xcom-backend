@@ -5,7 +5,7 @@ import {
     Get,
     HttpError,
     JsonController,
-    NotFoundError,
+    NotFoundError, Param,
     Post,
     QueryParam
 } from 'routing-controllers'
@@ -27,6 +27,7 @@ import { ACCOUNTS } from '../sbol/accounts'
 import { StatusCode } from '../sbol/orderStatusResponse'
 import { PreAuthResponse } from '../sbol/preAuthResponse'
 import { SbolService } from '../sbol/sbolService'
+import logger from "../config/logger.config";
 
 const PARAM_ORDER_ID = 'orderNumber'
 const PARAM_SBOL_REDIRECT_RESULT = 'success'
@@ -64,22 +65,23 @@ export class ChequeController {
         }
     }
 
-    @Post('/fiscal')
+    @Post('/fiscal/:payType')
     public async postFiscalCheque(
+        @Param('payType') payType: number,
         @Ctx() ctx: Context,
         @Body() request: FiscalChequeRequest
-    ): Promise<Order | PreAuthResponse> {
+    ): Promise<Order & { id: number } | PreAuthResponse> {
         const cheque = await this.manzanaPosService.getCheque(request)
-        const storeLookup = await this.stores.getInn(request.storeId)
-        if (!storeLookup) {
+        const storeInn = await this.stores.getInn(request.storeId)
+        if (!storeInn) {
             throw new NotFoundError('store with this id not found')
         }
-        // store order in local db and assign id
-        const order = await this.ordersRepository.insert(createEcomOrder(request, cheque, storeLookup.INN))
+        // store order in local db and assign local id
+        const order = await this.ordersRepository.insert(createEcomOrder(request, cheque, payType, storeInn.INN))
 
         switch (order.payType) {
             case PayType.CASH:
-                return this.ecom.postOrder(order)
+                return this.submitToEcomAndSaveOrder(order)
             case PayType.ONLINE:
                 return this.sbolService.registerPreAuth({
                     orderNumber: order.extId,
@@ -97,7 +99,9 @@ export class ChequeController {
     }
 
     @Get('/fiscal/callback')
-    public async processSbolCallback(@QueryParam(PARAM_ORDER_ID, { required: true }) orderId: string) {
+    public async processSbolCallback(
+        @QueryParam(PARAM_ORDER_ID, { required: true }) orderId: string
+    ): Promise<Order & { id: number }> {
         const order = await this.ordersRepository.findById(orderId)
         if (!order) {
             throw new NotFoundError('no authorized payment with this id')
@@ -107,11 +111,20 @@ export class ChequeController {
             INN: order.INN
         })
         if (status.orderStatus === StatusCode.PREAUTHORIZED) {
-            // successfully pre-authorized - send to ecom
-            return this.ecom.postOrder(order)
+            // successfully pre-authorized - post to ecom
+            return this.submitToEcomAndSaveOrder(order)
         } else {
             const err = new HttpError(402, status.actionCodeDescription)
             throw Object.assign(err, status) // send status to user
+        }
+    }
+
+    private async submitToEcomAndSaveOrder(order: Order): Promise<Order & { id: number }> {
+        const res = await this.ecom.submitOrder(order)
+        await this.ordersRepository.updateById(order.extId, { id: res.orderId })
+        return {
+            ...order,
+            id: res.orderId
         }
     }
 

@@ -1,4 +1,5 @@
 import { Context } from 'koa'
+import { RequestError, StatusCodeError } from 'request-promise-native/errors'
 import { Action, ActionMetadata, HttpError, KoaMiddlewareInterface, Middleware } from 'routing-controllers'
 import { NODE_ENV } from '../config/env.config'
 import logger from '../config/logger.config'
@@ -35,6 +36,11 @@ export class ErrorHandlerMiddleware implements KoaMiddlewareInterface {
                 processedError.stack = error.stack
             }
 
+            if (!this.developmentMode && this.isRequestError(error)) {
+                // do not leak outgoing request details
+                return processedError
+            }
+
             Object.keys(error)
                 .filter(
                     key =>
@@ -49,5 +55,9 @@ export class ErrorHandlerMiddleware implements KoaMiddlewareInterface {
         }
 
         return error
+    }
+
+    private isRequestError(error: any): boolean {
+        return error instanceof StatusCodeError || error instanceof RequestError
     }
 }

@@ -13,7 +13,6 @@ export class FiscalChequeRequest extends SoftChequeRequest implements EcomOrderM
     @IsNotEmpty()
     public clientTel!: string
 
-    @IsDefined()
-    @IsInt()
-    public payType!: number
+    @IsNotEmpty()
+    public loyaltyCardType!: string
 }

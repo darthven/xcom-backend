@@ -8,6 +8,7 @@ import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { Order } from '../mongo/entity/order'
 import { ecomOptions } from './ecomOptions'
 import { EcomOrder } from './ecomOrder'
+import { EcomOrderResponse } from './ecomOrderResponse'
 
 interface PriceDescriptor {
     storeId: number
@@ -18,14 +19,17 @@ interface PriceDescriptor {
 
 @Service()
 export class EcomService {
-    public async postOrder(order: Order): Promise<Order> {
-        await this.request({
+    public async submitOrder(order: Order): Promise<EcomOrderResponse> {
+        const res: any = await this.request({
             ...ecomOptions,
             method: 'POST',
             uri: `${ECOM_URL}/orders`,
             body: order
         })
-        return order
+        if (res.errorCode) {
+            throw res
+        }
+        return res
     }
 
     public async getPrices(goodsIds: number[], storeId: number): Promise<PriceDescriptor[]> {
