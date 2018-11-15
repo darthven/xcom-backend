@@ -53,4 +53,12 @@ export interface ManzanaChequeItem extends Item {
      * Всего начислено активных статусных бонусных баллов
      */
     activeChargedStatusBonus: number
+
+    /**
+     * Расширенный аттрибут
+     */
+    extendedAttribute?: {
+        key: string
+        value: string
+    }
 }

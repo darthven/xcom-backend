@@ -75,7 +75,13 @@ export default class SoapUtil {
                     writeoffBonus: parseFloat(item.WriteoffBonus._text),
                     writeoffStatusBonus: parseFloat(item.WriteoffStatusBonus._text),
                     activeChargedBonus: parseFloat(item.ActiveChargedBonus._text),
-                    activeChargedStatusBonus: parseFloat(item.ActiveChargedStatusBonus._text)
+                    activeChargedStatusBonus: parseFloat(item.ActiveChargedStatusBonus._text),
+                    extendedAttribute: item.ExtendedAttribute
+                        ? {
+                              key: item.ExtendedAttribute.Key._text,
+                              value: item.ExtendedAttribute.Value._text
+                          }
+                        : undefined
                 }
             })
         }

@@ -2,6 +2,11 @@ export interface ElementValue {
     _text: string
 }
 
+export interface ExtendedAttribute {
+    Key: ElementValue
+    Value: ElementValue
+}
+
 export interface Item {
     PositionNumber: ElementValue
     Article: ElementValue
@@ -20,6 +25,7 @@ export interface ManzanaItem extends Item {
     ActiveChargedStatusBonus: ElementValue
     WriteoffBonus: ElementValue
     WriteoffStatusBonus: ElementValue
+    ExtendedAttribute?: ExtendedAttribute
 }
 
 export interface CouponDefinition {
