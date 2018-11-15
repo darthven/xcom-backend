@@ -31,6 +31,15 @@ export class SbolService {
                 ...credentials
             }
         }
-        return requestPromise(options)
+        let res: any = await requestPromise(options)
+        try {
+            res = JSON.parse(res)
+        } catch (e) {
+            // not json
+        }
+        if (res.errorCode) {
+            throw res
+        }
+        return res
     }
 }

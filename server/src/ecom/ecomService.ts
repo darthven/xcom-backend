@@ -4,10 +4,8 @@ import { Service } from 'typedi'
 
 import { PriceError } from '../common/errors'
 import { ECOM_URL } from '../config/env.config'
-import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { Order } from '../mongo/entity/order'
 import { ecomOptions } from './ecomOptions'
-import { EcomOrder } from './ecomOrder'
 import { EcomOrderResponse } from './ecomOrderResponse'
 
 interface PriceDescriptor {
@@ -20,16 +18,12 @@ interface PriceDescriptor {
 @Service()
 export class EcomService {
     public async submitOrder(order: Order): Promise<EcomOrderResponse> {
-        const res: any = await this.request({
+        return this.request({
             ...ecomOptions,
             method: 'POST',
             uri: `${ECOM_URL}/orders`,
             body: order
         })
-        if (res.errorCode) {
-            throw res
-        }
-        return res
     }
 
     public async getPrices(goodsIds: number[], storeId: number): Promise<PriceDescriptor[]> {
@@ -51,7 +45,11 @@ export class EcomService {
     }
 
     private async request(options: CoreOptions & RequiredUriUrl) {
-        return requestPromise(options)
+        const res: any = await requestPromise(options)
+        if (res.errorCode) {
+            throw res
+        }
+        return res
     }
 
     private checkPrices(goodsIdsFromRequest: number[], goodsIdsFromResponse: number[]): number[] {
