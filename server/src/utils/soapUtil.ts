@@ -18,7 +18,8 @@ import {
     ChequeSoapRequest,
     CouponDefinition,
     Coupons,
-    Item
+    Item,
+    ManzanaItem
 } from './soapDefinitions'
 
 interface SoapHeaders {
@@ -51,7 +52,7 @@ export default class SoapUtil {
                 throw new CouponError(invalidCoupons)
             }
         }
-        const items: Item[] = isArray(data.Item) ? data.Item : [data.Item]
+        const items: ManzanaItem[] = isArray(data.Item) ? data.Item : [data.Item]
         return {
             chargedBonus: data.ChargedBonus ? parseFloat(data.ChargedBonus._text) : 0,
             chargedStatusBonus: data.ChargedStatusBonus ? parseFloat(data.ChargedStatusBonus._text) : 0,
@@ -67,7 +68,14 @@ export default class SoapUtil {
                 return {
                     price: parseFloat(item.Price._text),
                     amount: parseFloat(item.SummDiscounted._text),
-                    discount: parseFloat(item.Discount._text)
+                    discount: parseFloat(item.Discount._text),
+                    availablePayment: parseFloat(item.AvailablePayment._text),
+                    chargedBonus: item.ChargedBonus ? parseFloat(item.AvailablePayment._text) : 0.0,
+                    chargedStatusBonus: parseFloat(item.ChargedStatusBonus._text),
+                    writeoffBonus: parseFloat(item.WriteoffBonus._text),
+                    writeoffStatusBonus: parseFloat(item.WriteoffStatusBonus._text),
+                    activeChargedBonus: parseFloat(item.ActiveChargedBonus._text),
+                    activeChargedStatusBonus: parseFloat(item.ActiveChargedStatusBonus._text)
                 }
             })
         }
@@ -196,7 +204,11 @@ export default class SoapUtil {
 
     private checkCoupons(couponsFromResponse: Coupons, couponsFromRequest: Coupons): InvalidCoupon[] {
         const invalidCoupons = []
-        for (const [index, coupon] of couponsFromResponse.Coupon.entries()) {
+        let coupons: CouponDefinition | CouponDefinition[] = couponsFromResponse.Coupon
+        if (!isArray(coupons)) {
+            coupons = [coupons]
+        }
+        for (const [index, coupon] of coupons.entries()) {
             if (coupon.ApplicabilityCode!._text === '0') {
                 invalidCoupons.push({
                     message: coupon.ApplicabilityMessage!._text,

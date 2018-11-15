@@ -12,6 +12,16 @@ export interface Item {
     SummDiscounted: ElementValue
 }
 
+export interface ManzanaItem extends Item {
+    AvailablePayment: ElementValue
+    ChargedBonus: ElementValue
+    ChargedStatusBonus: ElementValue
+    ActiveChargedBonus: ElementValue
+    ActiveChargedStatusBonus: ElementValue
+    WriteoffBonus: ElementValue
+    WriteoffStatusBonus: ElementValue
+}
+
 export interface CouponDefinition {
     Number?: ElementValue
     EmissionId?: ElementValue
@@ -66,13 +76,14 @@ export interface ChequeResponse {
     Summ: ElementValue
     Discount: ElementValue
     SummDiscounted: ElementValue
-    ChargedBonus: ElementValue
-    ActiveChargedBonus: ElementValue
-    ChargedStatusBonus: ElementValue
-    ActiveChargedStatusBonus: ElementValue
     AvailablePayment: ElementValue
+    ChargedBonus: ElementValue
+    ChargedStatusBonus: ElementValue
+    ActiveChargedBonus: ElementValue
+    ActiveChargedStatusBonus: ElementValue
     WriteoffBonus: ElementValue
-    Item: Item[]
+    WriteoffStatusBonus: ElementValue
+    Item: ManzanaItem[]
     Coupons?: Coupons
 }
 
