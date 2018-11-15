@@ -66,7 +66,7 @@ export default class SoapUtil {
             basket: items.map(item => {
                 return {
                     goodsId: parseInt(item.Article._text, 10),
-                    quantity: parseInt(item.Article._text, 10),
+                    quantity: parseInt(item.Quantity._text, 10),
                     price: parseFloat(item.Price._text),
                     amount: parseFloat(item.SummDiscounted._text),
                     discount: parseFloat(item.Discount._text)
