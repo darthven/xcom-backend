@@ -2,6 +2,7 @@ import { CoreOptions, RequiredUriUrl } from 'request'
 import * as requestPromise from 'request-promise-native'
 import { Service } from 'typedi'
 
+import {HttpError} from "routing-controllers";
 import { PriceError } from '../common/errors'
 import { ECOM_URL } from '../config/env.config'
 import { Order } from '../mongo/entity/order'
@@ -47,7 +48,7 @@ export class EcomService {
     private async request(options: CoreOptions & RequiredUriUrl) {
         const res: any = await requestPromise(options)
         if (res.errorCode) {
-            throw res
+            throw Object.assign(new HttpError(502), res)
         }
         return res
     }
