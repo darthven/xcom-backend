@@ -2,7 +2,7 @@ import { CoreOptions, RequiredUriUrl } from 'request'
 import * as requestPromise from 'request-promise-native'
 import { Service } from 'typedi'
 
-import {HttpError} from "routing-controllers";
+import { HttpError } from 'routing-controllers'
 import { PriceError } from '../common/errors'
 import { ECOM_URL } from '../config/env.config'
 import { Order } from '../mongo/entity/order'
