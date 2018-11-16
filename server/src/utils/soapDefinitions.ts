@@ -2,6 +2,11 @@ export interface ElementValue {
     _text: string
 }
 
+export interface ExtendedAttribute {
+    Key: ElementValue
+    Value: ElementValue
+}
+
 export interface Item {
     PositionNumber: ElementValue
     Article: ElementValue
@@ -10,6 +15,17 @@ export interface Item {
     Summ: ElementValue
     Discount: ElementValue
     SummDiscounted: ElementValue
+}
+
+export interface ManzanaItem extends Item {
+    AvailablePayment: ElementValue
+    ChargedBonus: ElementValue
+    ChargedStatusBonus: ElementValue
+    ActiveChargedBonus: ElementValue
+    ActiveChargedStatusBonus: ElementValue
+    WriteoffBonus: ElementValue
+    WriteoffStatusBonus: ElementValue
+    ExtendedAttribute?: ExtendedAttribute
 }
 
 export interface CouponDefinition {
@@ -66,13 +82,14 @@ export interface ChequeResponse {
     Summ: ElementValue
     Discount: ElementValue
     SummDiscounted: ElementValue
-    ChargedBonus: ElementValue
-    ActiveChargedBonus: ElementValue
-    ChargedStatusBonus: ElementValue
-    ActiveChargedStatusBonus: ElementValue
     AvailablePayment: ElementValue
+    ChargedBonus: ElementValue
+    ChargedStatusBonus: ElementValue
+    ActiveChargedBonus: ElementValue
+    ActiveChargedStatusBonus: ElementValue
     WriteoffBonus: ElementValue
-    Item: Item[]
+    WriteoffStatusBonus: ElementValue
+    Item: ManzanaItem[]
     Coupons?: Coupons
 }
 
