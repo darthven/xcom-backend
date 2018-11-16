@@ -8,7 +8,10 @@ import { INN } from './stores'
 
 /**
  * Used as a temporary order storage for payment gateway processing.
- * Not served for users
+ * Not served for users.
+ * IMPORTANT!:
+ * 1. '_id' a.k.a extId - local order id (xcom) and sbol primary order number
+ * 2. 'id' is an internal e-com number
  */
 @Service()
 export class OrdersRepository extends Repository {
@@ -40,5 +43,9 @@ export class OrdersRepository extends Repository {
             ...order,
             extId: writeResult.insertedId.toHexString()
         }
+    }
+
+    public async updateById(extId: string, fields: any) {
+        await this.collection.updateOne({ _id: extId }, { $set: fields })
     }
 }

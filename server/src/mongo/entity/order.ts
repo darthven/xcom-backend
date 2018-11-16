@@ -10,4 +10,9 @@ export interface Order extends EcomOrder {
      * Stored locally for efficient payment gateway user lookup
      */
     INN: string
+
+    /**
+     * Ecom order id (assigned after submission to ecom)
+     */
+    id?: number
 }

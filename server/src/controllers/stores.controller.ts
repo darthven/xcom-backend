@@ -1,22 +1,20 @@
 import {
-    Body,
+    BadRequestError,
     Get,
     JsonController,
     NotFoundError,
     Param,
-    Post,
     QueryParam,
     State,
     UseBefore
 } from 'routing-controllers'
 import { Inject } from 'typedi'
-
-import { ChequeRequest } from '../common/chequeRequest'
-import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
+import { PayType } from '../ecom/payType'
 import { LocationFilterInjectMiddleware } from '../middlewares/locationFilter.inject.middleware'
 import { LocationsQuery } from '../mongo/queries/LocationsQuery'
 import { StoreRepository } from '../mongo/repository/stores'
 import { LocationFilter } from '../parameters/locationFilter'
+import { ACCOUNTS } from '../sbol/accounts'
 
 @JsonController('/stores')
 export class StoresController {

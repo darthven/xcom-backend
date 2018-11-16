@@ -3,9 +3,10 @@ import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
 import { Item } from '../common/item'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { INN } from '../mongo/repository/stores'
+import { PayType } from './payType'
 
 export interface EcomOrderMeta {
-    storeId: string // Код склада
+    storeId: number // Код склада
     loyaltyCard?: string // Код карты клиента
     clientName: string // ФИО Клиента
     clientTel: string // Номер телефона клиента (7XXXXXXXXXX)
@@ -42,8 +43,9 @@ export interface OrderItem extends Item {
 }
 
 export const createEcomOrder = (
-    { storeId, loyaltyCard, clientName, clientTel, payType }: FiscalChequeRequest,
+    { storeId, loyaltyCard, clientName, clientTel, loyaltyCardType }: FiscalChequeRequest,
     manzanaCheque: ManzanaCheque,
+    payType: PayType,
     inn: string
 ): EcomOrder & INN => {
     return {
@@ -53,8 +55,9 @@ export const createEcomOrder = (
         clientTel,
         payType,
         paySum: manzanaCheque.amount,
-        extDate: new Date().toDateString(),
+        extDate: new Date().toISOString(),
         basket: manzanaCheque.basket,
-        INN: inn
+        INN: inn,
+        loyaltyCardType
     }
 }

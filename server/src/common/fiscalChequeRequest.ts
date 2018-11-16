@@ -7,13 +7,12 @@ import { SoftChequeRequest } from './softChequeRequest'
 export class FiscalChequeRequest extends SoftChequeRequest implements EcomOrderMeta {
     @IsDefined()
     @IsNotEmpty()
-    public clientName: string = ''
+    public clientName!: string
 
     @IsDefined()
     @IsNotEmpty()
-    public clientTel: string = ''
+    public clientTel!: string
 
-    @IsDefined()
     @IsNotEmpty()
-    public payType: number = 0
+    public loyaltyCardType!: string
 }

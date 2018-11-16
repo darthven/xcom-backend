@@ -52,7 +52,7 @@ export default class SoapUtil {
                 throw new CouponError(invalidCoupons)
             }
         }
-        const items: ManzanaItem[] = isArray(data.Item) ? data.Item : [data.Item]
+        const items: ManzanaItem[] = Array.isArray(data.Item) ? data.Item : [data.Item]
         return {
             chargedBonus: data.ChargedBonus ? parseFloat(data.ChargedBonus._text) : 0,
             chargedStatusBonus: data.ChargedStatusBonus ? parseFloat(data.ChargedStatusBonus._text) : 0,
@@ -66,6 +66,8 @@ export default class SoapUtil {
             discount: data.Discount ? parseFloat(data.Discount._text) : 0,
             basket: items.map(item => {
                 return {
+                    goodsId: parseInt(item.Article._text, 10),
+                    quantity: parseInt(item.Quantity._text, 10),
                     price: parseFloat(item.Price._text),
                     amount: parseFloat(item.SummDiscounted._text),
                     discount: parseFloat(item.Discount._text),
@@ -140,7 +142,7 @@ export default class SoapUtil {
         const items: Item[] = []
         const prices: Array<{ goodsId: number; price: number }> = await this.ecomService.getPrices(
             chequeRequest.basket.map(it => it.goodsId!),
-            parseInt(chequeRequest.storeId, 10)
+            chequeRequest.storeId
         )
         let summ: number = 0
         for (const [index, item] of chequeRequest.basket.entries()) {
@@ -221,8 +223,8 @@ export default class SoapUtil {
                     couponId: couponsFromRequest.Coupon[index].Number
                         ? couponsFromRequest.Coupon[index].Number!._text
                         : couponsFromRequest.Coupon[index].EmissionId
-                        ? couponsFromRequest.Coupon[index].EmissionId!._text
-                        : couponsFromRequest.Coupon[index].TypeId!._text
+                            ? couponsFromRequest.Coupon[index].EmissionId!._text
+                            : couponsFromRequest.Coupon[index].TypeId!._text
                 })
             }
         }
@@ -237,7 +239,7 @@ export default class SoapUtil {
             body: xml,
             json: false
         })
-        logger.info(response)
+        logger.debug(`manzana response ${response}`)
         return converter.xml2js(response, { compact: true, alwaysChildren: true }) as ChequeResponseModel
     }
 

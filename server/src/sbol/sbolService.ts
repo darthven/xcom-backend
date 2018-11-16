@@ -1,5 +1,5 @@
 import * as requestPromise from 'request-promise-native'
-import { NotFoundError } from 'routing-controllers'
+import { HttpError, NotFoundError } from 'routing-controllers'
 import { Service } from 'typedi'
 import { SBOL_GATEWAY_URL } from '../config/env.config'
 import { INN } from '../mongo/repository/stores'
@@ -31,6 +31,15 @@ export class SbolService {
                 ...credentials
             }
         }
-        return requestPromise(options)
+        let res: any = await requestPromise(options)
+        try {
+            res = JSON.parse(res)
+        } catch (e) {
+            // not json
+        }
+        if (res.errorCode) {
+            throw Object.assign(new HttpError(502), res)
+        }
+        return res
     }
 }
