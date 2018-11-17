@@ -1,4 +1,5 @@
 import { Get, JsonController } from 'routing-controllers'
+import { NODE_ENV } from '../config/env.config'
 
 @JsonController()
 export class ApiController {
@@ -8,7 +9,8 @@ export class ApiController {
             status: 'available',
             info: 'xcom api',
             version: '1.10.0',
-            startAt: new Date()
+            startAt: new Date(),
+            env: NODE_ENV
         }
     }
 }
