@@ -5,6 +5,7 @@
     "scripts": {
         "start": "env-cmd .env ts-node src/bin/index.ts",
         "build": "tsc -p .",
+        "start:dev": "env-cmd .env pm2 start ecosystem.config.js",
         "start:prod": "env-cmd .env.prod pm2 start ecosystem.config.js",
         "ecom:upload": "env-cmd .env ts-node src/bin/ecomUploader.ts",
         "ecom:update": "env-cmd .env ts-node src/bin/ecomUpdater.ts",
