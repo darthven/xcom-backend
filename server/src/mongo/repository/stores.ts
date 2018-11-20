@@ -241,6 +241,7 @@ export class StoreRepository extends Repository {
                 },
                 {
                     $project: {
+                        _id: 0,
                         INN: 1
                     }
                 }

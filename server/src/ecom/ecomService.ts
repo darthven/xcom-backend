@@ -2,11 +2,12 @@ import { CoreOptions, RequiredUriUrl } from 'request'
 import * as requestPromise from 'request-promise-native'
 import { Service } from 'typedi'
 
+import { HttpError } from 'routing-controllers'
 import { PriceError } from '../common/errors'
 import { ECOM_URL } from '../config/env.config'
-import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { Order } from '../mongo/entity/order'
 import { ecomOptions } from './ecomOptions'
+import { EcomOrderResponse } from './ecomOrderResponse'
 
 interface PriceDescriptor {
     storeId: number
@@ -17,7 +18,7 @@ interface PriceDescriptor {
 
 @Service()
 export class EcomService {
-    public async postOrder(order: Order): Promise<ManzanaCheque> {
+    public async submitOrder(order: Order): Promise<EcomOrderResponse> {
         return this.request({
             ...ecomOptions,
             method: 'POST',
@@ -45,7 +46,11 @@ export class EcomService {
     }
 
     private async request(options: CoreOptions & RequiredUriUrl) {
-        return requestPromise(options)
+        const res: any = await requestPromise(options)
+        if (res.errorCode) {
+            throw Object.assign(new HttpError(502), res)
+        }
+        return res
     }
 
     private checkPrices(goodsIdsFromRequest: number[], goodsIdsFromResponse: number[]): number[] {

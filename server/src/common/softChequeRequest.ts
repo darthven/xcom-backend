@@ -1,11 +1,10 @@
-import { IsDefined, IsNotEmpty, IsOptional } from 'class-validator'
+import { IsDefined, IsOptional } from 'class-validator'
 import { ChequeRequest } from './chequeRequest'
 import { Coupon } from './coupon'
 
 export class SoftChequeRequest extends ChequeRequest {
     @IsDefined()
-    @IsNotEmpty()
-    public storeId: string = ''
+    public storeId!: number
 
     @IsOptional()
     public loyaltyCard: string | undefined
@@ -16,6 +15,5 @@ export class SoftChequeRequest extends ChequeRequest {
     @IsOptional()
     public email: string | undefined
 
-    @IsDefined()
-    public coupons?: Coupon[] = []
+    public coupons?: Coupon[]
 }

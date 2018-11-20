@@ -31,9 +31,6 @@ export class SharesRepository extends Repository {
         await this.createCollection()
         for (const item of data) {
             const share = new Share(item)
-            if (isNaN(share.regions[0])) {
-                share.regions = (await this.regions.collection.find().toArray()).map(doc => doc.regionCode)
-            }
             await this.collection.insertOne(share)
             await this.goods.setShare(share)
         }
@@ -42,6 +39,9 @@ export class SharesRepository extends Repository {
     public async getAll() {
         return this.collection
             .aggregate([
+                {
+                    $match: { endDate: { $gt: new Date() } }
+                },
                 {
                     $group: {
                         _id: '$id',

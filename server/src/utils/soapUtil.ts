@@ -39,10 +39,9 @@ export default class SoapUtil {
     private ecomService!: EcomService
 
     public async sendRequest(url: string, chequeRequest: SoftChequeRequest): Promise<ManzanaCheque> {
-        chequeRequest = await this.handleCard(url, chequeRequest)
-        const requestData: ChequeRequestModel = await this.createSoftChequeRequest(chequeRequest)
+        const handledRequest = await this.handleCard(url, chequeRequest)
+        const requestData: ChequeRequestModel = await this.createSoftChequeRequest(handledRequest)
         const xmlData: string = converter.js2xml(requestData, { compact: true })
-        console.log(xmlData)
         const response: ChequeResponseModel = await this.sendSoapRequest(url, xmlData, {
             'Content-Type': 'text/xml;charset=UTF-8'
         })
@@ -59,7 +58,7 @@ export default class SoapUtil {
                 throw new CouponError(invalidCoupons)
             }
         }
-        const items: ManzanaItem[] = isArray(data.Item) ? data.Item : [data.Item]
+        const items: ManzanaItem[] = Array.isArray(data.Item) ? data.Item : [data.Item]
         return {
             chargedBonus: data.ChargedBonus ? parseFloat(data.ChargedBonus._text) : 0,
             chargedStatusBonus: data.ChargedStatusBonus ? parseFloat(data.ChargedStatusBonus._text) : 0,
@@ -73,6 +72,8 @@ export default class SoapUtil {
             discount: data.Discount ? parseFloat(data.Discount._text) : 0,
             basket: items.map(item => {
                 return {
+                    goodsId: parseInt(item.Article._text, 10),
+                    quantity: parseInt(item.Quantity._text, 10),
                     price: parseFloat(item.Price._text),
                     amount: parseFloat(item.SummDiscounted._text),
                     discount: parseFloat(item.Discount._text),
@@ -185,7 +186,7 @@ export default class SoapUtil {
         const items: Item[] = []
         const prices: Array<{ goodsId: number; price: number }> = await this.ecomService.getPrices(
             chequeRequest.basket.map(it => it.goodsId!),
-            parseInt(chequeRequest.storeId, 10)
+            chequeRequest.storeId
         )
         let summ: number = 0
         for (const [index, item] of chequeRequest.basket.entries()) {
@@ -275,6 +276,7 @@ export default class SoapUtil {
     }
 
     private async sendSoapRequest(url: string, xml: string, headers?: SoapHeaders): Promise<any> {
+        logger.debug(`manzana request ${xml}`)
         const response = await request({
             method: 'POST',
             url,
@@ -282,8 +284,8 @@ export default class SoapUtil {
             body: xml,
             json: false
         })
-        logger.info(response)
-        return converter.xml2js(response, { compact: true, alwaysChildren: true })
+        logger.debug(`manzana response ${response}`)
+        return converter.xml2js(response, { compact: true, alwaysChildren: true }) as ChequeResponseModel
     }
 
     private getXmlRequestDataFromFile(path: string): string {
