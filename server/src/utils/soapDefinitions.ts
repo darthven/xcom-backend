@@ -36,8 +36,43 @@ export interface CouponDefinition {
     ApplicabilityCode?: ElementValue
 }
 
+export interface Card {
+    CardNumber: ElementValue
+    BonusType: ElementValue
+    Discount: ElementValue
+    Status: ElementValue
+    CollaborationType: ElementValue
+    CardTypeId: ElementValue
+}
+
 export interface Coupons {
     Coupon: CouponDefinition[]
+}
+
+export interface CardRequest {
+    RequestID: ElementValue
+    DateTime: ElementValue
+    Organization: ElementValue
+    BusinessUnit: ElementValue
+    POS: ElementValue
+    Phone?: ElementValue
+    Email?: ElementValue
+}
+
+export interface CardResponse {
+    TransactionID: ElementValue
+    RequestID: ElementValue
+    Processed: ElementValue
+    ReturnCode: ElementValue
+    Message: ElementValue
+    FirstName: ElementValue
+    LastName: ElementValue
+    MiddleName: ElementValue
+    BirthDate: ElementValue
+    Age: ElementValue
+    Phone: ElementValue
+    Email: ElementValue
+    Card: Card[]
 }
 
 export interface ChequeRequest {
@@ -93,6 +128,53 @@ export interface ChequeResponse {
     Coupons?: Coupons
 }
 
+export interface CardRequestModel {
+    'soap:Envelope': {
+        _attributes: {
+            'xmlns:xsi': string
+            'xmlns:xsd': string
+            'xmlns:soap': string
+        }
+        'soap:Body': {
+            ProcessRequest: {
+                _attributes: {
+                    xmlns: string
+                }
+                request: {
+                    CardRequest: CardRequest
+                }
+                orgName: ElementValue
+            }
+        }
+    }
+}
+
+export interface CardResponseModel {
+    _declaration: {
+        _attributes: {
+            version: string
+            encoding: string
+        }
+    }
+    'soap:Envelope': {
+        _attributes: {
+            'xmlns:soap': string
+            'xmlns:xsi': string
+            'xmlns:xsd': string
+        }
+        'soap:Body': {
+            ProcessRequestResponse: {
+                _attributes: {
+                    xmlns: string
+                }
+                ProcessRequestResult: {
+                    CardResponse: CardResponse
+                }
+            }
+        }
+    }
+}
+
 export interface ChequeRequestModel {
     'soap:Envelope': {
         _attributes: {
@@ -134,6 +216,45 @@ export interface ChequeResponseModel {
                 }
                 ProcessRequestResult: {
                     ChequeResponse: ChequeResponse
+                }
+            }
+        }
+    }
+}
+
+export class CardSoapRequest implements CardRequestModel {
+    public readonly 'soap:Envelope' = {
+        _attributes: {
+            'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+            'xmlns:xsd': 'http://www.w3.org/2001/XMLSchema',
+            'xmlns:soap': 'http://schemas.xmlsoap.org/soap/envelope/'
+        },
+        'soap:Body': {
+            ProcessRequest: {
+                _attributes: {
+                    xmlns: 'http://loyalty.manzanagroup.ru/loyalty.xsd'
+                },
+                request: {
+                    CardRequest: {
+                        RequestID: {
+                            _text: '1001'
+                        },
+                        DateTime: {
+                            _text: '2032-01-18T01:43:56+03:00'
+                        },
+                        Organization: {
+                            _text: '0001'
+                        },
+                        BusinessUnit: {
+                            _text: '001'
+                        },
+                        POS: {
+                            _text: '001'
+                        }
+                    }
+                },
+                orgName: {
+                    _text: 'Ozerki'
                 }
             }
         }
