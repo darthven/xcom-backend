@@ -21,7 +21,7 @@ import { StoreRepository } from '../mongo/repository/stores'
 import { StoreTypeRepository } from '../mongo/repository/storeTypes'
 import { getStationsInRadius } from '../utils/distanceByCoord'
 import { categoryImageExist, goodImageExist } from '../utils/fileExist'
-import { uploadImage } from '../utils/ftpUploader'
+import { downloadImage } from '../utils/ftpUploader'
 import { saveGoodImage } from '../utils/imageSaver'
 import { invalidGoodImages } from '../utils/invalidGoodImages'
 import { storeTypesIconsMap } from '../utils/storeTypesIcons'
@@ -338,7 +338,7 @@ export class EcomUpdater {
         if (item.imgLinkFTP && !goodImageExist(item.id)) {
             // upload image from ftp
             try {
-                const tmpFile = await uploadImage(item.imgLinkFTP)
+                const tmpFile = await downloadImage(item.imgLinkFTP)
                 await saveGoodImage(tmpFile, item.id)
                 await this.goods.updateImageLink(item.id)
                 logger.info(`image for good saved ${item.id}`)
