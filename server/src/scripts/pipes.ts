@@ -1,3 +1,6 @@
+/**
+ * Inner arrays run in parallel
+ */
 const pipes: { [index: string]: Array<string | string[]> } = {
     initialPipe: ['loadStations', ['storesPipe', 'goodsPipe'], 'stocksPipe'],
     dailyPipe: [['storesPipe', 'goodsPipe'], 'stocksPipe'],

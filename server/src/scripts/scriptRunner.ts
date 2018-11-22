@@ -3,7 +3,7 @@ import logger from '../config/logger.config'
 import pipes from './pipes'
 
 const runScript = async (name: string) => {
-    const script = (await import(`../scripts/${name}`)).default
+    const script = (await import(`./${name}`)).default
     return script()
 }
 
@@ -19,14 +19,15 @@ const pipeToPlan = (pipe: Array<string | string[]>): Array<() => Promise<any>> =
         }
         if (typeof it === 'string') {
             return () => {
+                const t = process.hrtime()
                 logger.info(`started script: ${it}`)
                 return runScript(it).then(
                     result => {
-                        logger.info(`finished script: ${it}`, result)
+                        logger.info(`finished script: ${it} in ${process.hrtime(t)[0]} seconds`, result)
                         return result
                     },
                     err => {
-                        logger.error(`failed script: ${it}`)
+                        logger.error(`failed script: ${it} in ${process.hrtime(t)[0]} seconds`, err)
                         logger.error(err.stack)
                         return Promise.reject(err)
                     }

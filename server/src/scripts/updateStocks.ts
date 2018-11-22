@@ -23,7 +23,6 @@ export default async () => {
 
     for (const store of storeIds) {
         try {
-            logger.debug(`requesting stock for store ${store.id}`)
             const res: { stocks: Stock[] } = await requestPromise({
                 ...ecomOptions,
                 uri: `${ECOM_URL}/stocks/${store.id}`
@@ -34,7 +33,7 @@ export default async () => {
                 await stocksRepo.collection.insertMany(res.stocks)
             }
             updatedCount++
-            logger.info(`${updatedCount + failedCount}/${storeIds.length} updated`)
+            logger.info(`${updatedCount + failedCount}/${storeIds.length} stocks updated. store ${store.id}`)
         } catch (err) {
             failedIds.push(store.id)
             logger.error(`stocks for store ${store.id} update failed`, { failedIds })

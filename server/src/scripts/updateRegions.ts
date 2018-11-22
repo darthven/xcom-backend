@@ -43,7 +43,7 @@ export default async () => {
     for (const item of regions) {
         const polygons = JSON.parse(fs.readFileSync(`${appRoot}/data/regions.json`, 'utf8'))
         try {
-            item.polygon = polygons.find((it: any) => it.id === item.id)[0]
+            item.polygon = polygons.find((it: any) => it.id === item.regionCode)[0]
             success++
         } catch (e) {
             errors++

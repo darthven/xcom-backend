@@ -1,7 +1,7 @@
 import { MONGO_DB, MONGO_URI } from '../config/env.config'
 import logger from '../config/logger.config'
 import Mongo from '../mongo/index'
-import { run } from '../sync/scriptRunner'
+import { run } from '../scripts/scriptRunner'
 ;(async () => {
     try {
         const mongodbOptions = { url: MONGO_URI, dbName: MONGO_DB }
@@ -14,5 +14,7 @@ import { run } from '../sync/scriptRunner'
         logger.error(e.stack)
         process.exit(-1)
         throw e
+    } finally {
+        await Mongo.close()
     }
 })()
