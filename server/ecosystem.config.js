@@ -4,7 +4,7 @@ module.exports = {
             name: 'xcom',
             script: './lib/bin/index.js',
             watch: false,
-            "log_date_format": "YYYY-MM-DD HH:mm Z"
+            "log_date_format": "DD-MM-YYYY HH:mm:ss.SSS"
         }
     ]
 };
