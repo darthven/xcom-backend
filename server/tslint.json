@@ -11,8 +11,7 @@
         "interface-name": false,
         "prettier": true,
         "prefer-object-spread": false,
-        "max-classes-per-file": false,
-        "no-var-requires": false
+        "max-classes-per-file": false
     },
     "rulesDirectory": ["tslint-plugin-prettier"]
 }

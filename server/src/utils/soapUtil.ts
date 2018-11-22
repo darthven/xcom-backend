@@ -3,12 +3,14 @@ import { HttpError } from 'routing-controllers'
 import { Inject, Service } from 'typedi'
 import { isArray } from 'util'
 import * as converter from 'xml-js'
+// tslint:disable-next-line:no-var-requires
 const ntlmRequest = require('httpntlm')
 
 import { TECHNICAL_CARD } from '../common/data'
 import { CouponError } from '../common/errors'
 import { InvalidCoupon } from '../common/invalidCoupon'
 import { SoftChequeRequest } from '../common/softChequeRequest'
+import { MANZANA_CASH_DOMAIN, MANZANA_CASH_PASSWORD, MANZANA_CASH_USERNAME } from '../config/env.config'
 import logger from '../config/logger.config'
 import { EcomService } from '../ecom/ecomService'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
@@ -282,9 +284,9 @@ export default class SoapUtil {
                 {
                     url,
                     headers,
-                    username: 'postest',
-                    password: '5fxbRYwKj',
-                    domain: 'ozerki',
+                    username: MANZANA_CASH_USERNAME,
+                    password: MANZANA_CASH_PASSWORD,
+                    domain: MANZANA_CASH_DOMAIN,
                     body: xml
                 },
                 (err: Error, response: any) => {
