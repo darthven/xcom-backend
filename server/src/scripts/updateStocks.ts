@@ -23,11 +23,20 @@ export default async () => {
 
     for (const store of storeIds) {
         try {
-            const res: { stocks: Stock[] } = await requestPromise({
+            const rp = requestPromise({
                 ...ecomOptions,
                 uri: `${ECOM_URL}/stocks/${store.id}`,
                 timeout: 1000 * 60 * 5
             })
+            const timeout = new Promise((resolve, reject) =>
+                setTimeout(() => {
+                    rp.abort()
+                    reject(new Error('Request timed out after 5 minutes'))
+                }, 60000 * 5)
+            )
+
+            const res: { stocks: Stock[] } = await Promise.race([rp, timeout])
+
             await stocksRepo.collection.deleteMany({ storeId: store.id })
             // TODO: possible race condition on stocks :(
             if (res.stocks && res.stocks.length > 0) {
@@ -37,10 +46,10 @@ export default async () => {
             logger.info(`${updatedCount + failedCount}/${storeIds.length} stocks updated. store ${store.id}`)
         } catch (err) {
             failedIds.push(store.id)
-            logger.error(`stocks for store ${store.id} update failed`, { failedIds })
+            logger.error(`stocks for store ${store.id} update failed`)
             logger.error(err.stack)
             failedCount++
         }
     }
-    return { updatedCount, failedCount }
+    return { updatedCount, failedCount, failedIds }
 }
