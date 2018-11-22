@@ -25,7 +25,8 @@ export default async () => {
         try {
             const res: { stocks: Stock[] } = await requestPromise({
                 ...ecomOptions,
-                uri: `${ECOM_URL}/stocks/${store.id}`
+                uri: `${ECOM_URL}/stocks/${store.id}`,
+                timeout: 1000 * 60 * 5
             })
             await stocksRepo.collection.deleteMany({ storeId: store.id })
             // TODO: possible race condition on stocks :(
