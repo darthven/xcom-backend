@@ -24,7 +24,7 @@ function create_cron(){
         #install new cron file
         crontab temp_file
         rm "$temp_file"
-    fiu
+    fi
 }
 
 env > cron_env_${mode}.sh
