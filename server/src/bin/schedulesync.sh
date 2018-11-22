@@ -14,7 +14,7 @@ mode=$1
 
 env_file=$([[ "$mode" == "dev" ]] && echo ".env" || echo ".env.prod")
 
-function create_cron(){
+function crontab_add(){
     if ! crontab -l | fgrep -q "$1"; then
         #write out current crontab
         temp_file=$(mktemp)
@@ -29,10 +29,12 @@ function create_cron(){
 
 env > cron_env_${mode}.sh
 
+crontab_add "SHELL=/bin/bash"
+
 # every hour except a break from 3 am to 6 am
-create_cron "0 0,1,2,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * * cd $PWD && source cron_env_$mode.sh $env_file && pm2 restart xcomStockUpdater || pm2 start npm --name 'xcomStockUpdater' --no-autorestart --log-date-format 'DD-MM HH:mm:ss.SSS' -- run script:${mode} -- stocksPipe"
+crontab_add "0 0,1,2,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 * * * cd $PWD && source cron_env_$mode.sh $env_file && pm2 restart xcomStockUpdater || pm2 start npm --name 'xcomStockUpdater' --no-autorestart --log-date-format 'DD-MM HH:mm:ss.SSS' -- run script:${mode} -- stocksPipe"
 
 # every day at 2.45 am
-create_cron "45 02 * * * cd $PWD && source cron_env_$mode.sh $env_file && pm2 restart xcomDailyUpdater || pm2 start npm --name 'xcomDailyUpdater' --no-autorestart --log-date-format 'DD-MM HH:mm:ss.SSS' -- run script:$mode -- dailyPipe"
+crontab_add "45 02 * * * cd $PWD && source cron_env_$mode.sh $env_file && pm2 restart xcomDailyUpdater || pm2 start npm --name 'xcomDailyUpdater' --no-autorestart --log-date-format 'DD-MM HH:mm:ss.SSS' -- run script:$mode -- dailyPipe"
 
 exit 0
