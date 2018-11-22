@@ -4,6 +4,7 @@
 - [Node.js](https://nodejs.org/uk/) 10+ and NPM
 - [MongoDB](https://docs.mongodb.com/manual/installation/) 4.0 or later
 - [PM2](https://www.npmjs.com/package/pm2) (npm install pm2 -g)
+- Postfix `sudo apt-get install postfix`
 
 ### Configuration
 * Dev: `server/.env`
