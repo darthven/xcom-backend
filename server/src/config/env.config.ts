@@ -21,7 +21,7 @@ export const LOGS_FOLDER = process.env.LOGS_FOLDER || 'logs/'
 export const IMAGE_DEFAULT_TYPE = process.env.IMAGE_DEFAULT_TYPE || '.jpeg'
 export const IMAGE_CATEGORY_TYPE = process.env.IMAGE_DEFAULT_TYPE || '.png'
 export const MANZANA_CASH_URL =
-    process.env.MANZANA_CASH_URL || 'http://mbsdevcrm15sp1.manzanagroup.ru:10001/POSProcessing.asmx'
+    process.env.MANZANA_CASH_URL || 'http://crmozerki.manzanagroup.ru:8083/posprocessing.asmx'
 export const MANZANA_CLIENT_URL =
     process.env.MANZANA_CLIENT_URL || 'https://cosnozerki.manzanagroup.ru/customerofficeservice/'
 export const SBOL_GATEWAY_URL: string = process.env.SBOL_GATEWAY_URL!

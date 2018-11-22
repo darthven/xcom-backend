@@ -243,13 +243,13 @@ export class CardSoapRequest implements CardRequestModel {
                             _text: '2032-01-18T01:43:56+03:00'
                         },
                         Organization: {
-                            _text: '0001'
+                            _text: '1'
                         },
                         BusinessUnit: {
                             _text: '001'
                         },
                         POS: {
-                            _text: '001'
+                            _text: '111'
                         }
                     }
                 },
@@ -285,13 +285,13 @@ export class ChequeSoapRequest implements ChequeRequestModel {
                             _text: '2032-01-18T01:43:56+03:00'
                         },
                         Organization: {
-                            _text: '0001'
+                            _text: '1'
                         },
                         BusinessUnit: {
                             _text: '001'
                         },
                         POS: {
-                            _text: '001'
+                            _text: '111'
                         },
                         Card: {
                             CardNumber: {
