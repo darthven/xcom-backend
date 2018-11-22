@@ -1,14 +1,16 @@
 import * as fs from 'fs'
-import * as request from 'request-promise-native'
 import { HttpError } from 'routing-controllers'
 import { Inject, Service } from 'typedi'
 import { isArray } from 'util'
 import * as converter from 'xml-js'
+// tslint:disable-next-line:no-var-requires
+const ntlmRequest = require('httpntlm')
 
 import { TECHNICAL_CARD } from '../common/data'
 import { CouponError } from '../common/errors'
 import { InvalidCoupon } from '../common/invalidCoupon'
 import { SoftChequeRequest } from '../common/softChequeRequest'
+import { MANZANA_CASH_DOMAIN, MANZANA_CASH_PASSWORD, MANZANA_CASH_USERNAME } from '../config/env.config'
 import logger from '../config/logger.config'
 import { EcomService } from '../ecom/ecomService'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
@@ -277,15 +279,31 @@ export default class SoapUtil {
 
     private async sendSoapRequest(url: string, xml: string, headers?: SoapHeaders): Promise<any> {
         logger.debug(`manzana request ${xml}`)
-        const response = await request({
-            method: 'POST',
-            url,
-            headers,
-            body: xml,
-            json: false
+        return new Promise((resolve, reject) => {
+            ntlmRequest.post(
+                {
+                    url,
+                    headers,
+                    username: MANZANA_CASH_USERNAME,
+                    password: MANZANA_CASH_PASSWORD,
+                    domain: MANZANA_CASH_DOMAIN,
+                    body: xml
+                },
+                (err: Error, response: any) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        logger.debug(`manzana response ${response.body}`)
+                        resolve(
+                            converter.xml2js(response.body, {
+                                compact: true,
+                                alwaysChildren: true
+                            })
+                        )
+                    }
+                }
+            )
         })
-        logger.debug(`manzana response ${response}`)
-        return converter.xml2js(response, { compact: true, alwaysChildren: true }) as ChequeResponseModel
     }
 
     private getXmlRequestDataFromFile(path: string): string {

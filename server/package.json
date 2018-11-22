@@ -80,6 +80,7 @@
         "bcrypt": "^3.0.2",
         "csvtojson": "^2.0.8",
         "ftp": "^0.3.10",
+        "httpntlm": "^1.7.6",
         "kcors": "^2.2.2",
         "koa": "^2.6.2",
         "koa-better-http-proxy": "^0.2.4",
