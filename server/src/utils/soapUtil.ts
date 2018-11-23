@@ -49,7 +49,7 @@ export default class SoapUtil {
         })
         const data: ChequeResponse =
             response['soap:Envelope']['soap:Body'].ProcessRequestResponse.ProcessRequestResult.ChequeResponse
-        if (data.Message._text !== 'OK') {
+        if (data.Message._text === 'Карта не найдена') {
             throw new HttpError(400, data.Message._text)
         }
         if (data.Coupons) {

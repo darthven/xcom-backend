@@ -8,6 +8,7 @@ import { ECOM_URL } from '../config/env.config'
 import { Order } from '../mongo/entity/order'
 import { ecomOptions } from './ecomOptions'
 import { EcomOrderResponse } from './ecomOrderResponse'
+import { EcomOrderStatusResponse } from './ecomOrderStatusResponse'
 
 interface PriceDescriptor {
     storeId: number
@@ -24,6 +25,17 @@ export class EcomService {
             method: 'POST',
             uri: `${ECOM_URL}/orders`,
             body: order
+        })
+    }
+
+    public async updateOrderStatus(statusId: number, order: Order): Promise<EcomOrderStatusResponse> {
+        return this.request({
+            ...ecomOptions,
+            method: 'PUT',
+            uri: `${ECOM_URL}/orders${order.id}`,
+            body: {
+                statusId
+            }
         })
     }
 
