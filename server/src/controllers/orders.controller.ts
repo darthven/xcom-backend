@@ -13,6 +13,7 @@ import {
     Put,
     Req,
     Res,
+    UnauthorizedError,
     UseBefore
 } from 'routing-controllers'
 import { Inject } from 'typedi'
@@ -25,6 +26,7 @@ import { EcomService } from '../ecom/ecomService'
 import { PayType } from '../ecom/payType'
 import { ManzanaPosService } from '../manzana/manzanaPosService'
 import { ManzanaSession } from '../manzana/manzanaSession'
+import { ManzanaUser } from '../manzana/manzanaUser'
 import { ManzanaUserApiClient } from '../manzana/manzanaUserApiClient'
 import { ProxyMiddleware } from '../middlewares/proxy.middleware'
 import { Order } from '../mongo/entity/order'
@@ -103,8 +105,16 @@ export class OrdersController {
             }
         })
     )
-    public async updateOrderStatus(@Param('id') orderId: number, @Body() req: { statusId: number }) {
-        return this.ecom.updateOrderStatus(orderId, req)
+    public async updateOrderStatus(
+        @Param('id') orderId: number,
+        @Ctx() ctx: Context,
+        @Body() req: { statusId: number }
+    ) {
+        if (!ctx.state.manzanaClient) {
+            throw new UnauthorizedError('User is not authorized in manzana')
+        }
+        const user: ManzanaUser = ctx.state.manzanaClient.getCurrentUser()
+        return this.ecom.updateOrderStatus(orderId, user, req)
     }
 
     @Post('/submit/:payType')
