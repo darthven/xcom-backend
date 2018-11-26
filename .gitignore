@@ -7,3 +7,5 @@ raw/*.json
 server/images/
 server/tmp/*
 server/lib/
+server/cron_env_dev.sh
+server/cron_env_prod.sh

@@ -12,7 +12,7 @@ import {
 } from '../config/env.config'
 import logger from '../config/logger.config'
 
-export async function uploadImage(imgLinkFTP: string) {
+export async function downloadImage(imgLinkFTP: string) {
     return new Promise<string>((resolve, reject) => {
         const client = new FtpClient()
         client.on('ready', () => {

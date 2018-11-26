@@ -4,9 +4,8 @@ import { LOGS_FOLDER } from './env.config'
 
 const myFormat = format.combine(
     format.colorize(),
-    format.timestamp(),
     format.printf(info => {
-        let log = `${info.timestamp}: ${info.level}: ${info.message} `
+        let log = `${info.level}: ${info.message} `
         const keys = Object.keys(info).filter(key => key !== 'timestamp' && key !== 'level' && key !== 'message')
         if (keys.length) {
             const obj: any = {}

@@ -1,3 +1,4 @@
+import { AggregationCursor } from 'mongodb'
 import { Service } from 'typedi'
 import { Stock } from '../entity/stock'
 import { Repository } from './repository'
@@ -32,4 +33,57 @@ export class StocksRepository extends Repository {
             ])
             .toArray()
     }
+
+    public getMinMaxCursor(): AggregationCursor<{ id: number; price: Price }> {
+        return this.collection.aggregate(
+            [
+                {
+                    $group: {
+                        _id: { goodsId: '$goodsId', region: '$region' },
+                        priceMin: { $min: '$storePrice' },
+                        priceMax: { $max: '$storePrice' },
+                        available: { $max: '$quantity' }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        id: '$_id.goodsId',
+                        region: '$_id.region',
+                        priceMin: 1,
+                        priceMax: 1,
+                        available: 1
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$id',
+                        price: {
+                            $push: {
+                                region: '$region',
+                                priceMin: '$priceMin',
+                                priceMax: '$priceMax',
+                                available: '$available'
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        id: '$_id',
+                        price: 1
+                    }
+                }
+            ],
+            { allowDiskUse: true }
+        )
+    }
+}
+
+export interface Price {
+    region: number
+    priceMin: number
+    priceMax: number
+    available: number
 }

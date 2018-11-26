@@ -90,7 +90,7 @@ export class GoodRepository extends Repository {
     public async createCollection() {
         await super.createCollection()
         await this.collection.createIndex({ name: 'text', tradeName: 'text', suffixes: 'text' })
-        await this.collection.createIndex({ id: 1 })
+        await this.collection.createIndex({ id: 1 }, { unique: true })
         await this.collection.createIndex({ siteCatId: 1 })
         await this.collection.createIndex({ price: 1 }, { name: 'price' })
         await this.collection.createIndex({ img: 1 }, { name: 'img' })

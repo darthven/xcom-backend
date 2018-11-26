@@ -135,7 +135,7 @@ export class OrdersController {
             case PayType.CASH:
                 return this.submitToEcomAndSaveOrder(order)
             case PayType.ONLINE:
-                return this.sbolService.registerPreAuth({
+                const authResponse = await this.sbolService.registerPreAuth({
                     orderNumber: order.extId,
                     failUrl: this.getRedirectUrl(order.extId, false),
                     returnUrl: this.getRedirectUrl(order.extId, true),
@@ -145,6 +145,8 @@ export class OrdersController {
                     INN: order.INN,
                     pageView: 'DESKTOP'
                 })
+                await this.ordersRepository.updateById(order.extId, { payGUID: authResponse.orderId })
+                return authResponse
             default:
                 throw new BadRequestError(`payType ${order.payType} not supported`)
         }

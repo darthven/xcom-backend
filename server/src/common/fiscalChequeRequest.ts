@@ -13,6 +13,7 @@ export class FiscalChequeRequest extends SoftChequeRequest implements EcomOrderM
     @IsNotEmpty()
     public clientTel!: string
 
+    @ValidateIf(o => o.loyaltyCard)
     @IsNotEmpty()
     public loyaltyCardType!: string
 }
