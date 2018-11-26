@@ -10,7 +10,7 @@ import {
     NotFoundError,
     Param,
     Post,
-    QueryParam,
+    Put,
     Req,
     Res,
     UseBefore
@@ -95,6 +95,18 @@ export class OrdersController {
         return response
     }
 
+    @Put('/:id')
+    @UseBefore(
+        ProxyMiddleware(`${ECOM_URL}orders`, {
+            headers: {
+                Authorization: `Basic ${ECOM_BASIC_AUTH_TOKEN}`
+            }
+        })
+    )
+    public async updateOrderStatus(@Param('id') orderId: number, @Body() req: { statusId: number }) {
+        return this.ecom.updateOrderStatus(orderId, req)
+    }
+
     @Post('/submit/:payType')
     public async postFiscalCheque(
         @Param('payType') payType: number,
@@ -140,7 +152,7 @@ export class OrdersController {
         const status = await this.sbolService.getOrderStatus({
             orderNumber: sbolCallback.orderNumber,
             INN: order.INN
-        });
+        })
         if (status.orderStatus === StatusCode.PREAUTHORIZED) {
             // successfully pre-authorized - post to ecom
             return this.submitToEcomAndSaveOrder(order)

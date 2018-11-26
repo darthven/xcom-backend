@@ -1,11 +1,14 @@
 import { CoreOptions, RequiredUriUrl } from 'request'
 import * as requestPromise from 'request-promise-native'
-import { Service } from 'typedi'
+import { HttpError, NotFoundError } from 'routing-controllers'
+import { Inject, Service } from 'typedi'
 
-import { HttpError } from 'routing-controllers'
 import { PriceError } from '../common/errors'
 import { ECOM_URL } from '../config/env.config'
 import { Order } from '../mongo/entity/order'
+import { OrderStatus } from '../mongo/entity/orderStatus'
+import { OrdersRepository } from '../mongo/repository/orders'
+import { OrderStatusRepository } from '../mongo/repository/orderStatuses'
 import { ecomOptions } from './ecomOptions'
 import { EcomOrderResponse } from './ecomOrderResponse'
 import { EcomOrderStatusResponse } from './ecomOrderStatusResponse'
@@ -19,6 +22,12 @@ interface PriceDescriptor {
 
 @Service()
 export class EcomService {
+    @Inject()
+    private readonly orderRepository!: OrdersRepository
+
+    @Inject()
+    private readonly orderStatusRepository!: OrderStatusRepository
+
     public async submitOrder(order: Order): Promise<EcomOrderResponse> {
         return this.request({
             ...ecomOptions,
@@ -28,11 +37,23 @@ export class EcomService {
         })
     }
 
-    public async updateOrderStatus(statusId: number, order: Order): Promise<EcomOrderStatusResponse> {
+    public async updateOrderStatus(
+        orderId: number,
+        { statusId }: { statusId: number }
+    ): Promise<EcomOrderStatusResponse> {
+        const order: Order = await this.orderRepository.collection.findOne({ id: orderId })
+        if (!order) {
+            throw new NotFoundError(`Order with id "${orderId}" was not found`)
+        }
+        const orderStatus: OrderStatus = await this.orderStatusRepository.collection.findOne({ id: statusId })
+        if (!orderStatus) {
+            throw new NotFoundError(`Order status with id "${statusId}" was not found`)
+        }
+        await this.orderRepository.collection.updateOne({ id: orderId }, { statusId })
         return this.request({
             ...ecomOptions,
             method: 'PUT',
-            uri: `${ECOM_URL}/orders${order.id}`,
+            uri: `${ECOM_URL}/orders${orderId}`,
             body: {
                 statusId
             }

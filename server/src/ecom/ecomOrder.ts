@@ -17,6 +17,7 @@ export interface EcomOrder extends EcomOrderMeta {
     preorder?: boolean // Признак предзаказа (Заказ того, чего нет на остатках в данный момент)
     extId?: string // Код заказа источника
     extDate: string // Дата заказа источника
+    statusId?: number // Идентификатор статуса текущего заказа
     extStatusId?: string // Внешний статус источника (если есть)
     extComment?: string // Комментарий от внешней системы
     insuranceId?: string // Идентификатор сервиса страхования по заказу. (Заказы по страховому контракту)
