@@ -183,14 +183,16 @@ export class OrdersController {
         if (!order) {
             throw new NotFoundError('no authorized payment with this id')
         }
-        const response: SbolResponse = await this.sbolService.reverseOrder({
-            orderId: sbolCallback.orderId!,
+        const status = await this.sbolService.getOrderStatus({
+            orderNumber: sbolCallback.orderNumber,
             INN: order.INN
         })
-        if (response.errorCode && response.errorCode !== '0') {
-            throw new HttpError(parseInt(response.errorCode, 10), response.errorMessage)
+        if (status.orderStatus === StatusCode.CANCELED) {
+            return this.ecom.reverseOrder(order)
+        } else {
+            const err = new HttpError(402, status.actionCodeDescription)
+            throw Object.assign(err, status) // send status to user
         }
-        return this.ecom.reverseOrder(order)
     }
 
     private getRedirectUrl(orderNumber: string, success: boolean) {
