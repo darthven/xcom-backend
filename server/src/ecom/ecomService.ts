@@ -54,7 +54,11 @@ export class EcomService {
         { statusId }: { statusId: number }
     ): Promise<EcomOrderStatusResponse | SbolResponse> {
         const order: Order = await this.orderRepository.collection.findOne({ id: orderId })
-        await this.checkOrderOwner(order, orderId, user)
+        if (!order) {
+            throw new NotFoundError(`Order with id "${orderId}" was not found`)
+        } else if (order.clientTel !== user.MobilePhone) {
+            throw new NotFoundError(`Client does not have current order with id "${orderId}"`)
+        }
         return this.handleOrderStatus(order, statusId)
     }
 
@@ -80,14 +84,6 @@ export class EcomService {
         return prices
     }
 
-    private async checkOrderOwner(order: Order, orderId: number, user: ManzanaUser): Promise<void> {
-        if (!order) {
-            throw new NotFoundError(`Order with id "${orderId}" was not found`)
-        } else if (order.clientTel !== user.MobilePhone) {
-            throw new NotFoundError(`Client does not have current order with id "${orderId}"`)
-        }
-    }
-
     private async handleOrderStatus(order: Order, statusId: number): Promise<EcomOrderStatusResponse | SbolResponse> {
         switch (statusId) {
             case Status.REVERSED_BY_CLIENT:
@@ -98,17 +94,13 @@ export class EcomService {
     }
 
     private async handleOrderReverse(order: Order, statusId: number): Promise<EcomOrderStatusResponse | SbolResponse> {
-        await this.checkOrderStatusForReverse(statusId)
-        return this.handleOrderSbolForReverse(order, statusId)
-    }
-
-    private async checkOrderStatusForReverse(statusId: number): Promise<void> {
         const orderStatus: OrderStatus = await this.orderStatusRepository.collection.findOne({ id: statusId })
         if (!orderStatus) {
             throw new NotFoundError(`Order status with id "${statusId}" was not found`)
         } else if (![Status.SALED, Status['Отказ по дефектуре']].includes(orderStatus.id)) {
             throw new HttpError(406, `Cannot process order with statuses "Продан" and "На дефектуре"`)
         }
+        return this.handleOrderSbolForReverse(order, statusId)
     }
 
     private async handleOrderSbolForReverse(
