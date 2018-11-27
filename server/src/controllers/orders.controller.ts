@@ -18,10 +18,12 @@ import {
 } from 'routing-controllers'
 import { Inject } from 'typedi'
 import { parse } from 'url'
+
 import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
 import { ECOM_PASS, ECOM_URL, ECOM_USER } from '../config/env.config'
 import logger from '../config/logger.config'
 import { createEcomOrder } from '../ecom/ecomOrder'
+import { EcomOrderStatusResponse } from '../ecom/ecomOrderStatusResponse'
 import { EcomService } from '../ecom/ecomService'
 import { PayType } from '../ecom/payType'
 import { ManzanaPosService } from '../manzana/manzanaPosService'
@@ -35,6 +37,7 @@ import { StoreRepository } from '../mongo/repository/stores'
 import { SbolCallback } from '../parameters/sbolCallback'
 import { StatusCode } from '../sbol/orderStatusResponse'
 import { PreAuthResponse } from '../sbol/preAuthResponse'
+import { SbolResponse } from '../sbol/sbolResponse'
 import { SbolService } from '../sbol/sbolService'
 
 const ECOM_BASIC_AUTH_TOKEN = Buffer.from(`${ECOM_USER}:${ECOM_PASS}`).toString('base64')
@@ -133,7 +136,7 @@ export class OrdersController {
 
         switch (order.payType) {
             case PayType.CASH:
-                return this.submitToEcomAndSaveOrder(order)
+                return this.ecom.submitToEcomAndSaveOrder(order)
             case PayType.ONLINE:
                 const authResponse = await this.sbolService.registerPreAuth({
                     orderNumber: order.extId,
@@ -167,21 +170,27 @@ export class OrdersController {
         })
         if (status.orderStatus === StatusCode.PREAUTHORIZED) {
             // successfully pre-authorized - post to ecom
-            return this.submitToEcomAndSaveOrder(order)
+            return this.ecom.submitToEcomAndSaveOrder(order)
         } else {
             const err = new HttpError(402, status.actionCodeDescription)
             throw Object.assign(err, status) // send status to user
         }
     }
 
-    private async submitToEcomAndSaveOrder(order: Order): Promise<Order & { id: number }> {
-        logger.debug(JSON.stringify(order))
-        const res = await this.ecom.submitOrder(order)
-        await this.ordersRepository.updateById(order.extId, { id: res.orderId })
-        return {
-            ...order,
-            id: res.orderId
+    @Post('/reverse/1/callback')
+    public async processSbolCallbackOnReverse(@Body() sbolCallback: SbolCallback): Promise<EcomOrderStatusResponse> {
+        const order = await this.ordersRepository.findById(sbolCallback.orderNumber)
+        if (!order) {
+            throw new NotFoundError('no authorized payment with this id')
         }
+        const response: SbolResponse = await this.sbolService.reverseOrder({
+            orderId: sbolCallback.orderId!,
+            INN: order.INN
+        })
+        if (response.errorCode && response.errorCode !== '0') {
+            throw new HttpError(parseInt(response.errorCode, 10), response.errorMessage)
+        }
+        return this.ecom.reverseOrder(order)
     }
 
     private getRedirectUrl(orderNumber: string, success: boolean) {
