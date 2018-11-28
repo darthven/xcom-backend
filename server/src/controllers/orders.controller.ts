@@ -1,3 +1,4 @@
+import { PhoneNumberFormat as PNF, PhoneNumberUtil } from 'google-libphonenumber'
 import { Context } from 'koa'
 import { stringify } from 'querystring'
 import {
@@ -13,6 +14,7 @@ import {
     Put,
     Req,
     Res,
+    State,
     UnauthorizedError,
     UseBefore
 } from 'routing-controllers'
@@ -23,6 +25,7 @@ import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
 import { ECOM_PASS, ECOM_URL, ECOM_USER } from '../config/env.config'
 import logger from '../config/logger.config'
 import { createEcomOrder } from '../ecom/ecomOrder'
+import { EcomOrderStatus } from '../ecom/ecomOrderStatus'
 import { EcomOrderStatusResponse } from '../ecom/ecomOrderStatusResponse'
 import { EcomService } from '../ecom/ecomService'
 import { PayType } from '../ecom/payType'
@@ -101,23 +104,29 @@ export class OrdersController {
     }
 
     @Put('/:id')
-    @UseBefore(
-        ProxyMiddleware(`${ECOM_URL}orders`, {
-            headers: {
-                Authorization: `Basic ${ECOM_BASIC_AUTH_TOKEN}`
-            }
-        })
-    )
-    public async updateOrderStatus(
+    @UseBefore(ManzanaUserApiClient)
+    public async changeOrderStatus(
         @Param('id') orderId: number,
-        @Ctx() ctx: Context,
+        @State('manzanaClient') manzanaClient: ManzanaUserApiClient,
         @Body() req: { statusId: number }
-    ) {
-        if (!ctx.state.manzanaClient) {
+    ): Promise<EcomOrderStatusResponse | SbolResponse> {
+        if (!manzanaClient) {
             throw new UnauthorizedError('User is not authorized in manzana')
         }
-        const user: ManzanaUser = ctx.state.manzanaClient.getCurrentUser()
-        return this.ecom.updateOrderStatus(orderId, user, req)
+        const order: Order =
+            (await this.ordersRepository.collection.findOne({ id: orderId })) || (await this.ecom.getOrderById(orderId))
+        if (!order) {
+            throw new NotFoundError(`Order with id "${orderId}" was not found`)
+        }
+        const user: ManzanaUser = await manzanaClient.getCurrentUser()
+        switch (order.payType) {
+            case PayType.CASH:
+                return this.submitToEcomAndUpdateOrderStatus(order, user, req.statusId)
+            case PayType.ONLINE:
+                return this.submitToSbolAndEcomAndUpdateOrderStatus(order, user, req.statusId)
+            default:
+                throw new BadRequestError(`payType ${order.payType} not supported`)
+        }
     }
 
     @Post('/submit/:payType')
@@ -136,7 +145,7 @@ export class OrdersController {
 
         switch (order.payType) {
             case PayType.CASH:
-                return this.ecom.submitToEcomAndSaveOrder(order)
+                return this.submitToEcomAndSaveOrder(order)
             case PayType.ONLINE:
                 const authResponse = await this.sbolService.registerPreAuth({
                     orderNumber: order.extId,
@@ -170,29 +179,78 @@ export class OrdersController {
         })
         if (status.orderStatus === StatusCode.PREAUTHORIZED) {
             // successfully pre-authorized - post to ecom
-            return this.ecom.submitToEcomAndSaveOrder(order)
+            return this.submitToEcomAndSaveOrder(order)
         } else {
             const err = new HttpError(402, status.actionCodeDescription)
             throw Object.assign(err, status) // send status to user
         }
     }
 
-    @Post('/reverse/1/callback')
-    public async processSbolCallbackOnReverse(@Body() sbolCallback: SbolCallback): Promise<EcomOrderStatusResponse> {
-        const order = await this.ordersRepository.findById(sbolCallback.orderNumber)
-        if (!order) {
-            throw new NotFoundError('no authorized payment with this id')
+    private async submitToEcomAndSaveOrder(order: Order): Promise<Order & { id: number }> {
+        logger.debug(JSON.stringify(order))
+        const res = await this.ecom.submitOrder(order)
+        await this.ordersRepository.updateById(order.extId, { id: res.orderId })
+        return {
+            ...order,
+            id: res.orderId
         }
-        const status = await this.sbolService.getOrderStatus({
-            orderNumber: sbolCallback.orderNumber,
-            INN: order.INN
-        })
-        if (status.orderStatus === StatusCode.CANCELED) {
-            return this.ecom.reverseOrder(order)
-        } else {
-            const err = new HttpError(402, status.actionCodeDescription)
-            throw Object.assign(err, status) // send status to user
+    }
+
+    private async submitToEcomAndUpdateOrderStatus(
+        order: Order,
+        user: ManzanaUser,
+        statusId: number
+    ): Promise<EcomOrderStatusResponse> {
+        if (!this.comparePhoneNumbers(order.clientTel, user.MobilePhone!, 'RU')) {
+            throw new NotFoundError(`Client does not have current order with id "${order.id}"`)
         }
+        if (
+            statusId === EcomOrderStatus.REVERSED_BY_CLIENT &&
+            [EcomOrderStatus.SALED, EcomOrderStatus.REVERSED_BY_DEFECT].includes(order.statusId!)
+        ) {
+            throw new HttpError(406, `Cannot reverse order with statuses "Продан" and "На дефектуре"`)
+        }
+        const response: EcomOrderStatusResponse = await this.ecom.submitOrderStatus(order, statusId)
+        if (!response.errorCode) {
+            await this.updateOrderStatus(order, statusId)
+        }
+        return response
+    }
+
+    private async submitToSbolAndEcomAndUpdateOrderStatus(
+        order: Order,
+        user: ManzanaUser,
+        statusId: number
+    ): Promise<EcomOrderStatusResponse> {
+        let sbolResponse: SbolResponse = {}
+        switch (statusId) {
+            case EcomOrderStatus.REVERSED_BY_CLIENT:
+                if ([EcomOrderStatus.SALED, EcomOrderStatus.REVERSED_BY_DEFECT].includes(order.statusId!)) {
+                    throw new HttpError(406, `Cannot reverse order with statuses "Продан" and "На дефектуре"`)
+                }
+                sbolResponse = await this.sbolService.reverseOrder({
+                    orderId: order.id!.toString(),
+                    INN: order.INN
+                })
+                if (sbolResponse.errorCode && sbolResponse.errorCode !== '0') {
+                    throw new HttpError(parseInt(sbolResponse.errorCode!, 10), sbolResponse.errorMessage)
+                }
+                return this.submitToEcomAndUpdateOrderStatus(order, user, statusId)
+            default:
+                throw new NotFoundError(`Status with id "${statusId}" was not found`)
+        }
+    }
+
+    private async updateOrderStatus(order: Order, statusId: number): Promise<void> {
+        await this.ordersRepository.updateById(order.extId, { statusId })
+    }
+
+    private comparePhoneNumbers(phoneNumber1: string, phoneNumber2: string, region: string): boolean {
+        const phoneNumberUtil: PhoneNumberUtil = PhoneNumberUtil.getInstance()
+        return (
+            phoneNumberUtil.format(phoneNumberUtil.parse(phoneNumber1, region), PNF.E164) ===
+            phoneNumberUtil.format(phoneNumberUtil.parse(phoneNumber2, region), PNF.E164)
+        )
     }
 
     private getRedirectUrl(orderNumber: string, success: boolean) {

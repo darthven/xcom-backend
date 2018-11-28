@@ -12,8 +12,6 @@ import { Stock } from '../mongo/entity/stock'
 import { Store } from '../mongo/entity/store'
 import { CategoryRepository } from '../mongo/repository/categories'
 import { GoodRepository } from '../mongo/repository/goods'
-import { OrderStatusRepository } from '../mongo/repository/orderStatuses'
-import { PayTypeRepository } from '../mongo/repository/payTypes'
 import { RegionsRepository } from '../mongo/repository/regions'
 import { StationsRepository } from '../mongo/repository/stations'
 import { StocksRepository } from '../mongo/repository/stocks'
@@ -44,10 +42,6 @@ export class EcomUpdater {
     private categories!: CategoryRepository
     @Inject()
     private stores!: StoreRepository
-    @Inject()
-    private orderStatuses!: OrderStatusRepository
-    @Inject()
-    private payTypes!: PayTypeRepository
     @Inject()
     private goods!: GoodRepository
     @Inject()
@@ -119,30 +113,6 @@ export class EcomUpdater {
             await this.regions.collection.updateOne({ regionCode: item.regionCode }, { $set: item }, { upsert: true })
         }
         logger.info('regions updated')
-    }
-
-    public async updateOrderStatuses() {
-        const options = {
-            ...ecomOptions,
-            uri: `${ECOM_URL}/order_statuses`
-        }
-        const res: any = await requestPromise(options)
-        for (const item of res.orderStatuses) {
-            await this.orderStatuses.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
-        }
-        logger.info('order statuses uploaded')
-    }
-
-    public async updatePayTypes() {
-        const options = {
-            ...ecomOptions,
-            uri: `${ECOM_URL}/pay_types`
-        }
-        const res: any = await requestPromise(options)
-        for (const item of res.payTypes) {
-            await this.payTypes.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
-        }
-        logger.info('pay types updated')
     }
 
     public async updateGoods() {

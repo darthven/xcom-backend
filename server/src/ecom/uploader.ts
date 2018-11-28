@@ -7,8 +7,6 @@ import { ECOM_URL } from '../config/env.config'
 import logger from '../config/logger.config'
 import { CategoryRepository } from '../mongo/repository/categories'
 import { GoodRepository } from '../mongo/repository/goods'
-import { OrderStatusRepository } from '../mongo/repository/orderStatuses'
-import { PayTypeRepository } from '../mongo/repository/payTypes'
 import { RegionsRepository } from '../mongo/repository/regions'
 import { StationsRepository } from '../mongo/repository/stations'
 import { StoreRepository } from '../mongo/repository/stores'
@@ -24,10 +22,6 @@ export class EcomUploader {
     private categories!: CategoryRepository
     @Inject()
     private stores!: StoreRepository
-    @Inject()
-    private orderStatuses!: OrderStatusRepository
-    @Inject()
-    private payTypes!: PayTypeRepository
     @Inject()
     private goods!: GoodRepository
     @Inject()
@@ -90,28 +84,6 @@ export class EcomUploader {
         }
         await this.storeTypes.insertMany(types)
         logger.info('store types uploaded')
-    }
-
-    public async uploadOrderStatuses() {
-        const res: any = await requestPromise({
-            ...ecomOptions,
-            uri: `${ECOM_URL}/order_statuses`
-        })
-        await this.orderStatuses.dropCollection()
-        await this.orderStatuses.createCollection()
-        await this.orderStatuses.collection.insertMany(res.orderStatuses)
-        logger.info('order statuses uploaded')
-    }
-
-    public async uploadPayTypes() {
-        const res: any = await requestPromise({
-            ...ecomOptions,
-            uri: `${ECOM_URL}/pay_types`
-        })
-        await this.payTypes.dropCollection()
-        await this.payTypes.createCollection()
-        await this.payTypes.collection.insertMany(res.payTypes)
-        logger.info('pay types uploaded')
     }
 
     public async uploadGoods() {

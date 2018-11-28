@@ -7,10 +7,10 @@ export interface EcomOrderStatusResponse {
     /**
      * Код ошибки
      */
-    errorCode: number
+    errorCode?: number
 
     /**
      * Текст ошибки
      */
-    message: string
+    message?: string
 }
