@@ -33,6 +33,7 @@ import { ManzanaPosService } from '../manzana/manzanaPosService'
 import { ManzanaSession } from '../manzana/manzanaSession'
 import { ManzanaUser } from '../manzana/manzanaUser'
 import { ManzanaUserApiClient } from '../manzana/manzanaUserApiClient'
+import { ManzanaAuthMiddleware } from '../middlewares/manzanaAuth.middleware'
 import { ProxyMiddleware } from '../middlewares/proxy.middleware'
 import { Order } from '../mongo/entity/order'
 import { OrdersRepository } from '../mongo/repository/orders'
@@ -104,11 +105,11 @@ export class OrdersController {
     }
 
     @Put('/:id')
-    @UseBefore(ManzanaUserApiClient)
+    @UseBefore(ManzanaAuthMiddleware)
     public async changeOrderStatus(
         @Param('id') orderId: number,
         @State('manzanaClient') manzanaClient: ManzanaUserApiClient,
-        @Body() req: { statusId: number }
+        @Body() req: { statusId: number; comment?: string }
     ): Promise<EcomOrderStatusResponse | SbolResponse> {
         if (!manzanaClient) {
             throw new UnauthorizedError('User is not authorized in manzana')
@@ -119,11 +120,14 @@ export class OrdersController {
             throw new NotFoundError(`Order with id "${orderId}" was not found`)
         }
         const user: ManzanaUser = await manzanaClient.getCurrentUser()
+        if (!this.comparePhoneNumbers(order.clientTel, user.MobilePhone!, 'RU')) {
+            throw new NotFoundError(`Client does not have current order with id "${order.id}"`)
+        }
         switch (order.payType) {
             case PayType.CASH:
-                return this.submitToEcomAndUpdateOrderStatus(order, user, req.statusId)
+                return this.changeOfflineOrderStatus(order, req.statusId, req.comment)
             case PayType.ONLINE:
-                return this.submitToSbolAndEcomAndUpdateOrderStatus(order, user, req.statusId)
+                return this.changeOnlineOrderStatus(order, req.statusId, req.comment)
             default:
                 throw new BadRequestError(`payType ${order.payType} not supported`)
         }
@@ -196,31 +200,28 @@ export class OrdersController {
         }
     }
 
-    private async submitToEcomAndUpdateOrderStatus(
+    private async changeOfflineOrderStatus(
         order: Order,
-        user: ManzanaUser,
-        statusId: number
+        statusId: number,
+        comment?: string
     ): Promise<EcomOrderStatusResponse> {
-        if (!this.comparePhoneNumbers(order.clientTel, user.MobilePhone!, 'RU')) {
-            throw new NotFoundError(`Client does not have current order with id "${order.id}"`)
-        }
         if (
             statusId === EcomOrderStatus.REVERSED_BY_CLIENT &&
             [EcomOrderStatus.SALED, EcomOrderStatus.REVERSED_BY_DEFECT].includes(order.statusId!)
         ) {
             throw new HttpError(406, `Cannot reverse order with statuses "Продан" and "На дефектуре"`)
         }
-        const response: EcomOrderStatusResponse = await this.ecom.submitOrderStatus(order, statusId)
+        const response: EcomOrderStatusResponse = await this.ecom.updateOrderStatus(order, statusId, comment)
         if (!response.errorCode) {
-            await this.updateOrderStatus(order, statusId)
+            await this.updateLocalOrderStatus(order, statusId)
         }
         return response
     }
 
-    private async submitToSbolAndEcomAndUpdateOrderStatus(
+    private async changeOnlineOrderStatus(
         order: Order,
-        user: ManzanaUser,
-        statusId: number
+        statusId: number,
+        comment?: string
     ): Promise<EcomOrderStatusResponse> {
         let sbolResponse: SbolResponse = {}
         switch (statusId) {
@@ -229,19 +230,19 @@ export class OrdersController {
                     throw new HttpError(406, `Cannot reverse order with statuses "Продан" and "На дефектуре"`)
                 }
                 sbolResponse = await this.sbolService.reverseOrder({
-                    orderId: order.id!.toString(),
+                    orderId: order.payGUID!,
                     INN: order.INN
                 })
                 if (sbolResponse.errorCode && sbolResponse.errorCode !== '0') {
                     throw new HttpError(parseInt(sbolResponse.errorCode!, 10), sbolResponse.errorMessage)
                 }
-                return this.submitToEcomAndUpdateOrderStatus(order, user, statusId)
+                return this.changeOfflineOrderStatus(order, statusId, comment)
             default:
                 throw new NotFoundError(`Status with id "${statusId}" was not found`)
         }
     }
 
-    private async updateOrderStatus(order: Order, statusId: number): Promise<void> {
+    private async updateLocalOrderStatus(order: Order, statusId: number): Promise<void> {
         await this.ordersRepository.updateById(order.extId, { statusId })
     }
 

@@ -1,22 +1,14 @@
-import { stringify } from 'querystring'
 import { CoreOptions, RequiredUriUrl } from 'request'
 import * as requestPromise from 'request-promise-native'
-import { BadRequestError, HttpError, NotFoundError } from 'routing-controllers'
-import { Inject, Service } from 'typedi'
+import { HttpError } from 'routing-controllers'
+import { Service } from 'typedi'
 
 import { PriceError } from '../common/errors'
 import { ECOM_URL } from '../config/env.config'
-import logger from '../config/logger.config'
-import { ManzanaUser } from '../manzana/manzanaUser'
 import { Order } from '../mongo/entity/order'
-import { OrdersRepository } from '../mongo/repository/orders'
-import { SbolResponse } from '../sbol/sbolResponse'
-import { SbolService } from '../sbol/sbolService'
 import { ecomOptions } from './ecomOptions'
 import { EcomOrderResponse } from './ecomOrderResponse'
-import { EcomOrderStatus } from './ecomOrderStatus'
 import { EcomOrderStatusResponse } from './ecomOrderStatusResponse'
-import { PayType } from './payType'
 
 interface PriceDescriptor {
     storeId: number
@@ -27,9 +19,6 @@ interface PriceDescriptor {
 
 @Service()
 export class EcomService {
-    @Inject()
-    private readonly orderRepository!: OrdersRepository
-
     public async submitOrder(order: Order): Promise<EcomOrderResponse> {
         return this.request({
             ...ecomOptions,
@@ -39,13 +28,14 @@ export class EcomService {
         })
     }
 
-    public async submitOrderStatus(order: Order, statusId: number): Promise<EcomOrderStatusResponse> {
+    public async updateOrderStatus(order: Order, statusId: number, comment?: string): Promise<EcomOrderStatusResponse> {
         return this.request({
             ...ecomOptions,
             method: 'PUT',
-            uri: `${ECOM_URL}/orders/${order.extId}`,
+            uri: `${ECOM_URL}/orders/${order.id}`,
             body: {
-                statusId
+                statusId,
+                comment
             }
         })
     }
@@ -55,7 +45,7 @@ export class EcomService {
             ...ecomOptions,
             method: 'GET',
             uri: `${ECOM_URL}/orders/${orderId}`
-        }))[0]
+        })).orders[0]
         return response
     }
 
