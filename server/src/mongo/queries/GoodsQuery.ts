@@ -1,7 +1,7 @@
 import { ProductFilter } from '../../parameters/productFilter'
 
 export class GoodsQuery {
-    public $text?: { $search: string }
+    public searchKeywords?: RegExp
     public siteCatId?: { $in: number[] }
     public price?: any
     public 'share.id'?: { $in: number[] }
@@ -10,7 +10,7 @@ export class GoodsQuery {
 
     constructor(region: number, filter: ProductFilter) {
         if (filter.query) {
-            this.$text = { $search: filter.query }
+            this.searchKeywords = new RegExp('^' + filter.query.toLocaleLowerCase())
         }
         if (filter.categories) {
             this.siteCatId = { $in: filter.categories }
