@@ -1,4 +1,4 @@
-import { Service } from 'typedi'
+import { Inject, Service } from 'typedi'
 
 import {
     IMAGE_DEFAULT_TYPE,
@@ -9,15 +9,20 @@ import {
 } from '../../config/env.config'
 import { Region } from '../../parameters/region'
 import { SkipTake } from '../../parameters/skipTake'
+import { Good } from '../entity/good'
 import { Share } from '../entity/share'
 import { GoodsHint } from '../queries/GoodsHint'
 import { GoodsNullQuery } from '../queries/GoodsNullQuery'
+import { GoodsQuery } from '../queries/GoodsQuery'
 import { GoodsSort } from '../queries/GoodsSort'
-import { GoodsStrictQuery } from '../queries/GoodsStrictQuery'
 import { Repository } from './repository'
+import { StocksRepository } from './stocks'
 
 @Service()
 export class GoodRepository extends Repository {
+    @Inject()
+    private readonly stocks!: StocksRepository
+
     private firstProject = {
         _id: 0,
         id: 1,
@@ -63,6 +68,7 @@ export class GoodRepository extends Repository {
         'share.endDate': 1,
         'share.description': 1
     }
+
     private lookup = {
         from: 'shares',
         let: { id: '$id' },
@@ -84,9 +90,11 @@ export class GoodRepository extends Repository {
         ],
         as: 'shares'
     }
+
     constructor() {
         super('goods')
     }
+
     public async createCollection() {
         await super.createCollection()
         await this.collection.createIndex({ name: 'text', tradeName: 'text', suffixes: 'text' })
@@ -109,39 +117,27 @@ export class GoodRepository extends Repository {
         return this.collection.updateOne({ id }, { $set: { img: `${id}${IMAGE_DEFAULT_TYPE}` } })
     }
 
-    public async updateIndexes() {
-        // await this.collection.dropIndex('id_1')
-        // await this.collection.dropIndex('img_1')
-        // await this.collection.dropIndex('siteCatId_1')
-        // await this.collection.dropIndex('priceMinReg')
-        // await this.collection.dropIndex('priceMinMaxReg')
-        // await this.collection.dropIndex('priceReg')
-        // await this.collection.dropIndex('price')
-        await this.collection.dropIndex('price.min')
-        await this.collection.dropIndex('price.max')
-        await this.collection.dropIndex('name_text_tradeName_text_suffixes_text')
-        await this.collection.createIndex({ name: 'text', tradeName: 'text', suffixes: 'text' })
-        await this.collection.createIndex({ id: 1 })
-        await this.collection.createIndex({ siteCatId: 1 })
-        await this.collection.createIndex({ price: 1 }, { name: 'price' })
-        await this.collection.createIndex({ img: 1 }, { name: 'img' })
-        await this.collection.createIndex({ 'price.region': 1 }, { name: 'priceReg' })
-        await this.collection.createIndex({ 'price.priceMin': 1 }, { name: 'priceMin' })
-        await this.collection.createIndex({ 'price.priceMax': 1 }, { name: 'priceMax' })
-        await this.collection.createIndex({ 'price.region': 1, 'price.priceMin': 1 }, { name: 'priceMinReg' })
-        await this.collection.createIndex({ 'price.region': 1, 'price.priceMax': 1 }, { name: 'priceMaxReg' })
-        await this.collection.createIndex(
-            { 'price.region': 1, 'price.priceMin': 1, 'price.priceMax': -1 },
-            { name: 'priceMinMaxReg' }
-        )
-    }
+    /**
+     * Обьясняю. Во первых, я не нашел возможности в монго возвращать сначала данные с каким-то полем а потом без этого поля, и при этом не сортировать по этому полю.
+     * В данном случае, у нас у товара есть цена, есть товары с ценой, а есть без (которых нет в наличии). Можно их отсортировать в порядке понижения цены, тогда в начале будут все товары с ценой, а потом без, но при этом товары ещё будут отсортированы по цене, чего нам не надо.
+     * Ситуацию ещё и усложняет то, что есть другие сортировки, которые поломают.
+     * Тут нужно понять, что главная цель этого когда, в том что товары должны в первую очередь выдаваться те которые в наличии, т.е. с ценой. Нам не важно какие пришли условия поиска, какая сортировка и прочее, сначала всегда данные с ценой.
+     * Более детально по коду, есть 2 почти одинаковые функции обе ищут по товарам, принимают одно и тоже, только одна ищет по товарам с ценой, другая по товарам без цены. Данные с этих функций не могут пересекаться.
+     * Фишка с оффсетом в чем.
+     * Функция getLength вернёт длину всех товаров с ценой по данному запросу, представим мы вбили какие-то параметры поиска и таких товаров (с ценой) нашло 17 штук (length). В рамках пагинации, на первой странице, у нас skip = 0, take = 10, в таком случае мы проверяем length - skip = 17, число положительное и больше take (по ИФАМ в коде) значит нам нужно будет вернуть 10 товаров которые в наличии.
+     * На второй странице,  skip = 10, take = 10. Length по прежнему, 17. Length - skip = 7.
+     * В данном случае, число положительное но меньше take, значит нам нужно вернуть 7 товаров с ценой и 3 товара без цены (если они будут).
+     * На третьей странице, skip = 20, take = 10.
+     * Length - skip = -7. Число отрицательное, значит нам нужно возвращать 10 товаров без цены. (Если они будут).
+     */
     public async getAll(
-        match: GoodsStrictQuery,
+        match: GoodsQuery,
         withoutPriceMatch: GoodsNullQuery,
         skipTake: SkipTake,
         region: Region,
         sort: GoodsSort,
-        hint: GoodsHint
+        hint: GoodsHint,
+        storeIds?: number[]
     ) {
         let data: any[]
         const fullLength = await this.getLength(match, hint)
@@ -162,10 +158,11 @@ export class GoodRepository extends Repository {
         }
         return {
             fullLength,
-            data
+            data: storeIds ? await this.joinStocksForStores(data, storeIds) : data
         }
     }
-    public async getAllWithPrice(match: GoodsStrictQuery, skipTake: SkipTake, region: Region, sort: GoodsSort) {
+
+    public async getAllWithPrice(match: GoodsQuery, skipTake: SkipTake, region: Region, sort: GoodsSort) {
         let pipeline = [
             { $match: match },
             sort,
@@ -190,6 +187,7 @@ export class GoodRepository extends Repository {
         }
         return this.collection.aggregate(pipeline, { allowDiskUse: true }).toArray()
     }
+
     public async getAllWithoutPrice(match: GoodsNullQuery, skipTake: SkipTake, sort: GoodsSort) {
         return this.collection
             .aggregate(
@@ -205,8 +203,9 @@ export class GoodRepository extends Repository {
             )
             .toArray()
     }
-    public async getByIds(ids: number[], region: Region) {
-        return this.collection
+
+    public async getByIds(ids: number[], region: Region, storeIds?: number[]) {
+        const goods = await this.collection
             .aggregate([
                 { $match: { id: { $in: ids } } },
                 { $project: this.firstProject },
@@ -220,9 +219,11 @@ export class GoodRepository extends Repository {
                 { $project: this.secondProject }
             ])
             .toArray()
+        return storeIds ? this.joinStocksForStores(goods, storeIds) : goods
     }
-    public async getSingle(id: number, region: Region) {
-        return this.collection
+
+    public async getSingle(id: number, region: Region, storeIds?: number[]) {
+        const goods = await this.collection
             .aggregate([
                 { $match: { id } },
                 { $project: this.firstProject },
@@ -236,8 +237,10 @@ export class GoodRepository extends Repository {
                 { $project: this.secondProject }
             ])
             .toArray()
+        return storeIds ? this.joinStocksForStores(goods, storeIds) : goods
     }
-    public async getLength(match: GoodsStrictQuery, hint: GoodsHint) {
+
+    public async getLength(match: GoodsQuery, hint: GoodsHint) {
         if (hint.hint) {
             return this.collection
                 .find(match)
@@ -246,8 +249,9 @@ export class GoodRepository extends Repository {
         }
         return this.collection.find(match).count()
     }
-    public async getByBarcode(barcode: string, region: Region) {
-        return this.collection
+
+    public async getByBarcode(barcode: string, region: Region, storeIds?: number[]) {
+        const goods = await this.collection
             .aggregate([
                 {
                     $match: {
@@ -265,8 +269,10 @@ export class GoodRepository extends Repository {
                 { $project: this.secondProject }
             ])
             .toArray()
+        return storeIds ? this.joinStocksForStores(goods, storeIds) : goods
     }
-    public async getCategories(match: GoodsStrictQuery, hint: GoodsHint) {
+
+    public async getCategories(match: GoodsQuery, hint: GoodsHint) {
         const res = await this.collection
             .aggregate([
                 { $match: match },
@@ -292,7 +298,8 @@ export class GoodRepository extends Repository {
             .toArray()
         return res[0] ? res[0].categories : res
     }
-    public async getMinMaxPrice(match: GoodsStrictQuery, region: Region, hint: GoodsHint) {
+
+    public async getMinMaxPrice(match: GoodsQuery, region: Region, hint: GoodsHint) {
         const res = await this.collection
             .aggregate([
                 { $match: match },
@@ -329,7 +336,8 @@ export class GoodRepository extends Repository {
             max: null
         }
     }
-    public async getDensity(match: GoodsStrictQuery, region: Region, hint: GoodsHint, max?: number) {
+
+    public async getDensity(match: GoodsQuery, region: Region, hint: GoodsHint, max?: number) {
         // generate boundaries
         const min = 300
         if (!max) {
@@ -372,7 +380,19 @@ export class GoodRepository extends Repository {
             ])
             .toArray()
     }
+
     public async setShare(share: Share) {
         return this.collection.findOneAndUpdate({ id: share.goodId }, { $set: { share } })
+    }
+
+    private joinStocksForStores(goods: Good[], storeIds: number[]): Promise<any[]> {
+        return Promise.all(
+            goods.map(async (good: any) => {
+                return {
+                    ...good,
+                    stocks: await this.stocks.getForStores(storeIds, [good.id])
+                }
+            })
+        )
     }
 }

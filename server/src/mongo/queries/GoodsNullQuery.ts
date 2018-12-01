@@ -1,22 +1,9 @@
-export class GoodsNullQuery {
-    public $text?: { $search: string }
-    public siteCatId?: { $in: number[] }
-    public price: null
-    public 'share.id'?: { $in: number[] }
-    public 'share.endDate'?: { $gt: Date }
-    public 'share.regions'?: { $in: number[] }
+import { ProductFilter } from '../../parameters/productFilter'
+import { GoodsQuery } from './GoodsQuery'
 
-    constructor(region: number, search?: string, categories?: number[], shares?: number[]) {
-        if (search) {
-            this.$text = { $search: search }
-        }
-        if (categories) {
-            this.siteCatId = { $in: categories }
-        }
-        if (shares) {
-            this['share.id'] = { $in: shares }
-            this['share.endDate'] = { $gt: new Date() }
-        }
+export class GoodsNullQuery extends GoodsQuery {
+    constructor(region: number, filter: ProductFilter) {
+        super(region, filter)
         this.price = null
     }
 }
