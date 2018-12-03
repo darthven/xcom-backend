@@ -11,7 +11,7 @@ async function saveM(from: string, to: string) {
         .withoutEnlargement()
         .jpeg({ quality: 90 })
         .toFile(to)
-    logger.info('image saved', { name: to })
+    logger.verbose('image saved', { name: to })
 }
 
 async function saveS(from: string, to: string) {
@@ -23,7 +23,7 @@ async function saveS(from: string, to: string) {
         .withoutEnlargement()
         .jpeg({ quality: 100 })
         .toFile(to)
-    logger.info('image saved', { name: to })
+    logger.verbose('image saved', { name: to })
 }
 
 async function save(from: string, to: string) {
@@ -35,7 +35,7 @@ async function save(from: string, to: string) {
         .withoutEnlargement()
         .jpeg({ progressive: true })
         .toFile(to)
-    logger.info('image saved', { name: to })
+    logger.verbose('image saved', { name: to })
 }
 
 export async function saveGoodImage(from: string, id: number) {
