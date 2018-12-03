@@ -27,7 +27,7 @@ function crontab_add(){
     fi
 }
 
-env > cron_env_${mode}.sh
+export -p > cron_env_${mode}.sh
 
 crontab_add "SHELL=/bin/bash"
 
