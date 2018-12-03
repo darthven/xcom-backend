@@ -44,7 +44,7 @@ export default async () => {
                     } else {
                         updated++
                     }
-                    logger.debug(`goods ${item.id} updated`, item)
+                    logger.debug(`goods ${item.id} updated`)
                 }
             }
             logger.debug(`goods page ${i}/${res.pageCount} updated`)
