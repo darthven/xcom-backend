@@ -28,14 +28,19 @@ export default async () => {
                 uri: `${ECOM_URL}/stocks/${store.id}`,
                 timeout: 1000 * 60 * 5
             })
-            const timeout = new Promise((resolve, reject) =>
-                setTimeout(() => {
+
+            let timer
+
+            const timeout = new Promise((resolve, reject) => {
+                timer = setTimeout(() => {
                     rp.abort()
-                    reject(new Error('Request timed out after 5 minutes'))
-                }, 60000 * 5)
-            )
+                    reject(new Error('Request timed out'))
+                }, 60000 * 2)
+            })
 
             const res: { stocks: Stock[] } = await Promise.race([rp, timeout])
+
+            clearTimeout(timer)
 
             const { deletedCount } = await stocksRepo.collection.deleteMany({ storeId: store.id })
             let insertedCount = 0
