@@ -110,7 +110,8 @@ export class GoodRepository extends Repository {
                 tradeName: 'text',
                 descrHTML: 'text',
                 consistHTML: 'text',
-                usageHTML: 'text'
+                usageHTML: 'text',
+                categoryName: 'text'
             },
             {
                 name: 'text_index',
@@ -121,6 +122,7 @@ export class GoodRepository extends Repository {
                     manufacturer: 3,
                     tradeMark: 3,
                     tradeName: 3,
+                    categoryName: 2,
                     descrHTML: 1,
                     consistHTML: 1,
                     usageHTML: 1

@@ -26,7 +26,11 @@ export default async () => {
         if (imgName) {
             item.img = imgName
         }
-        item.productCount = await goodsRepo.collection.find({ siteCatId: item.id }).count()
+        const updResult = await goodsRepo.collection.updateMany(
+            { siteCatId: item.id },
+            { $set: { categoryName: item.name } }
+        )
+        item.productCount = updResult.matchedCount
     }
 
     const ids = []
