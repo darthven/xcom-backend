@@ -51,7 +51,7 @@ export default async () => {
         }
     }
 
-    await regionsRepo.collection.drop()
+    await regionsRepo.dropCollection()
     await regionsRepo.createCollection()
     await regionsRepo.collection.insertMany(regions)
 
