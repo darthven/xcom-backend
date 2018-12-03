@@ -39,5 +39,9 @@ export async function downloadImage(imgLinkFTP: string) {
             user: FTP_CLIENT_USER,
             password: FTP_CLIENT_PASSWORD
         })
+        // set 2-minute timeout
+        setTimeout(() => {
+            client.abort(error => reject(error))
+        }, 60000 * 2)
     })
 }
