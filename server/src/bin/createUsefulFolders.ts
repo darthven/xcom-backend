@@ -1,5 +1,7 @@
 import { path } from 'app-root-path'
 import * as fs from 'fs'
+import * as fsPath from 'path'
+
 import {
     IMAGE_CATEGORIES_FOLDER,
     IMAGE_FOLDER,
@@ -26,7 +28,17 @@ dirs.push(
 
 dirs.forEach(dir => {
     if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir)
+        makeDir(dir)
         logger.debug(`Folder was created: ${dir}`)
     }
 })
+
+const makeDir = (pathToCreate: string) => {
+    pathToCreate.split(fsPath.sep).reduce((currentPath, folder) => {
+        currentPath += folder + fsPath.sep
+        if (!fs.existsSync(currentPath)) {
+            fs.mkdirSync(currentPath)
+        }
+        return currentPath
+    }, '')
+}
