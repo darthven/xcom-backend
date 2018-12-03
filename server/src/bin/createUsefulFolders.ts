@@ -26,13 +26,6 @@ dirs.push(
     `${IMAGE_FOLDER}${IMAGE_GOOD_FOLDER}${IMAGE_S_SUBFOLDER}`
 )
 
-dirs.forEach(dir => {
-    if (!fs.existsSync(dir)) {
-        makeDir(dir)
-        logger.debug(`Folder was created: ${dir}`)
-    }
-})
-
 const makeDir = (pathToCreate: string) => {
     pathToCreate.split(fsPath.sep).reduce((currentPath, folder) => {
         currentPath += folder + fsPath.sep
@@ -42,3 +35,10 @@ const makeDir = (pathToCreate: string) => {
         return currentPath
     }, '')
 }
+
+dirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        makeDir(dir)
+        logger.debug(`Folder was created: ${dir}`)
+    }
+})
