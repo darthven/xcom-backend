@@ -34,7 +34,7 @@ export default async () => {
                 logger.debug(`generated all images for ${item.id}`)
             } catch (e) {
                 errors++
-                logger.error('err while updating image', { err: e.message })
+                logger.error(`err while updating image for good ${item.id}`, { err: e.message })
             }
         } else {
             logger.debug(`item ${item.id} does not have image link, skipping...`)

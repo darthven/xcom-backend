@@ -41,7 +41,7 @@ export async function downloadImage(imgLinkFTP: string) {
         })
         // set 2-minute timeout
         setTimeout(() => {
-            client.abort(error => reject(error))
+            client.abort(error => reject(new Error('download timed out')))
         }, 60000 * 2)
     })
 }
