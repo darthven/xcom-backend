@@ -29,7 +29,7 @@ export default async () => {
             }
         }
         await storesRepo.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
-        logger.info(`updated store ${item.id}`)
+        logger.debug(`updated store ${item.id}`)
     }
 
     const ids = res.stores.map((it: Store) => it.id)
