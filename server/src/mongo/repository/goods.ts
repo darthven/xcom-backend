@@ -13,7 +13,6 @@ import { Good } from '../entity/good'
 import { Share } from '../entity/share'
 import { GoodsFilter } from '../queries/GoodsFilter'
 import { GoodsHint } from '../queries/GoodsHint'
-import { GoodsNullPriceFilter } from '../queries/GoodsNullPriceFilter'
 import { GoodsSort } from '../queries/GoodsSort'
 import { GoodsTextQuery } from '../queries/GoodsTextQuery'
 import { Repository } from './repository'
@@ -234,7 +233,7 @@ export class GoodRepository extends Repository {
     }
 
     public async getAllWithoutPrice(
-        filter: GoodsNullPriceFilter,
+        filter: GoodsFilter,
         query: GoodsTextQuery,
         skipTake: SkipTake,
         sort: GoodsSort
