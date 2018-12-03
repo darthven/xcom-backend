@@ -1,7 +1,7 @@
 import { ProductFilter } from '../../parameters/productFilter'
-import { GoodsQuery } from './GoodsQuery'
+import { GoodsFilter } from './GoodsFilter'
 
-export class GoodsNullQuery extends GoodsQuery {
+export class GoodsNullPriceFilter extends GoodsFilter {
     constructor(region: number, filter: ProductFilter) {
         super(region, filter)
         this.price = null

@@ -5,10 +5,11 @@ import { IdsInjectMiddleware } from '../middlewares/ids.inject.middleware'
 import { ProductFilterInjectMiddleware } from '../middlewares/productFilter.inject.middleware'
 import { RegionInjectMiddleware } from '../middlewares/region.inject.middleware'
 import { SkipTakeInjectMiddleware } from '../middlewares/skipTake.inject.middleware'
+import { GoodsFilter } from '../mongo/queries/GoodsFilter'
 import { GoodsHint } from '../mongo/queries/GoodsHint'
-import { GoodsNullQuery } from '../mongo/queries/GoodsNullQuery'
-import { GoodsQuery } from '../mongo/queries/GoodsQuery'
+import { GoodsNullPriceFilter } from '../mongo/queries/GoodsNullPriceFilter'
 import { GoodsSort } from '../mongo/queries/GoodsSort'
+import { GoodsTextQuery } from '../mongo/queries/GoodsTextQuery'
 import { GoodRepository } from '../mongo/repository/goods'
 import { Ids } from '../parameters/ids'
 import { ProductFilter } from '../parameters/productFilter'
@@ -36,12 +37,12 @@ export class GoodsController {
         }
         const sort = new GoodsSort(filter.sort, filter.order)
         const hint = new GoodsHint(filter.priceMin, filter.priceMax, filter.query)
-        const withoutPriceMatch = new GoodsNullQuery(region.region, filter)
-        const withPriceMatch = new GoodsQuery(region.region, filter)
-        const all = this.goods.getAll(withPriceMatch, withoutPriceMatch, skipTake, region, sort, hint, storeIds)
-        const categories = this.goods.getCategories(withPriceMatch, hint)
-        const price = await this.goods.getMinMaxPrice(withPriceMatch, region, hint)
-        const density = this.goods.getDensity(withPriceMatch, region, hint, price.max)
+        const textQuery = new GoodsTextQuery(filter.query)
+        const filterQuery = new GoodsFilter(region.region, filter)
+        const all = this.goods.getAll(filterQuery, textQuery, skipTake, region, sort, hint, storeIds)
+        const categories = this.goods.getCategories(filterQuery, textQuery, hint)
+        const price = await this.goods.getMinMaxPrice(filterQuery, textQuery, region, hint)
+        const density = this.goods.getDensity(filterQuery, textQuery, region, hint, price.max)
         const res = await all
         return {
             length: res.fullLength,
@@ -67,9 +68,9 @@ export class GoodsController {
         }
         const sort = new GoodsSort(filter.sort, filter.order)
         const hint = new GoodsHint(filter.priceMin, filter.priceMax, filter.query)
-        const withoutPriceMatch = new GoodsNullQuery(region.region, filter)
-        const withPriceMatch = new GoodsQuery(region.region, filter)
-        const res = await this.goods.getAll(withPriceMatch, withoutPriceMatch, skipTake, region, sort, hint, storeIds)
+        const textQuery = new GoodsTextQuery(filter.query)
+        const filterQuery = new GoodsFilter(region.region, filter)
+        const res = await this.goods.getAll(filterQuery, textQuery, skipTake, region, sort, hint, storeIds)
         return {
             length: res.fullLength,
             data: res.data
@@ -85,11 +86,12 @@ export class GoodsController {
         @State('productFilter') filter: ProductFilter
     ) {
         const hint = new GoodsHint(filter.priceMin, filter.priceMax, filter.query)
-        const withPriceMatch = new GoodsQuery(region.region, filter)
-        const length = this.goods.getLength(withPriceMatch, hint)
-        const categories = this.goods.getCategories(withPriceMatch, hint)
-        const price = await this.goods.getMinMaxPrice(withPriceMatch, region, hint)
-        const density = this.goods.getDensity(withPriceMatch, region, hint, price.max)
+        const filterQuery = new GoodsFilter(region.region, filter)
+        const textQuery = new GoodsTextQuery(filter.query)
+        const length = this.goods.getLength(filterQuery, textQuery, hint)
+        const categories = this.goods.getCategories(filterQuery, textQuery, hint)
+        const price = await this.goods.getMinMaxPrice(filterQuery, textQuery, region, hint)
+        const density = this.goods.getDensity(filterQuery, textQuery, region, hint, price.max)
         return {
             length: await length,
             categories: await categories,

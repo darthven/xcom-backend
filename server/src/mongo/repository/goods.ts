@@ -11,10 +11,11 @@ import { Region } from '../../parameters/region'
 import { SkipTake } from '../../parameters/skipTake'
 import { Good } from '../entity/good'
 import { Share } from '../entity/share'
+import { GoodsFilter } from '../queries/GoodsFilter'
 import { GoodsHint } from '../queries/GoodsHint'
-import { GoodsNullQuery } from '../queries/GoodsNullQuery'
-import { GoodsQuery } from '../queries/GoodsQuery'
+import { GoodsNullPriceFilter } from '../queries/GoodsNullPriceFilter'
 import { GoodsSort } from '../queries/GoodsSort'
+import { GoodsTextQuery } from '../queries/GoodsTextQuery'
 import { Repository } from './repository'
 import { StocksRepository } from './stocks'
 
@@ -97,7 +98,36 @@ export class GoodRepository extends Repository {
 
     public async createCollection() {
         await super.createCollection()
+        // index for partial regex text matches
         await this.collection.createIndex({ searchKeywords: 1 })
+        // index for stemmed text search
+        await this.collection.createIndex(
+            {
+                name: 'text',
+                mnn: 'text',
+                manufacturer: 'text',
+                tradeMark: 'text',
+                tradeName: 'text',
+                descrHTML: 'text',
+                consistHTML: 'text',
+                usageHTML: 'text'
+            },
+            {
+                name: 'text_index',
+                // @ts-ignore
+                weights: {
+                    name: 10,
+                    mnn: 5,
+                    manufacturer: 3,
+                    tradeMark: 3,
+                    tradeName: 3,
+                    descrHTML: 1,
+                    consistHTML: 1,
+                    usageHTML: 1
+                },
+                default_language: 'russian'
+            }
+        )
         await this.collection.createIndex({ id: 1 }, { unique: true })
         await this.collection.createIndex({ siteCatId: 1 })
         await this.collection.createIndex({ price: 1 }, { name: 'price' })
@@ -131,8 +161,8 @@ export class GoodRepository extends Repository {
      * Length - skip = -7. Число отрицательное, значит нам нужно возвращать 10 товаров без цены. (Если они будут).
      */
     public async getAll(
-        match: GoodsQuery,
-        withoutPriceMatch: GoodsNullQuery,
+        filter: GoodsFilter,
+        query: GoodsTextQuery,
         skipTake: SkipTake,
         region: Region,
         sort: GoodsSort,
@@ -140,21 +170,26 @@ export class GoodRepository extends Repository {
         storeIds?: number[]
     ) {
         let data: any[]
-        const fullLength = await this.getLength(match, hint)
+        const fullLength = await this.getLength(filter, query, hint)
         const diff = fullLength - skipTake.skip
         if (diff < 0) {
             // only data without price
             const withoutPriceSkipTake = new SkipTake({ skip: Math.abs(diff), take: skipTake.take })
-            data = await this.getAllWithoutPrice(withoutPriceMatch, withoutPriceSkipTake, sort)
+            data = await this.getAllWithoutPrice({ ...filter, price: null }, query, withoutPriceSkipTake, sort)
         } else if (diff < skipTake.take) {
             // data with and without price
             const withoutPriceSkipTake = new SkipTake({ skip: 0, take: skipTake.take - diff })
-            const withoutPriceRes = await this.getAllWithoutPrice(withoutPriceMatch, withoutPriceSkipTake, sort)
-            const withPriceRes = await this.getAllWithPrice(match, skipTake, region, sort)
+            const withoutPriceRes = await this.getAllWithoutPrice(
+                { ...filter, price: null },
+                query,
+                withoutPriceSkipTake,
+                sort
+            )
+            const withPriceRes = await this.getAllWithPrice(filter, query, skipTake, region, sort)
             data = withPriceRes.concat(withoutPriceRes)
         } else {
             // data only with price
-            data = await this.getAllWithPrice(match, skipTake, region, sort)
+            data = await this.getAllWithPrice(filter, query, skipTake, region, sort)
         }
         return {
             fullLength,
@@ -162,9 +197,16 @@ export class GoodRepository extends Repository {
         }
     }
 
-    public async getAllWithPrice(match: GoodsQuery, skipTake: SkipTake, region: Region, sort: GoodsSort) {
+    public async getAllWithPrice(
+        filter: GoodsFilter,
+        query: GoodsTextQuery,
+        skipTake: SkipTake,
+        region: Region,
+        sort: GoodsSort
+    ) {
         let pipeline = [
-            { $match: match },
+            { $match: query },
+            { $match: filter },
             sort,
             { $skip: skipTake.skip },
             { $limit: skipTake.take },
@@ -175,7 +217,8 @@ export class GoodRepository extends Repository {
         ]
         if (sort.$sort.price) {
             pipeline = [
-                { $match: match },
+                { $match: query },
+                { $match: filter },
                 { $project: this.firstProject },
                 { $unwind: '$price' },
                 { $match: { 'price.region': region.region } },
@@ -188,11 +231,17 @@ export class GoodRepository extends Repository {
         return this.collection.aggregate(pipeline, { allowDiskUse: true }).toArray()
     }
 
-    public async getAllWithoutPrice(match: GoodsNullQuery, skipTake: SkipTake, sort: GoodsSort) {
+    public async getAllWithoutPrice(
+        filter: GoodsNullPriceFilter,
+        query: GoodsTextQuery,
+        skipTake: SkipTake,
+        sort: GoodsSort
+    ) {
         return this.collection
             .aggregate(
                 [
-                    { $match: match },
+                    { $match: query },
+                    { $match: filter },
                     sort,
                     { $skip: skipTake.skip },
                     { $limit: skipTake.take },
@@ -240,14 +289,14 @@ export class GoodRepository extends Repository {
         return storeIds ? this.joinStocksForStores(goods, storeIds) : goods
     }
 
-    public async getLength(match: GoodsQuery, hint: GoodsHint) {
+    public async getLength(match: GoodsFilter, query: GoodsTextQuery, hint: GoodsHint) {
         if (hint.hint) {
             return this.collection
-                .find(match)
+                .find({ $and: [query, match] })
                 .hint(hint.hint)
                 .count()
         }
-        return this.collection.find(match).count()
+        return this.collection.find({ $and: [query, match] }).count()
     }
 
     public async getByBarcode(barcode: string, region: Region, storeIds?: number[]) {
@@ -272,10 +321,11 @@ export class GoodRepository extends Repository {
         return storeIds ? this.joinStocksForStores(goods, storeIds) : goods
     }
 
-    public async getCategories(match: GoodsQuery, hint: GoodsHint) {
+    public async getCategories(filter: GoodsFilter, query: GoodsTextQuery, hint: GoodsHint) {
         const res = await this.collection
             .aggregate([
-                { $match: match },
+                { $match: query },
+                { $match: filter },
                 { $limit: 1000 },
                 {
                     $group: {
@@ -299,10 +349,11 @@ export class GoodRepository extends Repository {
         return res[0] ? res[0].categories : res
     }
 
-    public async getMinMaxPrice(match: GoodsQuery, region: Region, hint: GoodsHint) {
+    public async getMinMaxPrice(filter: GoodsFilter, query: GoodsTextQuery, region: Region, hint: GoodsHint) {
         const res = await this.collection
             .aggregate([
-                { $match: match },
+                { $match: query },
+                { $match: filter },
                 {
                     $project: {
                         _id: 0,
@@ -337,7 +388,7 @@ export class GoodRepository extends Repository {
         }
     }
 
-    public async getDensity(match: GoodsQuery, region: Region, hint: GoodsHint, max?: number) {
+    public async getDensity(filter: GoodsFilter, query: GoodsTextQuery, region: Region, hint: GoodsHint, max?: number) {
         // generate boundaries
         const min = 300
         if (!max) {
@@ -349,7 +400,8 @@ export class GoodRepository extends Repository {
         }
         return this.collection
             .aggregate([
-                { $match: match },
+                { $match: query },
+                { $match: filter },
                 {
                     $project: {
                         _id: 0,
