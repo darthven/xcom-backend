@@ -1,7 +1,7 @@
 export class GoodsSort {
     public $sort: any
 
-    constructor(sort?: string, order?: string) {
+    constructor(sort?: string, order?: string, searchQuery?: string) {
         if (!sort) {
             sort = 'top'
         }
@@ -14,9 +14,16 @@ export class GoodsSort {
         } else if (sort === 'name') {
             this.$sort = { name: orderSign }
         } else {
-            this.$sort = {
-                score: { $meta: 'textScore' },
-                img: orderSign
+            if (searchQuery) {
+                // search based on relevance score
+                this.$sort = {
+                    score: { $meta: 'textScore' },
+                    img: orderSign
+                }
+            } else {
+                this.$sort = {
+                    img: orderSign
+                }
             }
         }
     }

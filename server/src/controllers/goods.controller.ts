@@ -34,7 +34,7 @@ export class GoodsController {
         if (storeId) {
             storeIds = (Array.isArray(storeId) ? storeId : [storeId]).map(Number)
         }
-        const sort = new GoodsSort(filter.sort, filter.order)
+        const sort = new GoodsSort(filter.sort, filter.order, filter.query)
         const hint = new GoodsHint(filter.priceMin, filter.priceMax, filter.query)
         const textQuery = new GoodsTextQuery(filter.query)
         const filterQuery = new GoodsFilter(region.region, filter)
@@ -65,7 +65,7 @@ export class GoodsController {
         if (storeId) {
             storeIds = (Array.isArray(storeId) ? storeId : [storeId]).map(Number)
         }
-        const sort = new GoodsSort(filter.sort, filter.order)
+        const sort = new GoodsSort(filter.sort, filter.order, filter.query)
         const hint = new GoodsHint(filter.priceMin, filter.priceMax, filter.query)
         const textQuery = new GoodsTextQuery(filter.query)
         const filterQuery = new GoodsFilter(region.region, filter)
