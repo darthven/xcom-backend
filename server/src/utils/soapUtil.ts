@@ -123,20 +123,23 @@ export default class SoapUtil {
 
     private async handleCard(url: string, chequeRequest: SoftChequeRequest): Promise<SoftChequeRequest> {
         if (!chequeRequest.loyaltyCard) {
-            const cardRequest: CardRequestModel = await this.createCardRequest(chequeRequest)
-            const cardResponse: CardResponseModel = await this.sendSoapRequest(
-                url,
-                converter.js2xml(cardRequest, { compact: true }),
-                {
-                    'Content-Type': 'text/xml;charset=UTF-8'
-                }
-            )
-            const cards: Card[] =
-                cardResponse['soap:Envelope']['soap:Body'].ProcessRequestResponse.ProcessRequestResult.CardResponse.Card
-            if (cards && cards.length > 0) {
-                return {
-                    ...chequeRequest,
-                    loyaltyCard: cards[cards.length - 1].CardNumber._text
+            const cardRequest: CardRequestModel | null = await this.createCardRequest(chequeRequest)
+            if (cardRequest) {
+                const cardResponse: CardResponseModel = await this.sendSoapRequest(
+                    url,
+                    converter.js2xml(cardRequest, { compact: true }),
+                    {
+                        'Content-Type': 'text/xml;charset=UTF-8'
+                    }
+                )
+                const cards: Card[] | null =
+                    cardResponse['soap:Envelope']['soap:Body'].ProcessRequestResponse.ProcessRequestResult.CardResponse
+                        .Card
+                if (cards && cards.length > 0) {
+                    return {
+                        ...chequeRequest,
+                        loyaltyCard: cards[cards.length - 1].CardNumber._text
+                    }
                 }
             }
             return {
@@ -147,7 +150,7 @@ export default class SoapUtil {
         return chequeRequest
     }
 
-    private async createCardRequest(chequeRequest: SoftChequeRequest): Promise<CardSoapRequest> {
+    private async createCardRequest(chequeRequest: SoftChequeRequest): Promise<CardSoapRequest | null> {
         const data = new CardSoapRequest()
         this.updateObjectValue<number>('RequestID', Math.round(Math.random() * (1100 - 1000) + 1000), data)
         this.updateObjectValue<string>('DateTime', new Date().toISOString(), data)
@@ -155,6 +158,8 @@ export default class SoapUtil {
             this.addObjectProperty('Phone', chequeRequest.phoneNumber, data, 'CardRequest')
         } else if (chequeRequest.email) {
             this.addObjectProperty('Email', chequeRequest.email, data, 'CardRequest')
+        } else {
+            return null
         }
         return data
     }
