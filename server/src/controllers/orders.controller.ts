@@ -122,7 +122,7 @@ export class OrdersController {
         }
         const user: ManzanaUser = await manzanaClient.getCurrentUser()
         if (!this.comparePhoneNumbers(order.clientTel, user.MobilePhone!, 'RU')) {
-            throw new NotFoundError(`Client does not have current order with id "${order.id}"`)
+            throw new HttpError(405, `Client does not have current order with id "${order.id}"`)
         }
         switch (order.payType) {
             case PayType.CASH:
