@@ -33,6 +33,16 @@ export async function downloadImage(imgLinkFTP: string) {
                 }
             })
         })
+
+        client.on('error', (e: Error) => {
+            reject(e)
+        })
+
+        // set 2-minute timeout
+        setTimeout(() => {
+            client.abort(error => reject(new Error('download timed out')))
+        }, 60000 * 2)
+
         client.connect({
             host: FTP_CLIENT_HOST,
             port: FTP_CLIENT_PORT,

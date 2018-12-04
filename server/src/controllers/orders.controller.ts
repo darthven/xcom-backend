@@ -26,6 +26,7 @@ import { ECOM_PASS, ECOM_URL, ECOM_USER } from '../config/env.config'
 import logger from '../config/logger.config'
 import { createEcomOrder } from '../ecom/ecomOrder'
 import { EcomOrderStatus } from '../ecom/ecomOrderStatus'
+import { EcomOrderStatusRequest } from '../ecom/ecomOrderStatusRequest'
 import { EcomOrderStatusResponse } from '../ecom/ecomOrderStatusResponse'
 import { EcomService } from '../ecom/ecomService'
 import { PayType } from '../ecom/payType'
@@ -109,7 +110,7 @@ export class OrdersController {
     public async changeOrderStatus(
         @Param('id') orderId: number,
         @State('manzanaClient') manzanaClient: ManzanaUserApiClient,
-        @Body() req: { statusId: number; comment?: string }
+        @Body() req: EcomOrderStatusRequest
     ): Promise<EcomOrderStatusResponse | SbolResponse> {
         if (!manzanaClient) {
             throw new UnauthorizedError('User is not authorized in manzana')
@@ -243,7 +244,11 @@ export class OrdersController {
     }
 
     private async updateLocalOrderStatus(order: Order, statusId: number): Promise<void> {
-        await this.ordersRepository.updateById(order.extId, { statusId })
+        await this.ordersRepository.collection.updateOne(
+            { _id: order.extId },
+            { $set: { ...order, statusId } },
+            { upsert: true }
+        )
     }
 
     private comparePhoneNumbers(phoneNumber1: string, phoneNumber2: string, region: string): boolean {

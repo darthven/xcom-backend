@@ -18,22 +18,28 @@ export default async () => {
     const goodsCursor = goodsRepo.collection.find({})
     while (await goodsCursor.hasNext()) {
         const item = await goodsCursor.next()
-        if (item.imgLinkFTP && !goodImageExist(item.id)) {
+        if (goodImageExist(item.id)) {
+            // todo checksum?
+            logger.debug(`already have images for ${item.id}, skipping...`)
+            skipped++
+            continue
+        }
+        if (item.imgLinkFTP) {
             // upload image from ftp
             try {
                 const tmpFile = await downloadImage(item.imgLinkFTP)
                 await saveGoodImage(tmpFile, item.id)
                 await goodsRepo.updateImageLink(item.id)
                 success++
-                logger.info(`downloaded image for ${item.id}`)
+                logger.debug(`generated all images for ${item.id}`)
             } catch (e) {
                 errors++
-                logger.error('err while updating image', { err: e.message })
+                logger.error(`err while updating image for good ${item.id}`, { err: e.message })
             }
         } else {
+            logger.debug(`item ${item.id} does not have image link, skipping...`)
             skipped++
         }
-        logger.info(`updated ${success + errors + skipped}/${await goodsCursor.count()} images`)
     }
 
     return { success, errors, skipped }

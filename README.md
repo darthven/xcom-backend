@@ -5,6 +5,8 @@
 - [MongoDB](https://docs.mongodb.com/manual/installation/) 4.0 or later
 - [PM2](https://www.npmjs.com/package/pm2) (npm install pm2 -g)
 - Postfix `sudo apt-get install postfix`
+- make, gcc, g++ to build bcrypt (`sudo apt-get install make build-essential g++`)
+- nginx
 
 ### Configuration
 * Dev: `server/.env`

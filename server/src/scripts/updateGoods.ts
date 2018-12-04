@@ -24,7 +24,13 @@ export default async () => {
             if (count) {
                 for (const item of res.goods) {
                     ids.push(item.id)
-                    item.suffixes = makePrefixes(item.name)
+                    item.searchKeywords = [].concat(
+                        ...(item.name || '').toLocaleLowerCase().split(' '),
+                        ...(item.mnn || '').toLocaleLowerCase().split(' '),
+                        ...(item.manufacturer || '').toLocaleLowerCase().split(' '),
+                        ...(item.tradeMark || '').toLocaleLowerCase().split(' '),
+                        ...(item.tradeName || '').toLocaleLowerCase().split(' ')
+                    )
                     const upd = await goodsRepo.collection.findOneAndUpdate(
                         { id: item.id },
                         { $set: item },
@@ -38,9 +44,10 @@ export default async () => {
                     } else {
                         updated++
                     }
+                    logger.debug(`goods ${item.id} updated`)
                 }
             }
-            logger.info(`goods page ${i}/${res.pageCount} updated`)
+            logger.debug(`goods page ${i}/${res.pageCount} updated`)
         } catch (err) {
             logger.error(`goods page ${i} failed`, { err: err.message })
         }
@@ -50,16 +57,4 @@ export default async () => {
 
     logger.info('goods updated')
     return { updated, inserted, deleted: del.result.n || 0 }
-}
-
-const makePrefixes = (value: string) => {
-    const res: string[] = []
-    if (value) {
-        value.split(' ').forEach((val: string) => {
-            for (let i = 1; i < val.length; i++) {
-                res.push(val.substr(0, i).toUpperCase())
-            }
-        })
-    }
-    return res
 }

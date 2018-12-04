@@ -16,12 +16,12 @@ export class StocksRepository extends Repository {
         await this.collection.createIndex({ storeId: 1, goodsId: 1, batch: 1 }, { unique: true })
     }
 
-    public async getForStore(id: any, ids: number[]): Promise<Stock[]> {
+    public async getForStores(storeIds: number[], ids: number[]): Promise<Stock[]> {
         return this.collection
             .aggregate([
                 {
                     $match: {
-                        storeId: id,
+                        storeId: { $in: storeIds },
                         goodsId: { $in: ids }
                     }
                 },

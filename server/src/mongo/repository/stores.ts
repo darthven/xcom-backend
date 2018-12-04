@@ -252,7 +252,7 @@ export class StoreRepository extends Repository {
     public async getStoresAndStocksForProductList(filter: LocationFilter, ids: number[]) {
         const stores = await this.getAll(new LocationsQuery(filter))
         for (const store of stores) {
-            store.stocks = await this.stocks.getForStore(store.id, ids)
+            store.stocks = await this.stocks.getForStores([store.id], ids)
         }
         return stores
     }

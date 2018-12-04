@@ -26,7 +26,7 @@ echo "filesystem initialized"
 
 # start initial ecom sync
 echo "starting initial ecom sync and database setup..."
-npm run sync:${mode} -- initialPipe
+npm run script:${mode} -- initialPipe
 echo "ecom sync completed."
 
 # schedule cron updates
