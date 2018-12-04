@@ -8,6 +8,9 @@ import { OrderStatusRequest } from './orderStatusRequest'
 import { OrderStatusResponse } from './orderStatusResponse'
 import { PreAuthRequest } from './preAuthRequest'
 import { PreAuthResponse } from './preAuthResponse'
+import { RefundRequest } from './refundRequest'
+import { ReverseRequest } from './reverseRequest'
+import { SbolResponse } from './sbolResponse'
 
 @Service()
 export class SbolService {
@@ -20,6 +23,14 @@ export class SbolService {
 
     public async getOrderStatus(params: OrderStatusRequest & INN): Promise<OrderStatusResponse> {
         return this.request('rest/getOrderStatusExtended.do', params)
+    }
+
+    public async reverseOrder(params: ReverseRequest & INN): Promise<SbolResponse> {
+        return this.request('rest/reverse.do', params)
+    }
+
+    public async refundOrder(params: RefundRequest & INN): Promise<SbolResponse> {
+        return this.request('rest/refund.do', params)
     }
 
     private async request(method: string, params: INN) {

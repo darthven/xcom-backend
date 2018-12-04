@@ -1,0 +1,13 @@
+export enum EcomOrderStatus {
+    NEW = 9,
+    FULLY_ASSEMBLED = 10,
+    PARTIALLLY_ASSEMBLED = 11,
+    SALED = 12,
+    REVERSED = 13,
+    REVERSED_BY_DEFECT = 14,
+    REVERSED_BY_CLIENT = 15,
+    ON_PICKING = 16,
+    IN_PRODUCTION = 17,
+    PRODUCED = 18,
+    REFUND = 19
+}

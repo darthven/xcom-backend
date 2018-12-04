@@ -1,3 +1,4 @@
+import { PhoneNumberFormat as PNF, PhoneNumberUtil } from 'google-libphonenumber'
 import { Context } from 'koa'
 import { stringify } from 'querystring'
 import {
@@ -10,22 +11,30 @@ import {
     NotFoundError,
     Param,
     Post,
-    QueryParam,
+    Put,
     Req,
     Res,
+    State,
+    UnauthorizedError,
     UseBefore
 } from 'routing-controllers'
 import { Inject } from 'typedi'
 import { parse } from 'url'
+
 import { FiscalChequeRequest } from '../common/fiscalChequeRequest'
 import { ECOM_PASS, ECOM_URL, ECOM_USER } from '../config/env.config'
 import logger from '../config/logger.config'
 import { createEcomOrder } from '../ecom/ecomOrder'
+import { EcomOrderStatus } from '../ecom/ecomOrderStatus'
+import { EcomOrderStatusRequest } from '../ecom/ecomOrderStatusRequest'
+import { EcomOrderStatusResponse } from '../ecom/ecomOrderStatusResponse'
 import { EcomService } from '../ecom/ecomService'
 import { PayType } from '../ecom/payType'
 import { ManzanaPosService } from '../manzana/manzanaPosService'
 import { ManzanaSession } from '../manzana/manzanaSession'
+import { ManzanaUser } from '../manzana/manzanaUser'
 import { ManzanaUserApiClient } from '../manzana/manzanaUserApiClient'
+import { ManzanaAuthMiddleware } from '../middlewares/manzanaAuth.middleware'
 import { ProxyMiddleware } from '../middlewares/proxy.middleware'
 import { Order } from '../mongo/entity/order'
 import { OrdersRepository } from '../mongo/repository/orders'
@@ -33,6 +42,7 @@ import { StoreRepository } from '../mongo/repository/stores'
 import { SbolCallback } from '../parameters/sbolCallback'
 import { StatusCode } from '../sbol/orderStatusResponse'
 import { PreAuthResponse } from '../sbol/preAuthResponse'
+import { SbolResponse } from '../sbol/sbolResponse'
 import { SbolService } from '../sbol/sbolService'
 
 const ECOM_BASIC_AUTH_TOKEN = Buffer.from(`${ECOM_USER}:${ECOM_PASS}`).toString('base64')
@@ -93,6 +103,35 @@ export class OrdersController {
     )
     public async getStatuses(@Req() request: any, @Res() response: any) {
         return response
+    }
+
+    @Put('/:id')
+    @UseBefore(ManzanaAuthMiddleware)
+    public async changeOrderStatus(
+        @Param('id') orderId: number,
+        @State('manzanaClient') manzanaClient: ManzanaUserApiClient,
+        @Body() req: EcomOrderStatusRequest
+    ): Promise<EcomOrderStatusResponse | SbolResponse> {
+        if (!manzanaClient) {
+            throw new UnauthorizedError('User is not authorized in manzana')
+        }
+        const order: Order =
+            (await this.ordersRepository.collection.findOne({ id: orderId })) || (await this.ecom.getOrderById(orderId))
+        if (!order) {
+            throw new NotFoundError(`Order with id "${orderId}" was not found`)
+        }
+        const user: ManzanaUser = await manzanaClient.getCurrentUser()
+        if (!this.comparePhoneNumbers(order.clientTel, user.MobilePhone!, 'RU')) {
+            throw new HttpError(405, `Client does not have current order with id "${order.id}"`)
+        }
+        switch (order.payType) {
+            case PayType.CASH:
+                return this.changeOfflineOrderStatus(order, req.statusId, req.comment)
+            case PayType.ONLINE:
+                return this.changeOnlineOrderStatus(order, req.statusId, req.comment)
+            default:
+                throw new BadRequestError(`payType ${order.payType} not supported`)
+        }
     }
 
     @Post('/submit/:payType')
@@ -160,6 +199,64 @@ export class OrdersController {
             ...order,
             id: res.orderId
         }
+    }
+
+    private async changeOfflineOrderStatus(
+        order: Order,
+        statusId: number,
+        comment?: string
+    ): Promise<EcomOrderStatusResponse> {
+        if (
+            statusId === EcomOrderStatus.REVERSED_BY_CLIENT &&
+            [EcomOrderStatus.SALED, EcomOrderStatus.REVERSED_BY_DEFECT].includes(order.statusId!)
+        ) {
+            throw new HttpError(406, `Cannot reverse order with statuses "Продан" and "На дефектуре"`)
+        }
+        const response: EcomOrderStatusResponse = await this.ecom.updateOrderStatus(order, statusId, comment)
+        if (!response.errorCode) {
+            await this.updateLocalOrderStatus(order, statusId)
+        }
+        return response
+    }
+
+    private async changeOnlineOrderStatus(
+        order: Order,
+        statusId: number,
+        comment?: string
+    ): Promise<EcomOrderStatusResponse> {
+        let sbolResponse: SbolResponse = {}
+        switch (statusId) {
+            case EcomOrderStatus.REVERSED_BY_CLIENT:
+                if ([EcomOrderStatus.SALED, EcomOrderStatus.REVERSED_BY_DEFECT].includes(order.statusId!)) {
+                    throw new HttpError(406, `Cannot reverse order with statuses "Продан" and "На дефектуре"`)
+                }
+                sbolResponse = await this.sbolService.reverseOrder({
+                    orderId: order.payGUID!,
+                    INN: order.INN
+                })
+                if (sbolResponse.errorCode && sbolResponse.errorCode !== '0') {
+                    throw new HttpError(parseInt(sbolResponse.errorCode!, 10), sbolResponse.errorMessage)
+                }
+                return this.changeOfflineOrderStatus(order, statusId, comment)
+            default:
+                throw new NotFoundError(`Status with id "${statusId}" was not found`)
+        }
+    }
+
+    private async updateLocalOrderStatus(order: Order, statusId: number): Promise<void> {
+        await this.ordersRepository.collection.updateOne(
+            { _id: order.extId },
+            { $set: { ...order, statusId } },
+            { upsert: true }
+        )
+    }
+
+    private comparePhoneNumbers(phoneNumber1: string, phoneNumber2: string, region: string): boolean {
+        const phoneNumberUtil: PhoneNumberUtil = PhoneNumberUtil.getInstance()
+        return (
+            phoneNumberUtil.format(phoneNumberUtil.parse(phoneNumber1, region), PNF.E164) ===
+            phoneNumberUtil.format(phoneNumberUtil.parse(phoneNumber2, region), PNF.E164)
+        )
     }
 
     private getRedirectUrl(orderNumber: string, success: boolean) {
