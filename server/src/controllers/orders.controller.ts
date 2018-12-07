@@ -245,7 +245,7 @@ export class OrdersController {
 
     private async updateLocalOrderStatus(order: Order, statusId: number): Promise<void> {
         await this.ordersRepository.collection.updateOne(
-            { _id: order.extId },
+            { id: order.id },
             { $set: { ...order, statusId } },
             { upsert: true }
         )
