@@ -2,7 +2,6 @@ import { ProductFilter } from '../../parameters/productFilter'
 
 export class GoodsFilter {
     public siteCatId?: { $in: number[] }
-    public 'price.stores'?: { $in: number[] }
     public price?: any
     public 'share.id'?: { $in: number[] }
     public 'share.endDate'?: { $gt: Date }
