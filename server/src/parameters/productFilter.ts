@@ -1,4 +1,4 @@
-import { IsArray, IsEnum, IsPositive, Length } from 'class-validator'
+import { IsArray, IsEnum, IsPositive, Length, IsBoolean } from 'class-validator'
 
 export class ProductFilter {
     @Length(1, 100)
@@ -19,6 +19,13 @@ export class ProductFilter {
     public order?: string
     @IsEnum({ top: 'top', price: 'price', name: 'name' })
     public sort?: string
+    /**
+     * Show only products that are in stock
+     */
+    @IsBoolean()
+    public inStock: boolean
+    @IsArray()
+    public storeIds?: number[]
 
     constructor(query: any) {
         if (query.query) {
@@ -50,5 +57,9 @@ export class ProductFilter {
         if (query.labelCategoryId) {
             this.labelCategoryId = parseInt(query.labelCategoryId, 10)
         }
+        if (query.storeId) {
+            this.storeIds = (Array.isArray(query.storeId) ? query.storeId : [query.storeId]).map(Number)
+        }
+        this.inStock = query.inStock === 'true'
     }
 }

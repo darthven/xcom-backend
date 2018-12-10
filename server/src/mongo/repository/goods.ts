@@ -131,7 +131,6 @@ export class GoodRepository extends Repository {
         )
         await this.collection.createIndex({ id: 1 }, { unique: true })
         await this.collection.createIndex({ siteCatId: 1 })
-        await this.collection.createIndex({ price: 1 }, { name: 'price' })
         await this.collection.createIndex({ img: 1 }, { name: 'img' })
         await this.collection.createIndex({ 'price.region': 1 }, { name: 'priceReg' })
         await this.collection.createIndex({ 'price.priceMin': 1 }, { name: 'priceMin' })

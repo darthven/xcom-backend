@@ -44,6 +44,7 @@ export default async () => {
 
             const { deletedCount } = await stocksRepo.collection.deleteMany({ storeId: store.id })
             let insertedCount = 0
+
             // TODO: possible race condition on stocks :(
             if (res.stocks && res.stocks.length > 0) {
                 const insertRes = await stocksRepo.collection.insertMany(res.stocks)
