@@ -203,7 +203,7 @@ export default class SoapUtil {
             const stock: Stock = await this.stocksRepository.collection.findOne({
                 storeId: chequeRequest.storeId,
                 goodsId: item.goodsId,
-                batch: item.batchId
+                batch: item.batchId || { $exists: true }
             })
             if (!stock) {
                 invalidGoodsIds.push(item.goodsId)
