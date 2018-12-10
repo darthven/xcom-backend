@@ -10,7 +10,7 @@ export class GoodsSort {
         }
         const orderSign = order === 'desc' ? -1 : 1
         if (sort === 'price') {
-            this.$sort = { price: orderSign }
+            this.$sort = { 'price.priceMin': orderSign }
         } else if (sort === 'name') {
             this.$sort = { name: orderSign }
         } else {

@@ -27,18 +27,13 @@ export class GoodsController {
     public async getGoods(
         @State('skipTake') skipTake: SkipTake,
         @State('region') region: Region,
-        @State('productFilter') filter: ProductFilter,
-        @QueryParam('storeId') storeId?: number | number[]
+        @State('productFilter') filter: ProductFilter
     ) {
-        let storeIds
-        if (storeId) {
-            storeIds = (Array.isArray(storeId) ? storeId : [storeId]).map(Number)
-        }
         const sort = new GoodsSort(filter.sort, filter.order, filter.query)
         const hint = new GoodsHint(filter.priceMin, filter.priceMax, filter.query)
         const textQuery = new GoodsTextQuery(filter.query)
         const filterQuery = new GoodsFilter(region.region, filter)
-        const all = this.goods.getAll(filterQuery, textQuery, skipTake, region, sort, hint, storeIds)
+        const all = this.goods.getAll(filterQuery, textQuery, skipTake, region, sort, hint, filter.storeIds)
         const categories = this.goods.getCategories(filterQuery, textQuery, hint)
         const price = await this.goods.getMinMaxPrice(filterQuery, textQuery, region, hint)
         const density = this.goods.getDensity(filterQuery, textQuery, region, hint, price.max)
@@ -58,18 +53,13 @@ export class GoodsController {
     public async getGoodsData(
         @State('skipTake') skipTake: SkipTake,
         @State('region') region: Region,
-        @State('productFilter') filter: ProductFilter,
-        @QueryParam('storeId') storeId?: number | number[]
+        @State('productFilter') filter: ProductFilter
     ) {
-        let storeIds
-        if (storeId) {
-            storeIds = (Array.isArray(storeId) ? storeId : [storeId]).map(Number)
-        }
         const sort = new GoodsSort(filter.sort, filter.order, filter.query)
         const hint = new GoodsHint(filter.priceMin, filter.priceMax, filter.query)
         const textQuery = new GoodsTextQuery(filter.query)
         const filterQuery = new GoodsFilter(region.region, filter)
-        const res = await this.goods.getAll(filterQuery, textQuery, skipTake, region, sort, hint, storeIds)
+        const res = await this.goods.getAll(filterQuery, textQuery, skipTake, region, sort, hint, filter.storeIds)
         return {
             length: res.fullLength,
             data: res.data
