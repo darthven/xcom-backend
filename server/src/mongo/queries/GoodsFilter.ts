@@ -15,16 +15,17 @@ export class GoodsFilter {
             this['share.id'] = { $in: filter.shares }
             this['share.endDate'] = { $gt: new Date() }
         }
-        if (filter.priceMin || filter.priceMax) {
-            this.price = {
-                $elemMatch: {
-                    region,
-                    priceMin: { $lt: filter.priceMax || 1000000 },
-                    priceMax: { $gt: filter.priceMin || 0 }
-                }
+        this.price = {
+            $elemMatch: {
+                region
             }
-        } else {
-            this.price = { $elemMatch: { region } }
+        }
+        if (filter.inStock && filter.storeIds) {
+            this.price.$elemMatch.stores = { $in: filter.storeIds }
+        }
+        if (filter.priceMin || filter.priceMax) {
+            this.price.$elemMatch.priceMin = { $lt: filter.priceMax || 1000000 }
+            this.price.$elemMatch.priceMax = { $gt: filter.priceMin || 0 }
         }
     }
 }

@@ -1,8 +1,8 @@
 import { CoreOptions, RequiredUriUrl } from 'request'
 import * as requestPromise from 'request-promise-native'
+import { HttpError } from 'routing-controllers'
 import { Service } from 'typedi'
 
-import { HttpError } from 'routing-controllers'
 import { PriceError } from '../common/errors'
 import { ECOM_URL } from '../config/env.config'
 import { Order } from '../mongo/entity/order'
@@ -28,15 +28,25 @@ export class EcomService {
         })
     }
 
-    public async updateOrderStatus(statusId: number, order: Order): Promise<EcomOrderStatusResponse> {
+    public async updateOrderStatus(order: Order, statusId: number, comment?: string): Promise<EcomOrderStatusResponse> {
         return this.request({
             ...ecomOptions,
             method: 'PUT',
-            uri: `${ECOM_URL}/orders${order.id}`,
+            uri: `${ECOM_URL}/orders/${order.id}`,
             body: {
-                statusId
+                statusId,
+                comment
             }
         })
+    }
+
+    public async getOrderById(orderId: number): Promise<Order> {
+        const response: Order = (await this.request({
+            ...ecomOptions,
+            method: 'GET',
+            uri: `${ECOM_URL}/orders/${orderId}`
+        })).orders[0]
+        return response
     }
 
     public async getPrices(goodsIds: number[], storeId: number): Promise<PriceDescriptor[]> {

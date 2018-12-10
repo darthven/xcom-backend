@@ -42,7 +42,8 @@ export class StocksRepository extends Repository {
                         _id: { goodsId: '$goodsId', region: '$region' },
                         priceMin: { $min: '$storePrice' },
                         priceMax: { $max: '$storePrice' },
-                        available: { $max: '$quantity' }
+                        available: { $max: '$quantity' },
+                        stores: { $addToSet: '$storeId' }
                     }
                 },
                 {
@@ -52,7 +53,8 @@ export class StocksRepository extends Repository {
                         region: '$_id.region',
                         priceMin: 1,
                         priceMax: 1,
-                        available: 1
+                        available: 1,
+                        stores: 1
                     }
                 },
                 {
@@ -63,7 +65,8 @@ export class StocksRepository extends Repository {
                                 region: '$region',
                                 priceMin: '$priceMin',
                                 priceMax: '$priceMax',
-                                available: '$available'
+                                available: '$available',
+                                stores: '$stores'
                             }
                         }
                     }
