@@ -228,7 +228,6 @@ export class OrdersController {
         comment?: string
     ): Promise<EcomOrderStatusResponse> {
         let sbolResponse: SbolResponse = {}
-        // const orderStatus: EcomOrderStatus = await this.ecom.getOrderById(order.id!)
         switch (statusId) {
             case EcomOrderStatus.REVERSED_BY_CLIENT:
                 if ([EcomOrderStatus.SALED, EcomOrderStatus.REVERSED_BY_DEFECT].includes(order.statusId!)) {
