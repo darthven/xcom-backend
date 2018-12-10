@@ -1,4 +1,4 @@
-import { IsDefined, IsInt, IsNotEmpty } from 'class-validator'
+import { IsDefined, IsInt, IsOptional, IsString } from 'class-validator'
 
 export class Item {
     @IsDefined()
@@ -7,4 +7,7 @@ export class Item {
     @IsDefined()
     @IsInt()
     public quantity!: number
+    @IsOptional()
+    @IsString()
+    public batchId?: string
 }
