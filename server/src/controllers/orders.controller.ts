@@ -162,7 +162,10 @@ export class OrdersController {
                     INN: order.INN,
                     pageView: 'DESKTOP'
                 })
-                await this.ordersRepository.updateById(order.extId, { payGUID: authResponse.orderId })
+                await this.ordersRepository.updateById(order.extId, {
+                    payGUID: authResponse.orderId,
+                    statusId: EcomOrderStatus.NEW
+                })
                 return authResponse
             default:
                 throw new BadRequestError(`payType ${order.payType} not supported`)
@@ -225,6 +228,7 @@ export class OrdersController {
         comment?: string
     ): Promise<EcomOrderStatusResponse> {
         let sbolResponse: SbolResponse = {}
+        // const orderStatus: EcomOrderStatus = await this.ecom.getOrderById(order.id!)
         switch (statusId) {
             case EcomOrderStatus.REVERSED_BY_CLIENT:
                 if ([EcomOrderStatus.SALED, EcomOrderStatus.REVERSED_BY_DEFECT].includes(order.statusId!)) {
