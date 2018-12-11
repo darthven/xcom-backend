@@ -204,16 +204,12 @@ export default class SoapUtil {
             const stock: Stock = await this.stocksRepository.collection.findOne({
                 storeId: chequeRequest.storeId,
                 goodsId: item.goodsId,
-                batch: item.batchId || { $exists: true },
-                quantity: { $lte: chequeRequest.basket[index].quantity }
+                batch: item.batchId || { $exists: true }
             })
-            if (!stock) {
+            if (!stock || stock.quantity < chequeRequest.basket[index].quantity) {
                 invalidGoodsIds.push(item.goodsId)
             } else {
-                prices.push({
-                    goodsId: stock.goodsId,
-                    price: stock.storePrice
-                })
+                prices.push({ goodsId: stock.goodsId, price: stock.storePrice })
             }
         }
         if (invalidGoodsIds.length > 0) {
