@@ -78,9 +78,10 @@ export default class SoapUtil {
                 : 0,
             amount: data.SummDiscounted ? parseFloat(data.Summ._text) : 0,
             discount: data.Discount ? parseFloat(data.Discount._text) : 0,
-            basket: items.map(item => {
+            basket: items.map((item, index) => {
                 return {
                     goodsId: parseInt(item.Article._text, 10),
+                    batchId: chequeRequest.basket[index].batchId,
                     quantity: parseInt(item.Quantity._text, 10),
                     price: parseFloat(item.Price._text),
                     amount: parseFloat(item.SummDiscounted._text),
@@ -199,11 +200,12 @@ export default class SoapUtil {
         const items: Item[] = []
         const prices: PriceDescriptor[] = []
         const invalidGoodsIds: number[] = []
-        for (const item of chequeRequest.basket) {
+        for (const [index, item] of chequeRequest.basket.entries()) {
             const stock: Stock = await this.stocksRepository.collection.findOne({
                 storeId: chequeRequest.storeId,
                 goodsId: item.goodsId,
-                batch: item.batchId || { $exists: true }
+                batch: item.batchId || { $exists: true },
+                quantity: { $lte: chequeRequest.basket[index].quantity }
             })
             if (!stock) {
                 invalidGoodsIds.push(item.goodsId)
