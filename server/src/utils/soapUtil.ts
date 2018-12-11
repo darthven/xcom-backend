@@ -200,11 +200,12 @@ export default class SoapUtil {
         const items: Item[] = []
         const prices: PriceDescriptor[] = []
         const invalidGoodsIds: number[] = []
-        for (const item of chequeRequest.basket) {
+        for (const [index, item] of chequeRequest.basket.entries()) {
             const stock: Stock = await this.stocksRepository.collection.findOne({
                 storeId: chequeRequest.storeId,
                 goodsId: item.goodsId,
-                batch: item.batchId || { $exists: true }
+                batch: item.batchId || { $exists: true },
+                quantity: { $lte: chequeRequest.basket[index].quantity }
             })
             if (!stock) {
                 invalidGoodsIds.push(item.goodsId)
