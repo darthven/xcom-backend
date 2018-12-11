@@ -222,7 +222,8 @@ export default class SoapUtil {
         let summ: number = 0
         for (const [index, item] of chequeRequest.basket.entries()) {
             const priceDescriptor: PriceDescriptor | undefined = prices.find(it => it.goodsId! === item.goodsId!)
-            summ += priceDescriptor!.price * item.quantity!
+            const itemTotalPrice: number = priceDescriptor!.price * item.quantity!
+            summ += itemTotalPrice
             items.push({
                 PositionNumber: {
                     _text: (index + 1).toString()
@@ -240,10 +241,10 @@ export default class SoapUtil {
                     _text: '0'
                 },
                 Summ: {
-                    _text: summ.toString()
+                    _text: itemTotalPrice.toString()
                 },
                 SummDiscounted: {
-                    _text: summ.toString()
+                    _text: itemTotalPrice.toString()
                 }
             })
         }
