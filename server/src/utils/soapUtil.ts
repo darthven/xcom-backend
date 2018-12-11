@@ -78,9 +78,10 @@ export default class SoapUtil {
                 : 0,
             amount: data.SummDiscounted ? parseFloat(data.Summ._text) : 0,
             discount: data.Discount ? parseFloat(data.Discount._text) : 0,
-            basket: items.map(item => {
+            basket: items.map((item, index) => {
                 return {
                     goodsId: parseInt(item.Article._text, 10),
+                    batchId: chequeRequest.basket[index].batchId,
                     quantity: parseInt(item.Quantity._text, 10),
                     price: parseFloat(item.Price._text),
                     amount: parseFloat(item.SummDiscounted._text),
