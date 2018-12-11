@@ -162,7 +162,10 @@ export class OrdersController {
                     INN: order.INN,
                     pageView: 'DESKTOP'
                 })
-                await this.ordersRepository.updateById(order.extId, { payGUID: authResponse.orderId })
+                await this.ordersRepository.updateById(order.extId, {
+                    payGUID: authResponse.orderId,
+                    statusId: EcomOrderStatus.NEW
+                })
                 return authResponse
             default:
                 throw new BadRequestError(`payType ${order.payType} not supported`)
@@ -245,7 +248,7 @@ export class OrdersController {
 
     private async updateLocalOrderStatus(order: Order, statusId: number): Promise<void> {
         await this.ordersRepository.collection.updateOne(
-            { _id: order.extId },
+            { id: order.id },
             { $set: { ...order, statusId } },
             { upsert: true }
         )
