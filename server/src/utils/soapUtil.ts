@@ -12,8 +12,9 @@ import { InvalidCoupon } from '../common/invalidCoupon'
 import { SoftChequeRequest } from '../common/softChequeRequest'
 import { MANZANA_CASH_DOMAIN, MANZANA_CASH_PASSWORD, MANZANA_CASH_USERNAME } from '../config/env.config'
 import logger from '../config/logger.config'
-import { EcomService } from '../ecom/ecomService'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
+import { Stock } from '../mongo/entity/stock'
+import { StocksRepository } from '../mongo/repository/stocks'
 import {
     Card,
     CardRequestModel,
@@ -35,10 +36,15 @@ interface SoapHeaders {
     soapAction?: string
 }
 
+interface PriceDescriptor {
+    goodsId: number
+    price: number
+}
+
 @Service()
 export default class SoapUtil {
     @Inject()
-    private ecomService!: EcomService
+    private stocksRepository!: StocksRepository
 
     public async sendRequest(url: string, chequeRequest: SoftChequeRequest): Promise<ManzanaCheque> {
         const handledRequest = await this.handleCard(url, chequeRequest)
@@ -123,20 +129,23 @@ export default class SoapUtil {
 
     private async handleCard(url: string, chequeRequest: SoftChequeRequest): Promise<SoftChequeRequest> {
         if (!chequeRequest.loyaltyCard) {
-            const cardRequest: CardRequestModel = await this.createCardRequest(chequeRequest)
-            const cardResponse: CardResponseModel = await this.sendSoapRequest(
-                url,
-                converter.js2xml(cardRequest, { compact: true }),
-                {
-                    'Content-Type': 'text/xml;charset=UTF-8'
-                }
-            )
-            const cards: Card[] =
-                cardResponse['soap:Envelope']['soap:Body'].ProcessRequestResponse.ProcessRequestResult.CardResponse.Card
-            if (cards && cards.length > 0) {
-                return {
-                    ...chequeRequest,
-                    loyaltyCard: cards[cards.length - 1].CardNumber._text
+            const cardRequest: CardRequestModel | null = await this.createCardRequest(chequeRequest)
+            if (cardRequest) {
+                const cardResponse: CardResponseModel = await this.sendSoapRequest(
+                    url,
+                    converter.js2xml(cardRequest, { compact: true }),
+                    {
+                        'Content-Type': 'text/xml;charset=UTF-8'
+                    }
+                )
+                const cards: Card[] | null =
+                    cardResponse['soap:Envelope']['soap:Body'].ProcessRequestResponse.ProcessRequestResult.CardResponse
+                        .Card
+                if (cards && cards.length > 0) {
+                    return {
+                        ...chequeRequest,
+                        loyaltyCard: cards[cards.length - 1].CardNumber._text
+                    }
                 }
             }
             return {
@@ -147,7 +156,7 @@ export default class SoapUtil {
         return chequeRequest
     }
 
-    private async createCardRequest(chequeRequest: SoftChequeRequest): Promise<CardSoapRequest> {
+    private async createCardRequest(chequeRequest: SoftChequeRequest): Promise<CardSoapRequest | null> {
         const data = new CardSoapRequest()
         this.updateObjectValue<number>('RequestID', Math.round(Math.random() * (1100 - 1000) + 1000), data)
         this.updateObjectValue<string>('DateTime', new Date().toISOString(), data)
@@ -155,6 +164,8 @@ export default class SoapUtil {
             this.addObjectProperty('Phone', chequeRequest.phoneNumber, data, 'CardRequest')
         } else if (chequeRequest.email) {
             this.addObjectProperty('Email', chequeRequest.email, data, 'CardRequest')
+        } else {
+            return null
         }
         return data
     }
@@ -186,14 +197,30 @@ export default class SoapUtil {
 
     private async addItems(chequeRequest: SoftChequeRequest, data: any): Promise<void> {
         const items: Item[] = []
-        const prices: Array<{ goodsId: number; price: number }> = await this.ecomService.getPrices(
-            chequeRequest.basket.map(it => it.goodsId!),
-            chequeRequest.storeId
-        )
+        const prices: PriceDescriptor[] = []
+        const invalidGoodsIds: number[] = []
+        for (const item of chequeRequest.basket) {
+            const stock: Stock = await this.stocksRepository.collection.findOne({
+                storeId: chequeRequest.storeId,
+                goodsId: item.goodsId,
+                batch: item.batchId || { $exists: true }
+            })
+            if (!stock) {
+                invalidGoodsIds.push(item.goodsId)
+            } else {
+                prices.push({
+                    goodsId: stock.goodsId,
+                    price: stock.storePrice
+                })
+            }
+        }
+        if (invalidGoodsIds.length > 0) {
+            throw new HttpError(402, `Prices cannot be counted for the next goods: ${invalidGoodsIds.toString()}`)
+        }
         let summ: number = 0
         for (const [index, item] of chequeRequest.basket.entries()) {
-            const price = prices.find(it => it.goodsId! === item.goodsId!)!.price
-            summ += price * item.quantity!
+            const priceDescriptor: PriceDescriptor | undefined = prices.find(it => it.goodsId! === item.goodsId!)
+            summ += priceDescriptor!.price * item.quantity!
             items.push({
                 PositionNumber: {
                     _text: (index + 1).toString()
@@ -205,16 +232,16 @@ export default class SoapUtil {
                     _text: item.quantity!.toString()
                 },
                 Price: {
-                    _text: price.toString()
+                    _text: priceDescriptor!.price.toString()
                 },
                 Discount: {
                     _text: '0'
                 },
                 Summ: {
-                    _text: (price * item.quantity!).toString()
+                    _text: summ.toString()
                 },
                 SummDiscounted: {
-                    _text: (price * item.quantity!).toString()
+                    _text: summ.toString()
                 }
             })
         }
