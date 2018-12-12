@@ -206,7 +206,7 @@ export default class SoapUtil {
                 goodsId: item.goodsId,
                 batch: item.batchId || { $exists: true }
             })
-            if (!stock || stock.quantity < chequeRequest.basket[index].quantity) {
+            if (!stock) {
                 invalidGoodsIds.push(item.goodsId)
             } else {
                 prices.push({ goodsId: stock.goodsId, price: stock.storePrice })
