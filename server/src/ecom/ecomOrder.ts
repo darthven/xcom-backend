@@ -59,6 +59,7 @@ export const createEcomOrder = (
         extDate: new Date().toISOString(),
         basket: manzanaCheque.basket,
         INN: inn,
-        loyaltyCardType
+        loyaltyCardType,
+        extComment: 'Заказ из мобильного приложения (ТЕСТ)'
     }
 }
