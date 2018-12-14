@@ -174,28 +174,8 @@ export class GoodRepository extends Repository {
         hint: GoodsHint,
         storeIds?: number[]
     ) {
-        let data: any[]
         const fullLength = await this.getLength(filter, query, hint)
-        const diff = fullLength - skipTake.skip
-        if (diff < 0) {
-            // only data without price
-            const withoutPriceSkipTake = new SkipTake({ skip: Math.abs(diff), take: skipTake.take })
-            data = await this.getAllWithoutPrice({ ...filter, price: null }, query, withoutPriceSkipTake, sort)
-        } else if (diff < skipTake.take) {
-            // data with and without price
-            const withoutPriceSkipTake = new SkipTake({ skip: 0, take: skipTake.take - diff })
-            const withoutPriceRes = await this.getAllWithoutPrice(
-                { ...filter, price: null },
-                query,
-                withoutPriceSkipTake,
-                sort
-            )
-            const withPriceRes = await this.getAllWithPrice(filter, query, skipTake, region, sort)
-            data = withPriceRes.concat(withoutPriceRes)
-        } else {
-            // data only with price
-            data = await this.getAllWithPrice(filter, query, skipTake, region, sort)
-        }
+        const data = await this.getAllWithPrice(filter, query, skipTake, region, sort)
         return {
             fullLength,
             data: storeIds ? await this.joinStocksForStores(data, storeIds) : data
@@ -220,7 +200,7 @@ export class GoodRepository extends Repository {
             { $match: { 'price.region': region.region } },
             { $project: this.secondProject }
         ]
-        if (sort.$sort.price) {
+        if (sort.$sort['price.priceMin']) {
             pipeline = [
                 { $match: query },
                 { $match: filter },
