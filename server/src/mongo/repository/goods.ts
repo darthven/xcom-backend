@@ -28,6 +28,8 @@ export class GoodRepository extends Repository {
         id: 1,
         name: 1,
         manufacturer: 1,
+        tradeName: 1,
+        tradeMark: 1,
         siteCatId: 1,
         country: 1,
         byPrescription: 1,
@@ -46,6 +48,8 @@ export class GoodRepository extends Repository {
         id: 1,
         name: 1,
         manufacturer: { $ifNull: ['$manufacturer', ''] },
+        tradeName: { $ifNull: ['$tradeName', ''] },
+        tradeMark: { $ifNull: ['$tradeMark', ''] },
         country: 1,
         activeSubstance: '$mnn',
         categoryId: '$siteCatId',
@@ -232,12 +236,7 @@ export class GoodRepository extends Repository {
         return this.collection.aggregate(pipeline, { allowDiskUse: true }).toArray()
     }
 
-    public async getAllWithoutPrice(
-        filter: GoodsFilter,
-        query: GoodsTextQuery,
-        skipTake: SkipTake,
-        sort: GoodsSort
-    ) {
+    public async getAllWithoutPrice(filter: GoodsFilter, query: GoodsTextQuery, skipTake: SkipTake, sort: GoodsSort) {
         return this.collection
             .aggregate(
                 [
