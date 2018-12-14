@@ -47,9 +47,9 @@ export class GoodRepository extends Repository {
     private secondProject = {
         id: 1,
         name: 1,
-        manufacturer: { $ifNull: ['$manufacturer', ''] },
-        tradeName: { $ifNull: ['$tradeName', ''] },
-        tradeMark: { $ifNull: ['$tradeMark', ''] },
+        manufacturer: { $ifNull: ['$manufacturer', null] },
+        tradeName: { $ifNull: ['$tradeName', null] },
+        tradeMark: { $ifNull: ['$tradeMark', null] },
         country: 1,
         activeSubstance: '$mnn',
         categoryId: '$siteCatId',
