@@ -76,7 +76,8 @@ export default class SoapUtil {
             activeChargedStatusBonus: data.ActiveChargedStatusBonus
                 ? parseFloat(data.ActiveChargedStatusBonus._text)
                 : 0,
-            amount: data.SummDiscounted ? parseFloat(data.SummDiscounted._text) : 0,
+            amount: data.Summ ? parseFloat(data.Summ._text) : 0,
+            amountDiscounted: data.SummDiscounted ? parseFloat(data.SummDiscounted._text) : 0,
             discount: data.Discount ? parseFloat(data.Discount._text) : 0,
             basket: items.map((item, index) => {
                 return {
