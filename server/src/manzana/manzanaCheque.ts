@@ -33,7 +33,9 @@ export interface ManzanaCheque {
 
     amount: number // total amount
 
-    discount: number // total discount
+    amountDiscounted: number // total amount discounted
+
+    discount: number // discount
 
     basket: ManzanaChequeItem[]
 }

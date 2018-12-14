@@ -7,7 +7,7 @@ import * as converter from 'xml-js'
 const ntlmRequest = require('httpntlm')
 
 import { TECHNICAL_CARD } from '../common/data'
-import { CouponError } from '../common/errors'
+import { CardNotFound, CouponError } from '../common/errors'
 import { InvalidCoupon } from '../common/invalidCoupon'
 import { SoftChequeRequest } from '../common/softChequeRequest'
 import { MANZANA_CASH_DOMAIN, MANZANA_CASH_PASSWORD, MANZANA_CASH_USERNAME } from '../config/env.config'
@@ -56,14 +56,14 @@ export default class SoapUtil {
         const data: ChequeResponse =
             response['soap:Envelope']['soap:Body'].ProcessRequestResponse.ProcessRequestResult.ChequeResponse
         if (data.Message._text === 'Карта не найдена') {
-            throw new HttpError(400, data.Message._text)
+            throw new CardNotFound(parseInt(data.ReturnCode._text, 10), data.Message._text, handledRequest.loyaltyCard!)
         }
         if (data.Coupons) {
             const coupons: Coupons = requestData['soap:Envelope']['soap:Body'].ProcessRequest.request.ChequeRequest
                 .Coupons!
             const invalidCoupons = this.checkCoupons(data.Coupons, coupons)
             if (invalidCoupons.length > 0) {
-                throw new CouponError(invalidCoupons)
+                throw new CouponError(parseInt(data.ReturnCode._text, 10), invalidCoupons)
             }
         }
         const items: ManzanaItem[] = Array.isArray(data.Item) ? data.Item : [data.Item]
@@ -76,7 +76,8 @@ export default class SoapUtil {
             activeChargedStatusBonus: data.ActiveChargedStatusBonus
                 ? parseFloat(data.ActiveChargedStatusBonus._text)
                 : 0,
-            amount: data.SummDiscounted ? parseFloat(data.Summ._text) : 0,
+            amount: data.Summ ? parseFloat(data.Summ._text) : 0,
+            amountDiscounted: data.SummDiscounted ? parseFloat(data.SummDiscounted._text) : 0,
             discount: data.Discount ? parseFloat(data.Discount._text) : 0,
             basket: items.map((item, index) => {
                 return {
