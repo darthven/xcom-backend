@@ -212,12 +212,7 @@ export class GoodRepository extends Repository {
         return this.collection.aggregate(pipeline, { allowDiskUse: true }).toArray()
     }
 
-    public async getAllWithoutPrice(
-        filter: GoodsFilter,
-        query: GoodsTextQuery,
-        skipTake: SkipTake,
-        sort: GoodsSort
-    ) {
+    public async getAllWithoutPrice(filter: GoodsFilter, query: GoodsTextQuery, skipTake: SkipTake, sort: GoodsSort) {
         return this.collection
             .aggregate(
                 [

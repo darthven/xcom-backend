@@ -1,13 +1,32 @@
 import { HttpError } from 'routing-controllers'
 import { InvalidCoupon } from './invalidCoupon'
 
-export class CouponError extends HttpError {
-    private invalidCoupons: InvalidCoupon[]
+export class ManzanaError extends Error {
+    private errorCode!: number
 
-    constructor(invalidCoupons: InvalidCoupon[]) {
-        super(425, 'Coupons are invalid')
+    constructor(errorCode: number, errorMsg: string) {
+        super(errorMsg)
+        this.name = 'ManzanaError'
+        this.errorCode = errorCode
+    }
+}
+export class CouponError extends ManzanaError {
+    private invalidCoupons!: InvalidCoupon[]
+
+    constructor(errorCode: number, invalidCoupons: InvalidCoupon[]) {
+        super(errorCode, 'Coupons cannot be used')
         this.name = 'CouponError'
         this.invalidCoupons = invalidCoupons
+    }
+}
+
+export class CardNotFound extends ManzanaError {
+    private invalidCard!: string
+
+    constructor(errorCode: number, errorMsg: string, invalidCard: string) {
+        super(errorCode, errorMsg)
+        this.name = 'CardNotFound'
+        this.invalidCard = invalidCard
     }
 }
 
