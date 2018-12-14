@@ -28,7 +28,12 @@ export class CardsController {
         if (!virtualCard) {
             throw new NotFoundError('No available virtual cards found')
         }
-        await manzana.bindVirtualLoyaltyCard(virtualCard)
+        try {
+            await manzana.bindVirtualLoyaltyCard(virtualCard)
+        } catch (e) {
+            e.virtualCard = virtualCard
+            throw e
+        }
         virtualCard.used = true
         await this.virtualCardsRepository.updateOne(virtualCard)
         return virtualCard
