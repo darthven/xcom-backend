@@ -11,7 +11,7 @@ export class Share {
     public startDate: Date
     public endDate: Date
     public description: string
-    public regions: number[]
+    public regions: number[] | null
 
     constructor(csvRowData: CSVData) {
         this.id = parseInt(csvRowData['ID акции'], 10)
@@ -22,6 +22,6 @@ export class Share {
         this.startDate = moment(csvRowData['Дата начала'], 'DD.MM.YYYY').toDate()
         this.endDate = moment(csvRowData['Дата окончания'], 'DD.MM.YYYY').toDate()
         this.description = csvRowData['Описание акции']
-        this.regions = csvRowData.Регион.split(' ').map(value => parseInt(value, 10))
+        this.regions = csvRowData.Регион !== '' ? csvRowData.Регион.split(',').map(value => parseInt(value, 10)) : null
     }
 }
