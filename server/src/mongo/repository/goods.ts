@@ -70,7 +70,8 @@ export class GoodRepository extends Repository {
         'share.attributeZOZ': 1,
         'share.startDate': 1,
         'share.endDate': 1,
-        'share.description': 1
+        'share.description': 1,
+        'share.regions': 1
     }
 
     private lookup = {
