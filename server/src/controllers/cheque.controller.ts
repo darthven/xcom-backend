@@ -7,9 +7,10 @@ import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { ManzanaPosService } from '../manzana/manzanaPosService'
 import { INN, StoreRepository } from '../mongo/repository/stores'
 import { AccountManager } from '../sbol/accountManager'
+import { GeneralController } from './general.controller'
 
 @JsonController('/cheque')
-export class ChequeController {
+export class ChequeController extends GeneralController {
     @Inject()
     private readonly manzanaPosService!: ManzanaPosService
     @Inject()
@@ -23,7 +24,7 @@ export class ChequeController {
     ): Promise<ManzanaCheque & { payTypes: PayType[] }> {
         const inn: INN | null = await this.stores.getInn(request.storeId)
         if (!inn) {
-            throw new BadRequestError(`Store with id ${request.storeId} not found`)
+            throw new BadRequestError(`Store was not found with id ${request.storeId} `)
         }
         const manzanaCheque: ManzanaCheque = await this.manzanaPosService.getCheque(request)
         const payTypes: PayType[] = [PayType.CASH]

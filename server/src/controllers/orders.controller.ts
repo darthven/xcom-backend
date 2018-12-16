@@ -44,13 +44,14 @@ import { StatusCode } from '../sbol/orderStatusResponse'
 import { PreAuthResponse } from '../sbol/preAuthResponse'
 import { SbolResponse } from '../sbol/sbolResponse'
 import { SbolService } from '../sbol/sbolService'
+import { GeneralController } from './general.controller'
 
 const ECOM_BASIC_AUTH_TOKEN = Buffer.from(`${ECOM_USER}:${ECOM_PASS}`).toString('base64')
 const PARAM_ORDER_ID = 'orderNumber'
 const PARAM_SBOL_REDIRECT_RESULT = 'success'
 
 @JsonController('/orders')
-export class OrdersController {
+export class OrdersController extends GeneralController {
     @Inject()
     private readonly sbolService!: SbolService
     @Inject()
@@ -118,7 +119,7 @@ export class OrdersController {
         const order: Order =
             (await this.ordersRepository.collection.findOne({ id: orderId })) || (await this.ecom.getOrderById(orderId))
         if (!order) {
-            throw new NotFoundError(`Order with id "${orderId}" was not found`)
+            throw new NotFoundError(`Order was not found with id "${orderId}"`)
         }
         const user: ManzanaUser = await manzanaClient.getCurrentUser()
         if (!this.comparePhoneNumbers(order.clientTel, user.MobilePhone!, 'RU')) {
@@ -130,7 +131,7 @@ export class OrdersController {
             case PayType.ONLINE:
                 return this.changeOnlineOrderStatus(order, req.statusId, req.comment)
             default:
-                throw new BadRequestError(`payType ${order.payType} not supported`)
+                throw new BadRequestError(`PayType is not supported: ${order.payType}`)
         }
     }
 
@@ -143,7 +144,7 @@ export class OrdersController {
         const cheque = await this.manzanaPosService.getCheque(request)
         const storeInn = await this.stores.getInn(request.storeId)
         if (!storeInn) {
-            throw new NotFoundError('store with this id not found')
+            throw new NotFoundError('Store with this id not found')
         }
         // store order in local db and assign local id
         const order = await this.ordersRepository.insert(createEcomOrder(request, cheque, payType, storeInn.INN))

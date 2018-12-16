@@ -62,7 +62,7 @@ export class EcomService {
         const { prices } = response
         const invalidGoodsIds: number[] = this.checkPrices(goodsIds, prices.map((pr: PriceDescriptor) => pr.goodsId))
         if (invalidGoodsIds.length > 0) {
-            throw new PriceError(storeId, invalidGoodsIds)
+            throw new PriceError('', storeId, invalidGoodsIds)
         }
         return prices
     }

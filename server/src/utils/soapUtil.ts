@@ -15,6 +15,7 @@ import logger from '../config/logger.config'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { Stock } from '../mongo/entity/stock'
 import { StocksRepository } from '../mongo/repository/stocks'
+import LocalizationManager from './localizationManager'
 import {
     Card,
     CardRequestModel,
@@ -46,6 +47,9 @@ export default class SoapUtil {
     @Inject()
     private stocksRepository!: StocksRepository
 
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
+
     public async sendRequest(url: string, chequeRequest: SoftChequeRequest): Promise<ManzanaCheque> {
         const handledRequest = await this.handleCard(url, chequeRequest)
         const requestData: ChequeRequestModel = await this.createSoftChequeRequest(handledRequest)
@@ -63,7 +67,7 @@ export default class SoapUtil {
                 .Coupons!
             const invalidCoupons = this.checkCoupons(data.Coupons, coupons)
             if (invalidCoupons.length > 0) {
-                throw new CouponError(parseInt(data.ReturnCode._text, 10), invalidCoupons)
+                throw new CouponError(parseInt(data.ReturnCode._text, 10), data.Message._text, invalidCoupons)
             }
         }
         const items: ManzanaItem[] = Array.isArray(data.Item) ? data.Item : [data.Item]

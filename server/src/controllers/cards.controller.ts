@@ -15,9 +15,10 @@ import { ManzanaUserApiClient } from '../manzana/manzanaUserApiClient'
 import { ManzanaAuthMiddleware } from '../middlewares/manzanaAuth.middleware'
 import { VirtualCard } from '../mongo/entity/virtualCard'
 import { VirtualCardsRepository } from '../mongo/repository/virtualCards'
+import { GeneralController } from './general.controller'
 
 @JsonController('/cards')
-export class CardsController {
+export class CardsController extends GeneralController {
     @Inject()
     public virtualCardsRepository!: VirtualCardsRepository
 

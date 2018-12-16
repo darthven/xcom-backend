@@ -14,9 +14,10 @@ import { Ids } from '../parameters/ids'
 import { ProductFilter } from '../parameters/productFilter'
 import { Region } from '../parameters/region'
 import { SkipTake } from '../parameters/skipTake'
+import { GeneralController } from './general.controller'
 
 @JsonController('/goods')
-export class GoodsController {
+export class GoodsController extends GeneralController {
     @Inject()
     private goods!: GoodRepository
 

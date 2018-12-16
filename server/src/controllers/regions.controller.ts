@@ -2,9 +2,10 @@ import { BadRequestError, Get, JsonController, NotFoundError, Param } from 'rout
 import { Inject } from 'typedi'
 
 import { RegionsRepository } from '../mongo/repository/regions'
+import { GeneralController } from './general.controller'
 
 @JsonController('/regions')
-export class RegionsController {
+export class RegionsController extends GeneralController {
     @Inject()
     private regions!: RegionsRepository
 

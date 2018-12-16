@@ -14,9 +14,10 @@ import { LocationFilterInjectMiddleware } from '../middlewares/locationFilter.in
 import { LocationsQuery } from '../mongo/queries/LocationsQuery'
 import { StoreRepository } from '../mongo/repository/stores'
 import { LocationFilter } from '../parameters/locationFilter'
+import { GeneralController } from './general.controller'
 
 @JsonController('/stores')
-export class StoresController {
+export class StoresController extends GeneralController {
     @Inject()
     private stores!: StoreRepository
 

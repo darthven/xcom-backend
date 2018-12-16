@@ -2,9 +2,10 @@ import { Get, JsonController, NotFoundError, Param } from 'routing-controllers'
 import { Inject } from 'typedi'
 
 import { StationsRepository } from '../mongo/repository/stations'
+import { GeneralController } from './general.controller'
 
 @JsonController('/stations')
-export class StationsController {
+export class StationsController extends GeneralController {
     @Inject()
     private stations!: StationsRepository
 
