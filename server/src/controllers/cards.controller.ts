@@ -27,7 +27,7 @@ export class CardsController extends GeneralController {
     public async bindVirtualCard(@State('manzanaClient') manzana: ManzanaUserApiClient) {
         const virtualCard = await this.virtualCardsRepository.getRandomAvailable()
         if (!virtualCard) {
-            throw new NotFoundError('No available virtual cards found')
+            throw new NotFoundError(this.localizationManager.getValue('No available virtual cards found'))
         }
         await manzana.bindVirtualLoyaltyCard(virtualCard)
         virtualCard.used = true
@@ -41,7 +41,7 @@ export class CardsController extends GeneralController {
         // TODO: optimize with file streaming ?
         const data = await converter({ trim: true, delimiter: ',', noheader: true }).fromString(file.buffer.toString())
         if (!data.length) {
-            throw new BadRequestError('File is empty')
+            throw new BadRequestError(this.localizationManager.getValue('File is empty'))
         }
         await this.virtualCardsRepository.createCollection()
         const cards = data.map(item => {

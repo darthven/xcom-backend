@@ -35,7 +35,7 @@ export class StoresController extends GeneralController {
     public async getLocationById(@Param('id') id: number) {
         const res = await this.stores.getSingle(id)
         if (!res || !res[0]) {
-            throw new NotFoundError('store not found')
+            throw new NotFoundError(this.localizationManager.getValue('Store not found'))
         }
         return res[0]
     }

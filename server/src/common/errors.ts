@@ -35,7 +35,7 @@ export class PriceError extends HttpError {
     private goodsIds: number[]
 
     constructor(errorMsg: string, storeId: number, goodsIds: number[]) {
-        super(426, errorMsg /*'Cannot get prices for goods. Wrong "storeId" or "goodsIds" are defined.'*/)
+        super(426, errorMsg)
         this.name = 'PriceError'
         this.storeId = storeId
         this.goodsIds = goodsIds

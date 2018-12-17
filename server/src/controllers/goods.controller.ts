@@ -129,7 +129,7 @@ export class GoodsController extends GeneralController {
         }
         const res = await this.goods.getSingle(id, region, storeIds)
         if (!res || !res[0]) {
-            throw new NotFoundError('good not found')
+            throw new NotFoundError(this.localizationManager.getValue('Good not found'))
         }
         return res[0]
     }

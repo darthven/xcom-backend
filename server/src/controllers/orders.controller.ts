@@ -114,7 +114,7 @@ export class OrdersController extends GeneralController {
         @Body() req: EcomOrderStatusRequest
     ): Promise<EcomOrderStatusResponse | SbolResponse> {
         if (!manzanaClient) {
-            throw new UnauthorizedError('User is not authorized in manzana')
+            throw new UnauthorizedError(this.localizationManager.getValue('User is not authorized in manzana'))
         }
         const order: Order =
             (await this.ordersRepository.collection.findOne({ id: orderId })) || (await this.ecom.getOrderById(orderId))
@@ -123,7 +123,10 @@ export class OrdersController extends GeneralController {
         }
         const user: ManzanaUser = await manzanaClient.getCurrentUser()
         if (!this.comparePhoneNumbers(order.clientTel, user.MobilePhone!, 'RU')) {
-            throw new HttpError(405, `Client does not have current order with id "${order.id}"`)
+            throw new HttpError(
+                405,
+                `${this.localizationManager.getValue('Client does not have current order with id')} "${order.id}"`
+            )
         }
         switch (order.payType) {
             case PayType.CASH:
@@ -131,7 +134,9 @@ export class OrdersController extends GeneralController {
             case PayType.ONLINE:
                 return this.changeOnlineOrderStatus(order, req.statusId, req.comment)
             default:
-                throw new BadRequestError(`PayType is not supported: ${order.payType}`)
+                throw new BadRequestError(
+                    `${this.localizationManager.getValue('PayType is not supported:')} ${order.payType}`
+                )
         }
     }
 
@@ -144,7 +149,7 @@ export class OrdersController extends GeneralController {
         const cheque = await this.manzanaPosService.getCheque(request)
         const storeInn = await this.stores.getInn(request.storeId)
         if (!storeInn) {
-            throw new NotFoundError('Store with this id not found')
+            throw new NotFoundError(this.localizationManager.getValue('Store with this id not found'))
         }
         // store order in local db and assign local id
         const order = await this.ordersRepository.insert(createEcomOrder(request, cheque, payType, storeInn.INN))
@@ -169,7 +174,9 @@ export class OrdersController extends GeneralController {
                 })
                 return authResponse
             default:
-                throw new BadRequestError(`payType ${order.payType} not supported`)
+                throw new BadRequestError(
+                    `${this.localizationManager.getValue('PayType is not supported:')} ${order.payType}`
+                )
         }
     }
 
@@ -177,7 +184,7 @@ export class OrdersController extends GeneralController {
     public async processSbolCallback(@Body() sbolCallback: SbolCallback): Promise<Order & { id: number }> {
         const order = await this.ordersRepository.findById(sbolCallback.orderNumber)
         if (!order) {
-            throw new NotFoundError('no authorized payment with this id')
+            throw new NotFoundError(this.localizationManager.getValue('no authorized payment with this id'))
         }
         if (order.id) {
             throw new BadRequestError(`Order ${order.extId} has already been submitted to e-ecom as ${order.id}`)
@@ -214,7 +221,10 @@ export class OrdersController extends GeneralController {
             statusId === EcomOrderStatus.REVERSED_BY_CLIENT &&
             [EcomOrderStatus.SALED, EcomOrderStatus.REVERSED_BY_DEFECT].includes(order.statusId!)
         ) {
-            throw new HttpError(406, `Cannot reverse order with statuses "Продан" and "На дефектуре"`)
+            throw new HttpError(
+                406,
+                this.localizationManager.getValue(`Cannot reverse order with statuses "Продан" and "На дефектуре"`)
+            )
         }
         const response: EcomOrderStatusResponse = await this.ecom.updateOrderStatus(order, statusId, comment)
         if (!response.errorCode) {
@@ -232,7 +242,12 @@ export class OrdersController extends GeneralController {
         switch (statusId) {
             case EcomOrderStatus.REVERSED_BY_CLIENT:
                 if ([EcomOrderStatus.SALED, EcomOrderStatus.REVERSED_BY_DEFECT].includes(order.statusId!)) {
-                    throw new HttpError(406, `Cannot reverse order with statuses "Продан" and "На дефектуре"`)
+                    throw new HttpError(
+                        406,
+                        this.localizationManager.getValue(
+                            `Cannot reverse order with statuses "Продан" and "На дефектуре"`
+                        )
+                    )
                 }
                 sbolResponse = await this.sbolService.reverseOrder({
                     orderId: order.payGUID!,
@@ -243,7 +258,9 @@ export class OrdersController extends GeneralController {
                 }
                 return this.changeOfflineOrderStatus(order, statusId, comment)
             default:
-                throw new NotFoundError(`Status with id "${statusId}" was not found`)
+                throw new NotFoundError(
+                    `${this.localizationManager.getValue('Status was not found with id')} "${statusId}"`
+                )
         }
     }
 

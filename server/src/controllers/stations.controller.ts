@@ -17,7 +17,7 @@ export class StationsController extends GeneralController {
     public async getStationById(@Param('id') id: number) {
         const res = await this.stations.getSingle(id)
         if (!res || !res[0]) {
-            throw new NotFoundError('store not found')
+            throw new NotFoundError(this.localizationManager.getValue('Station not found'))
         }
         return res[0]
     }

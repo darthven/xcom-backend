@@ -17,7 +17,7 @@ export class RegionsController extends GeneralController {
     public async getRegionById(@Param('id') id: number) {
         const res = await this.regions.getSingle(id)
         if (!res || !res[0]) {
-            throw new NotFoundError('region not found')
+            throw new NotFoundError(this.localizationManager.getValue('Region not found'))
         }
         return res[0]
     }
@@ -30,7 +30,7 @@ export class RegionsController extends GeneralController {
             throw new BadRequestError(e.message)
         }
         if (!res || !res[0]) {
-            throw new NotFoundError('region not found')
+            throw new NotFoundError(this.localizationManager.getValue('Region not found'))
         }
         return res[0]
     }

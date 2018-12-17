@@ -24,7 +24,9 @@ export class ChequeController extends GeneralController {
     ): Promise<ManzanaCheque & { payTypes: PayType[] }> {
         const inn: INN | null = await this.stores.getInn(request.storeId)
         if (!inn) {
-            throw new BadRequestError(`Store was not found with id ${request.storeId} `)
+            throw new BadRequestError(
+                `${this.localizationManager.getValue('Store was not found with id')} ${request.storeId}`
+            )
         }
         const manzanaCheque: ManzanaCheque = await this.manzanaPosService.getCheque(request)
         const payTypes: PayType[] = [PayType.CASH]

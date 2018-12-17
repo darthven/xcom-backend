@@ -3,5 +3,5 @@ import LocalizationManager from '../utils/localizationManager'
 
 export class GeneralController {
     @Inject()
-    private readonly manager!: LocalizationManager
+    protected readonly localizationManager!: LocalizationManager
 }

@@ -17,7 +17,7 @@ export class CategoriesController extends GeneralController {
     public async getCategoryById(@Param('id') id: number) {
         const res = await this.categories.getSingle(id)
         if (!res || !res[0]) {
-            throw new NotFoundError('Category not found')
+            throw new NotFoundError(this.localizationManager.getValue('Category not found'))
         }
         return res[0]
     }
