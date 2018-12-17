@@ -3,7 +3,7 @@ export const RussianLocale = {
     'File is empty': 'Файл для загрузки данных пуст',
     'File has incorrect format. Encountered row: ': 'Файл имеет неверный формат. Строка: ',
     'Region not found': 'Заданный регион не найден',
-    'Category not found': 'Заданная категория не найдена',
+    'Category not found with id {value0}': 'Заданная категория не найдена по идентификатору {value0}',
     'Station not found': 'Станция метро не найдена',
     'Store was not found with id': 'Аптека не найдена по индентификатору ',
     'Good was not found': 'Товар не найден',

@@ -3,7 +3,7 @@ export const EnglishLocale = {
     'File is empty': 'File is empty',
     'File has incorrect format. Encountered row: ': 'File has incorrect format. Encountered row: ',
     'Region not found': 'Region not found',
-    'Category not found': 'Category not found',
+    'Category not found with id {value0}': 'Category not found with id {value0}',
     'Station not found': 'Station not found',
     'Store was not found with id': 'Store was not found with id ',
     'Good was not found': 'Good was not found',
