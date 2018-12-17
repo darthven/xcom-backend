@@ -39,6 +39,7 @@ interface SoapHeaders {
 
 interface PriceDescriptor {
     goodsId: number
+    batchId: string
     price: number
 }
 
@@ -214,15 +215,22 @@ export default class SoapUtil {
             if (!stock) {
                 invalidGoodsIds.push(item.goodsId)
             } else {
-                prices.push({ goodsId: stock.goodsId, price: stock.storePrice })
+                prices.push({ goodsId: stock.goodsId, price: stock.storePrice, batchId: stock.batch })
             }
         }
         if (invalidGoodsIds.length > 0) {
-            throw new HttpError(402, `Prices cannot be counted for the next goods: ${invalidGoodsIds.toString()}`)
+            throw new HttpError(
+                402,
+                `${this.localizationManager.getValue(
+                    'Prices cannot be counted for the next goods:'
+                )} ${invalidGoodsIds.toString()}`
+            )
         }
         let summ: number = 0
         for (const [index, item] of chequeRequest.basket.entries()) {
-            const priceDescriptor: PriceDescriptor | undefined = prices.find(it => it.goodsId! === item.goodsId!)
+            const priceDescriptor: PriceDescriptor | undefined = prices.find(
+                it => it.goodsId! === item.goodsId! && it.batchId === item.batchId
+            )
             const itemTotalPrice: number = priceDescriptor!.price * item.quantity!
             summ += itemTotalPrice
             items.push({
