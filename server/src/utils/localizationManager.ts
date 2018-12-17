@@ -13,7 +13,7 @@ export default class LocalizationManager {
         let result: string = this.localeDescriptor[key]
         if (args) {
             args.forEach((item, index) => {
-                result = this.localeDescriptor[key].replace(`{value${index}}`, item)
+                result = result.replace(`{value${index}}`, item)
             })
         }
         return result
