@@ -8,10 +8,7 @@ export class GoodsTextQuery {
 
     public constructor(query?: string) {
         if (query) {
-            this.$or = [
-                { searchKeywords: new RegExp(`^\\${decodeURIComponent(`${query.toLocaleLowerCase()}`)}`) },
-                { $text: { $search: query } }
-            ]
+            this.$or = [{ searchKeywords: new RegExp('^' + query.toLocaleLowerCase()) }, { $text: { $search: query } }]
         }
     }
 }
