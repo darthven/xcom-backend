@@ -24,20 +24,6 @@ export class GoodsController {
     @Inject()
     private readonly localizationManager!: LocalizationManager
 
-    @Get('/get/all')
-    public async getAllGoods() {
-        return this.goods.collection
-            .aggregate([
-                {
-                    $project: {
-                        _id: 0,
-                        id: 1
-                    }
-                }
-            ])
-            .toArray()
-    }
-
     @Get()
     @UseBefore(SkipTakeInjectMiddleware)
     @UseBefore(RegionInjectMiddleware)
