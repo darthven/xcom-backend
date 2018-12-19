@@ -40,7 +40,7 @@ export class SbolService {
     private async request(method: string, params: INN) {
         const credentials = this.accountManager.getForInn(params.INN)
         if (!credentials) {
-            throw new NotFoundError(this.localizationManager.getValue(`No SBOL account found with this store's INN`))
+            throw new NotFoundError(this.localizationManager.getValue(14))
         }
         const options = {
             uri: SBOL_GATEWAY_URL + method,

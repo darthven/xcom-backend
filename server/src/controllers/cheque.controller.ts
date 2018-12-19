@@ -7,16 +7,18 @@ import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { ManzanaPosService } from '../manzana/manzanaPosService'
 import { INN, StoreRepository } from '../mongo/repository/stores'
 import { AccountManager } from '../sbol/accountManager'
-import { GeneralController } from './general.controller'
+import LocalizationManager from '../utils/localizationManager'
 
 @JsonController('/cheque')
-export class ChequeController extends GeneralController {
+export class ChequeController {
     @Inject()
     private readonly manzanaPosService!: ManzanaPosService
     @Inject()
     private readonly stores!: StoreRepository
     @Inject()
     private readonly accountManager!: AccountManager
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
 
     @Post('/soft')
     public async handleSoftCheque(
@@ -24,9 +26,7 @@ export class ChequeController extends GeneralController {
     ): Promise<ManzanaCheque & { payTypes: PayType[] }> {
         const inn: INN | null = await this.stores.getInn(request.storeId)
         if (!inn) {
-            throw new BadRequestError(
-                `${this.localizationManager.getValue('Store was not found with id')} ${request.storeId}`
-            )
+            throw new BadRequestError(`${this.localizationManager.getValue(6)} ${request.storeId}`)
         }
         const manzanaCheque: ManzanaCheque = await this.manzanaPosService.getCheque(request)
         const payTypes: PayType[] = [PayType.CASH]

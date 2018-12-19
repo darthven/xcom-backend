@@ -1,6 +1,6 @@
 import { ProductFilter } from '../../parameters/productFilter'
 
-type RegionFilter = [{ 'share.regions': { $exists: true; $eq: null } }, { 'share.regions': { $in: [number] } }]
+type RegionFilter = [{ 'share.regions': { $exists: true; $eq: null } }, { 'share.regions': [number] }]
 
 export class GoodsFilter {
     public siteCatId?: { $in: number[] }
@@ -17,7 +17,7 @@ export class GoodsFilter {
             this['share.id'] = { $in: filter.shares }
             this['share.endDate'] = { $gt: new Date() }
         }
-        this.$or = [{ 'share.regions': { $exists: true, $eq: null } }, { 'share.regions': { $in: [region] } }]
+        this.$or = [{ 'share.regions': { $exists: true, $eq: null } }, { 'share.regions': [region] }]
         this.price = {
             $elemMatch: {
                 region

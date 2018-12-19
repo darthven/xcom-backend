@@ -2,12 +2,14 @@ import { BadRequestError, Get, JsonController, NotFoundError, Param } from 'rout
 import { Inject } from 'typedi'
 
 import { RegionsRepository } from '../mongo/repository/regions'
-import { GeneralController } from './general.controller'
+import LocalizationManager from '../utils/localizationManager'
 
 @JsonController('/regions')
-export class RegionsController extends GeneralController {
+export class RegionsController {
     @Inject()
     private regions!: RegionsRepository
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
 
     @Get()
     public async getRegions() {
@@ -17,7 +19,7 @@ export class RegionsController extends GeneralController {
     public async getRegionById(@Param('id') id: number) {
         const res = await this.regions.getSingle(id)
         if (!res || !res[0]) {
-            throw new NotFoundError(this.localizationManager.getValue('Region not found'))
+            throw new NotFoundError(this.localizationManager.getValue(3))
         }
         return res[0]
     }
@@ -30,7 +32,7 @@ export class RegionsController extends GeneralController {
             throw new BadRequestError(e.message)
         }
         if (!res || !res[0]) {
-            throw new NotFoundError(this.localizationManager.getValue('Region not found'))
+            throw new NotFoundError(this.localizationManager.getValue(3))
         }
         return res[0]
     }

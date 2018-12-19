@@ -14,12 +14,15 @@ import { Ids } from '../parameters/ids'
 import { ProductFilter } from '../parameters/productFilter'
 import { Region } from '../parameters/region'
 import { SkipTake } from '../parameters/skipTake'
-import { GeneralController } from './general.controller'
+import LocalizationManager from '../utils/localizationManager'
 
 @JsonController('/goods')
-export class GoodsController extends GeneralController {
+export class GoodsController {
     @Inject()
     private goods!: GoodRepository
+
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
 
     @Get('/get/all')
     public async getAllGoods() {

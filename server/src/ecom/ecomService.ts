@@ -66,13 +66,7 @@ export class EcomService {
         const { prices } = response
         const invalidGoodsIds: number[] = this.checkPrices(goodsIds, prices.map((pr: PriceDescriptor) => pr.goodsId))
         if (invalidGoodsIds.length > 0) {
-            throw new PriceError(
-                this.localizationManager.getValue(
-                    'Cannot get prices for goods. Wrong "storeId" or "goodsIds" are defined.'
-                ),
-                storeId,
-                invalidGoodsIds
-            )
+            throw new PriceError(this.localizationManager.getValue(17), storeId, invalidGoodsIds)
         }
         return prices
     }

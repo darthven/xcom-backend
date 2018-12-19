@@ -15,19 +15,22 @@ import { ManzanaUserApiClient } from '../manzana/manzanaUserApiClient'
 import { ManzanaAuthMiddleware } from '../middlewares/manzanaAuth.middleware'
 import { VirtualCard } from '../mongo/entity/virtualCard'
 import { VirtualCardsRepository } from '../mongo/repository/virtualCards'
-import { GeneralController } from './general.controller'
+import LocalizationManager from '../utils/localizationManager'
 
 @JsonController('/cards')
-export class CardsController extends GeneralController {
+export class CardsController {
     @Inject()
     public virtualCardsRepository!: VirtualCardsRepository
+
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
 
     @Post('/bindVirtual')
     @UseBefore(ManzanaAuthMiddleware)
     public async bindVirtualCard(@State('manzanaClient') manzana: ManzanaUserApiClient) {
         const virtualCard = await this.virtualCardsRepository.getRandomAvailable()
         if (!virtualCard) {
-            throw new NotFoundError(this.localizationManager.getValue('No available virtual cards found'))
+            throw new NotFoundError(this.localizationManager.getValue(0))
         }
         try {
             await manzana.bindVirtualLoyaltyCard(virtualCard)
@@ -46,12 +49,12 @@ export class CardsController extends GeneralController {
         // TODO: optimize with file streaming ?
         const data = await converter({ trim: true, delimiter: ',', noheader: true }).fromString(file.buffer.toString())
         if (!data.length) {
-            throw new BadRequestError(this.localizationManager.getValue('File is empty'))
+            throw new BadRequestError(this.localizationManager.getValue(1))
         }
         await this.virtualCardsRepository.createCollection()
         const cards = data.map(item => {
             if (!item.field1) {
-                throw new BadRequestError(`File has incorrect format. Encountered row: ${JSON.stringify(item)}`)
+                throw new BadRequestError(`${this.localizationManager.getValue(2)} ${JSON.stringify(item)}`)
             }
             return new VirtualCard(item.field1, false)
         })

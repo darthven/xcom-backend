@@ -2,10 +2,12 @@ import { Get, JsonController, NotFoundError, Param, QueryParam } from 'routing-c
 import { Inject } from 'typedi'
 
 import { CategoryRepository } from '../mongo/repository/categories'
-import { GeneralController } from './general.controller'
+import LocalizationManager from '../utils/localizationManager'
 
 @JsonController('/categories')
-export class CategoriesController extends GeneralController {
+export class CategoriesController {
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
     @Inject()
     private categories!: CategoryRepository
 
@@ -17,7 +19,7 @@ export class CategoriesController extends GeneralController {
     public async getCategoryById(@Param('id') id: number) {
         const res = await this.categories.getSingle(id)
         if (!res || !res[0]) {
-            throw new NotFoundError(this.localizationManager.getValue(`Category not found with id {value0}`, id))
+            throw new NotFoundError(this.localizationManager.getValue(4, id))
         }
         return res[0]
     }

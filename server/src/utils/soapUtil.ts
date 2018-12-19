@@ -219,12 +219,7 @@ export default class SoapUtil {
             }
         }
         if (invalidGoodsIds.length > 0) {
-            throw new HttpError(
-                402,
-                `${this.localizationManager.getValue(
-                    'Prices cannot be counted for the next goods:'
-                )} ${invalidGoodsIds.toString()}`
-            )
+            throw new HttpError(402, `${this.localizationManager.getValue(15)} ${invalidGoodsIds.toString()}`)
         }
         let summ: number = 0
         for (const [index, item] of chequeRequest.basket.entries()) {

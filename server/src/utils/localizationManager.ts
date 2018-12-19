@@ -9,7 +9,7 @@ export default class LocalizationManager {
         this.localeDescriptor = localeDescriptor
     }
 
-    public getValue(key: string, ...args: any[]) {
+    public getValue(key: number | string, ...args: any[]) {
         let result: string = this.localeDescriptor[key]
         if (args) {
             args.forEach((item, index) => {
