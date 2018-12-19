@@ -18,10 +18,13 @@ export class GoodsSort {
                 // search based on relevance score
                 this.$sort = {
                     score: { $meta: 'textScore' },
+                    'price.priceMin': -1,
                     img: orderSign
                 }
             } else {
+                // by default sorted by non-null price and image presence
                 this.$sort = {
+                    'price.priceMin': -1,
                     img: orderSign
                 }
             }

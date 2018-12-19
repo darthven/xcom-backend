@@ -14,14 +14,15 @@ export default async () => {
 
     const ids = []
 
-    for (let i = 1, count = 1; count; i++) {
+    let pageCount = 9999
+    for (let i = 1; i < pageCount; i++) {
         try {
             const res: any = await requestPromise({
                 ...ecomOptions,
                 uri: `${ECOM_URL}/goods?page=${i}`
             })
-            count = res.goodsCount
-            if (count) {
+            pageCount = res.pageCount
+            if (res.goodsCount) {
                 for (const item of res.goods) {
                     ids.push(item.id)
                     item.searchKeywords = [].concat(
