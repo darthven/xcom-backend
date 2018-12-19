@@ -18,11 +18,6 @@ export class GoodsFilter {
             this['share.endDate'] = { $gt: new Date() }
         }
         this.$or = [{ 'share.regions': { $exists: true, $eq: null } }, { 'share.regions': region }]
-        this.price = {
-            $elemMatch: {
-                region
-            }
-        }
         if (filter.inStock && filter.storeIds) {
             this.price.$elemMatch = {
                 stores: { $in: filter.storeIds }
