@@ -19,7 +19,7 @@ export default async () => {
         const good: { id: number; price: Price } = (await pricesCursor.next())!
         updatedGoods.add(good.id)
         await goodsRepo.collection.updateOne({ id: good.id }, { $set: { price: good.price } })
-        logger.debug(`good ${good.id} updated`)
+        logger.debug(`updatePricesIndex: price for ${good.id} updated`)
         updated++
     }
 
