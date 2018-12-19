@@ -7,8 +7,8 @@ export class GoodsTextQuery {
     private $or?: any[]
 
     public constructor(query?: string) {
-        const matchResult: string[] | null = query!.match(/[°"§%()\[\]{}=\\?´`'#<>|,;.:+_-]+|([a-z]+|[а-я]+)/gi)
         if (query) {
+            const matchResult: string[] | null = query!.match(/[°"§%()\[\]{}=\\?´`'#<>|,;.:+_-]+|([a-z]+|[а-я]+)/gi)
             this.$or = [
                 { searchKeywords: matchResult ? new RegExp('^' + matchResult.toString().toLocaleLowerCase()) : null },
                 { $text: { $search: query } }
