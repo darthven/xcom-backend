@@ -147,6 +147,7 @@ export class GoodRepository extends Repository {
             { 'price.region': 1, 'price.priceMin': 1, 'price.priceMax': -1 },
             { name: 'priceMinMaxReg' }
         )
+        await this.collection.createIndex({ 'share.regions': 1 })
     }
 
     public async updateImageLink(id: number) {
