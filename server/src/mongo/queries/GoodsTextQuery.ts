@@ -10,11 +10,11 @@ export class GoodsTextQuery {
         if (query) {
             this.$or = [
                 {
-                    searchKeywords: new RegExp('^' + query.toLocaleLowerCase())
+                    searchKeywords: new RegExp(
+                        '^' + query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&').toLocaleLowerCase()
+                    )
                 },
-                {
-                    $text: { $search: query }
-                }
+                { $text: { $search: query } }
             ]
         }
     }

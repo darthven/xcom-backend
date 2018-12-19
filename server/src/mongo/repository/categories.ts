@@ -30,6 +30,7 @@ export class CategoryRepository extends Repository {
                         level: 1,
                         productCount: 1,
                         treeSumCount: 1,
+                        listOrder: 1,
                         icon: {
                             url: { $concat: [IMAGE_URL, IMAGE_CATEGORIES_FOLDER, '$img'] },
                             urls: null,
@@ -39,6 +40,7 @@ export class CategoryRepository extends Repository {
                     }
                 }
             ])
+            .sort({ level: 1, listOrder: 1 })
             .toArray()
     }
     public async getSingle(id: number) {

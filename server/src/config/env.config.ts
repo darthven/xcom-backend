@@ -1,4 +1,5 @@
 export const NODE_ENV = process.env.NODE_ENV || 'development'
+export const LOCALE = process.env.LOCALE || 'ru'
 export const PORT = process.env.PORT || '1340'
 export const ECOM_URL = process.env.ECOM_URL || 'http://ws.erkapharm.com:8990/ecom/hs/'
 export const ECOM_USER = process.env.ECOM_USER || 'IdEast'

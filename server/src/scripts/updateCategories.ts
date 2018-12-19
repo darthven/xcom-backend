@@ -1,5 +1,6 @@
 import * as requestPromise from 'request-promise-native'
 import { Container } from 'typedi'
+import { orderedCategoriesRoots } from '../common/data'
 import { ECOM_URL } from '../config/env.config'
 import logger from '../config/logger.config'
 import { ecomOptions } from '../ecom/ecomOptions'
@@ -40,6 +41,10 @@ export default async () => {
     for (const item of res.categories) {
         ids.push(item.id)
         item.treeSumCount = recursiveCategoryCount(res.categories, item.id)
+        if (item.level === 1) {
+            const rootDescriptor = orderedCategoriesRoots.find(catDescr => catDescr.id === item.id)
+            item.listOrder = rootDescriptor ? rootDescriptor.order : 1000
+        }
         await categoriesRepo.collection.updateOne({ id: item.id }, { $set: item }, { upsert: true })
         updated++
     }

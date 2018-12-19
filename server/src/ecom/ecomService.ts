@@ -1,11 +1,12 @@
 import { CoreOptions, RequiredUriUrl } from 'request'
 import * as requestPromise from 'request-promise-native'
 import { HttpError } from 'routing-controllers'
-import { Service } from 'typedi'
+import { Inject, Service } from 'typedi'
 
 import { PriceError } from '../common/errors'
 import { ECOM_URL } from '../config/env.config'
 import { Order } from '../mongo/entity/order'
+import LocalizationManager from '../utils/localizationManager'
 import { ecomOptions } from './ecomOptions'
 import { EcomOrderResponse } from './ecomOrderResponse'
 import { EcomOrderStatusResponse } from './ecomOrderStatusResponse'
@@ -19,6 +20,9 @@ interface PriceDescriptor {
 
 @Service()
 export class EcomService {
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
+
     public async submitOrder(order: Order): Promise<EcomOrderResponse> {
         return this.request({
             ...ecomOptions,
@@ -62,7 +66,7 @@ export class EcomService {
         const { prices } = response
         const invalidGoodsIds: number[] = this.checkPrices(goodsIds, prices.map((pr: PriceDescriptor) => pr.goodsId))
         if (invalidGoodsIds.length > 0) {
-            throw new PriceError(storeId, invalidGoodsIds)
+            throw new PriceError(this.localizationManager.getValue(17), storeId, invalidGoodsIds)
         }
         return prices
     }

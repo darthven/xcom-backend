@@ -14,11 +14,15 @@ import { Ids } from '../parameters/ids'
 import { ProductFilter } from '../parameters/productFilter'
 import { Region } from '../parameters/region'
 import { SkipTake } from '../parameters/skipTake'
+import LocalizationManager from '../utils/localizationManager'
 
 @JsonController('/goods')
 export class GoodsController {
     @Inject()
     private goods!: GoodRepository
+
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
 
     @Get()
     @UseBefore(SkipTakeInjectMiddleware)
@@ -114,7 +118,7 @@ export class GoodsController {
         }
         const res = await this.goods.getSingle(id, region, storeIds)
         if (!res || !res[0]) {
-            throw new NotFoundError('good not found')
+            throw new NotFoundError(this.localizationManager.getValue('Good not found'))
         }
         return res[0]
     }

@@ -4,4 +4,5 @@ export interface Category {
     parentId: number
     level: number
     productCount: number
+    listOrder?: number | undefined
 }

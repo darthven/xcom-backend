@@ -14,11 +14,14 @@ import { LocationFilterInjectMiddleware } from '../middlewares/locationFilter.in
 import { LocationsQuery } from '../mongo/queries/LocationsQuery'
 import { StoreRepository } from '../mongo/repository/stores'
 import { LocationFilter } from '../parameters/locationFilter'
+import LocalizationManager from '../utils/localizationManager'
 
 @JsonController('/stores')
 export class StoresController {
     @Inject()
     private stores!: StoreRepository
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
 
     @Get()
     @UseBefore(LocationFilterInjectMiddleware)
@@ -34,7 +37,7 @@ export class StoresController {
     public async getLocationById(@Param('id') id: number) {
         const res = await this.stores.getSingle(id)
         if (!res || !res[0]) {
-            throw new NotFoundError('store not found')
+            throw new NotFoundError(this.localizationManager.getValue('Store not found'))
         }
         return res[0]
     }

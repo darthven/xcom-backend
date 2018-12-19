@@ -3,6 +3,7 @@ import { HttpError, NotFoundError } from 'routing-controllers'
 import { Inject, Service } from 'typedi'
 import { SBOL_GATEWAY_URL } from '../config/env.config'
 import { INN } from '../mongo/repository/stores'
+import LocalizationManager from '../utils/localizationManager'
 import { AccountManager } from './accountManager'
 import { OrderStatusRequest } from './orderStatusRequest'
 import { OrderStatusResponse } from './orderStatusResponse'
@@ -14,6 +15,9 @@ import { SbolResponse } from './sbolResponse'
 
 @Service()
 export class SbolService {
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
+
     @Inject()
     private readonly accountManager!: AccountManager
 
@@ -36,7 +40,7 @@ export class SbolService {
     private async request(method: string, params: INN) {
         const credentials = this.accountManager.getForInn(params.INN)
         if (!credentials) {
-            throw new NotFoundError(`No SBOL account found with this store's INN`)
+            throw new NotFoundError(this.localizationManager.getValue(14))
         }
         const options = {
             uri: SBOL_GATEWAY_URL + method,

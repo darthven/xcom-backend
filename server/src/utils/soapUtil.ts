@@ -15,6 +15,7 @@ import logger from '../config/logger.config'
 import { ManzanaCheque } from '../manzana/manzanaCheque'
 import { Stock } from '../mongo/entity/stock'
 import { StocksRepository } from '../mongo/repository/stocks'
+import LocalizationManager from './localizationManager'
 import {
     Card,
     CardRequestModel,
@@ -38,6 +39,7 @@ interface SoapHeaders {
 
 interface PriceDescriptor {
     goodsId: number
+    batchId: string
     price: number
 }
 
@@ -45,6 +47,9 @@ interface PriceDescriptor {
 export default class SoapUtil {
     @Inject()
     private stocksRepository!: StocksRepository
+
+    @Inject()
+    private readonly localizationManager!: LocalizationManager
 
     public async sendRequest(url: string, chequeRequest: SoftChequeRequest): Promise<ManzanaCheque> {
         const handledRequest = await this.handleCard(url, chequeRequest)
@@ -63,7 +68,7 @@ export default class SoapUtil {
                 .Coupons!
             const invalidCoupons = this.checkCoupons(data.Coupons, coupons)
             if (invalidCoupons.length > 0) {
-                throw new CouponError(parseInt(data.ReturnCode._text, 10), invalidCoupons)
+                throw new CouponError(parseInt(data.ReturnCode._text, 10), data.Message._text, invalidCoupons)
             }
         }
         const items: ManzanaItem[] = Array.isArray(data.Item) ? data.Item : [data.Item]
@@ -210,15 +215,17 @@ export default class SoapUtil {
             if (!stock) {
                 invalidGoodsIds.push(item.goodsId)
             } else {
-                prices.push({ goodsId: stock.goodsId, price: stock.storePrice })
+                prices.push({ goodsId: stock.goodsId, price: stock.storePrice, batchId: stock.batch })
             }
         }
         if (invalidGoodsIds.length > 0) {
-            throw new HttpError(402, `Prices cannot be counted for the next goods: ${invalidGoodsIds.toString()}`)
+            throw new HttpError(402, `${this.localizationManager.getValue(15)} ${invalidGoodsIds.toString()}`)
         }
         let summ: number = 0
         for (const [index, item] of chequeRequest.basket.entries()) {
-            const priceDescriptor: PriceDescriptor | undefined = prices.find(it => it.goodsId! === item.goodsId!)
+            const priceDescriptor: PriceDescriptor | undefined = prices.find(
+                it => it.goodsId! === item.goodsId! && it.batchId === item.batchId
+            )
             const itemTotalPrice: number = priceDescriptor!.price * item.quantity!
             summ += itemTotalPrice
             items.push({
