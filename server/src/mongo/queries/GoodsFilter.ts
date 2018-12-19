@@ -15,15 +15,14 @@ export class GoodsFilter {
             this['share.id'] = { $in: filter.shares }
             this['share.endDate'] = { $gt: new Date() }
         }
-        this.price = {
-            $elemMatch: {
-                region
+        if (filter.inStock && filter.storeIds) {
+            this.price.$elemMatch = {
+                stores: { $in: filter.storeIds }
             }
         }
-        if (filter.inStock && filter.storeIds) {
-            this.price.$elemMatch.stores = { $in: filter.storeIds }
-        }
         if (filter.priceMin || filter.priceMax) {
+            this.price = this.price || { $elemMatch: {} }
+            this.price.$elemMatch.region = region
             this.price.$elemMatch.priceMin = { $lt: filter.priceMax || 1000000 }
             this.price.$elemMatch.priceMax = { $gt: filter.priceMin || 0 }
         }

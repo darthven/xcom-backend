@@ -44,6 +44,7 @@ export class GoodRepository extends Repository {
             }
         }
     }
+
     private secondProject = {
         id: 1,
         name: 1,
@@ -71,28 +72,6 @@ export class GoodRepository extends Repository {
         'share.startDate': 1,
         'share.endDate': 1,
         'share.description': 1
-    }
-
-    private lookup = {
-        from: 'shares',
-        let: { id: '$id' },
-        pipeline: [
-            { $match: { $expr: { $eq: ['$goodId', '$$id'] } } },
-            {
-                $project: {
-                    _id: 0,
-                    id: 1,
-                    description: 1,
-                    discountValue: 1,
-                    packCount: 1,
-                    attributeZOZ: 1,
-                    startDate: 1,
-                    endDate: 1,
-                    regions: 1
-                }
-            }
-        ],
-        as: 'shares'
     }
 
     constructor() {
@@ -196,8 +175,13 @@ export class GoodRepository extends Repository {
             { $skip: skipTake.skip },
             { $limit: skipTake.take },
             { $project: this.firstProject },
-            { $unwind: '$price' },
-            { $match: { 'price.region': region.region } },
+            {
+                $unwind: {
+                    path: '$price',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            { $match: { $or: [{ price: null }, { 'price.region': region.region }] } },
             { $project: this.secondProject }
         ]
         if (sort.$sort['price.priceMin']) {
@@ -205,8 +189,13 @@ export class GoodRepository extends Repository {
                 { $match: query },
                 { $match: filter },
                 { $project: this.firstProject },
-                { $unwind: '$price' },
-                { $match: { 'price.region': region.region } },
+                {
+                    $unwind: {
+                        path: '$price',
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                { $match: { $or: [{ price: null }, { 'price.region': region.region }] } },
                 sort,
                 { $skip: skipTake.skip },
                 { $limit: skipTake.take },
@@ -214,23 +203,6 @@ export class GoodRepository extends Repository {
             ]
         }
         return this.collection.aggregate(pipeline, { allowDiskUse: true }).toArray()
-    }
-
-    public async getAllWithoutPrice(filter: GoodsFilter, query: GoodsTextQuery, skipTake: SkipTake, sort: GoodsSort) {
-        return this.collection
-            .aggregate(
-                [
-                    { $match: query },
-                    { $match: filter },
-                    sort,
-                    { $skip: skipTake.skip },
-                    { $limit: skipTake.take },
-                    { $project: this.firstProject },
-                    { $project: this.secondProject }
-                ],
-                { allowDiskUse: true }
-            )
-            .toArray()
     }
 
     public async getByIds(ids: number[], region: Region, storeIds?: number[]) {

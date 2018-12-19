@@ -21,7 +21,9 @@ export class GoodsSort {
                     img: orderSign
                 }
             } else {
+                // by default sorted by non-null price and image presence
                 this.$sort = {
+                    price: -1,
                     img: orderSign
                 }
             }
