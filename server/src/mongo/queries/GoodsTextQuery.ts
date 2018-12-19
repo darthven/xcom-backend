@@ -8,9 +8,12 @@ export class GoodsTextQuery {
 
     public constructor(query?: string) {
         if (query) {
-            const matchResult: string[] | null = query!.match(/[°"§%()\[\]{}=\\?´`'#<>|,;.:+_-]+|([a-z]+|[а-я]+)/gi)
             this.$or = [
-                { searchKeywords: matchResult ? new RegExp('^' + matchResult.toString().toLocaleLowerCase()) : null },
+                {
+                    searchKeywords: new RegExp(
+                        '^ ' + query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&').toLocaleLowerCase()
+                    )
+                },
                 { $text: { $search: query } }
             ]
         }
