@@ -19,8 +19,10 @@ export class GoodsFilter {
             this.$or = [{ 'share.regions': { $exists: true, $eq: null } }, { 'share.regions': region }]
         }
         if (filter.inStock && filter.storeIds) {
-            this.price.$elemMatch = {
-                stores: { $in: filter.storeIds }
+            this.price = {
+                $elemMatch: {
+                    stores: { $in: filter.storeIds }
+                }
             }
         }
         if (filter.priceMin || filter.priceMax) {
