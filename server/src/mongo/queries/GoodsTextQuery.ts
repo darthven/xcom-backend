@@ -11,7 +11,7 @@ export class GoodsTextQuery {
             this.$or = [
                 {
                     searchKeywords: new RegExp(
-                        '^ ' + query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&').toLocaleLowerCase()
+                        '^' + query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&').toLocaleLowerCase()
                     )
                 },
                 { $text: { $search: query } }
