@@ -78,7 +78,7 @@
         "app-root-path": "^2.1.0",
         "axios": "^0.18.0",
         "basic-auth": "^2.0.1",
-        "bcrypt": "^3.0.2",
+        "bcrypt": "^5.0.0",
         "csvtojson": "^2.0.8",
         "ftp": "^0.3.10",
         "google-libphonenumber": "^3.1.15",
